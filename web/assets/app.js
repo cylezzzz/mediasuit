@@ -31,7 +31,7 @@
       setTimeout(() => el.remove(), 300);
     }, timeout);
   }
-
+  
   // Globale LMS-Funktionen
   window.LMS = window.LMS || {};
   window.LMS.toast = showToast;
@@ -128,12 +128,9 @@ function renderModelTabs({ container, models, onSelect, activeId, title = "Verf�
   
   if (models.length === 0) {
     container.innerHTML = `
-      <div class="p-4 text-center bg-yellow-900/20 border border-yellow-700 rounded-lg">
-        <div class="text-yellow-400 font-medium mb-2">⚠️ Keine Modelle gefunden</div>
-        <div class="text-sm text-gray-400">
-          Bitte installiere Modelle über den <a href="/catalog.html" class="text-blue-400 underline">Katalog</a> 
-          oder kopiere sie manuell in die entsprechenden Ordner.
-        </div>
+      <div class="card">
+        <p class="text-red-400 mb-2">⚠️ Keine Modelle gefunden</p>
+        <p class="text-gray-300 text-sm">Bitte installiere Modelle über den Katalog oder kopiere sie manuell in die entsprechenden Ordner.</p>
       </div>
     `;
     return;
@@ -142,14 +139,14 @@ function renderModelTabs({ container, models, onSelect, activeId, title = "Verf�
   const header = document.createElement('div');
   header.className = 'flex items-center justify-between mb-3';
   header.innerHTML = `
-    <div class="font-semibold text-lg">${title}</div>
-    <div class="text-sm text-gray-400">${models.length} gefunden</div>
+    <h3 class="text-lg font-semibold">${title}</h3>
+    <span class="text-sm text-gray-400">${models.length} gefunden</span>
   `;
   
   const tabsContainer = document.createElement('div');
   tabsContainer.className = 'flex flex-wrap gap-2';
   
-  models.forEach((model, index) => {
+  models.forEach((model) => {
     const isActive = model.id === activeId;
     const tab = document.createElement('button');
     tab.type = 'button';
@@ -163,9 +160,9 @@ function renderModelTabs({ container, models, onSelect, activeId, title = "Verf�
     const nsfwBadge = model.nsfw_capable ? ' 🔞' : '';
     
     tab.innerHTML = `
-      <div class="font-medium">${model.name}${nsfwBadge}</div>
-      ${sizeStr ? `<div class="text-xs opacity-75">${sizeStr}</div>` : ''}
-      ${model.recommended_use ? `<div class="text-xs opacity-75 max-w-48 truncate">${model.recommended_use}</div>` : ''}
+      ${model.name}${nsfwBadge}
+      ${sizeStr ? `<span class="text-xs text-gray-400">${sizeStr}</span>` : ''}
+      ${model.recommended_use ? `<span class="text-xs text-gray-400">${model.recommended_use}</span>` : ''}
     `;
     
     tab.addEventListener('click', () => {

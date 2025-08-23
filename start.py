@@ -200,7 +200,7 @@ def start_with_ui(host: str, port: int, reload: bool = False):
         except KeyboardInterrupt:
             logger.info("👋 Server beendet")
             return
-
+    
     def fetch_json(url, timeout=3):
         """Fetch JSON data from URL with error handling"""
         try:
@@ -209,7 +209,7 @@ def start_with_ui(host: str, port: int, reload: bool = False):
         except Exception as e:
             logger.debug(f"API call failed: {url} - {e}")
             return None
-
+    
     # Create main window
     root = tk.Tk()
     root.title("LocalMediaSuite – Server Control")
@@ -425,7 +425,7 @@ Beispiele:
   python start.py --headless --port 8080  # Kombiniert
 """)
             return
-
+    
     # Parse port
     port = PORT
     if '--port' in sys.argv:
@@ -435,7 +435,7 @@ Beispiele:
         except (IndexError, ValueError):
             print("❌ Ungültiger Port angegeben")
             sys.exit(1)
-
+    
     # Parse host
     host = HOST
     if '--host' in sys.argv:
@@ -445,15 +445,15 @@ Beispiele:
         except IndexError:
             print("❌ Ungültiger Host angegeben")
             sys.exit(1)
-
+    
     # Parse other flags
     headless = '--headless' in sys.argv
     reload = '--reload' in sys.argv or '--dev' in sys.argv
-
+    
     # Check dependencies first
     if not check_dependencies():
         sys.exit(1)
-
+    
     # Start appropriate mode
     if headless:
         logger.info("🖥️  Starte im Headless-Modus (ohne Desktop-UI)")

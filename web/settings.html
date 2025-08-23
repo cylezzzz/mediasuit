@@ -1,51 +1,115 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8"/>
+  <meta charset="UTF-8">
   <title>LocalMediaSuite – Settings</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <link rel="icon" href="/assets/logo.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="assets/styles.css">
+  <script defer src="assets/app.js"></script>
 </head>
-<body class="bg-gray-900 text-gray-100">
-  <header><h1>Settings</h1></header>
-  <main class="container mx-auto p-3">
+<body>
+  <header>
+    <h1 class="text-xl font-bold">LocalMediaSuite</h1>
+    <nav class="flex gap-2 flex-wrap">
+      <a href="index.html">Home</a>
+      <a href="image.html">Image (SFW)</a>
+      <a href="image_nsfw.html">Image (NSFW)</a>
+      <a href="video.html">Video (SFW)</a>
+      <a href="video_nsfw.html">Video (NSFW)</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="catalog.html">Catalog</a>
+      <a href="settings.html" class="active">Settings</a>
+    </nav>
+  </header>
+  <main style="padding:2rem;max-width:700px;margin:0 auto;">
     <form id="settings-form" class="card">
-      <label>Image Resolution <input name="img_resolution" value="1024x768"/></label>
-      <label>Video Resolution <input name="vid_resolution" value="1280x720"/></label>
-      <label>Video FPS <input name="vid_fps" type="number" value="24"/></label>
-      <label>Video Length (sec) <input name="vid_length_sec" type="number" value="3"/></label>
-      <label>Theme <select name="theme"><option value="dark">Dark</option><option value="light">Light</option></select></label>
-      <button type="submit">Speichern</button>
+      <h2 class="text-lg font-semibold mb-4">Einstellungen</h2>
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="label" for="img_resolution">Image Resolution</label>
+          <select id="img_resolution" name="img_resolution" class="input">
+            <option value="768x768">768×768</option>
+            <option value="1024x768">1024×768</option>
+            <option value="1024x1024">1024×1024</option>
+            <option value="1536x1024">1536×1024</option>
+            <option value="1920x1080">1920×1080</option>
+          </select>
+        </div>
+        <div>
+          <label class="label" for="vid_resolution">Video Resolution</label>
+          <select id="vid_resolution" name="vid_resolution" class="input">
+            <option value="1280x720">1280×720</option>
+            <option value="1920x1080">1920×1080</option>
+            <option value="1024x576">1024×576</option>
+          </select>
+        </div>
+        <div>
+          <label class="label" for="vid_fps">Video FPS</label>
+          <input id="vid_fps" class="input" type="number" name="vid_fps" min="1" max="60" value="24">
+        </div>
+        <div>
+          <label class="label" for="vid_length_sec">Video Length (sec)</label>
+          <input id="vid_length_sec" class="input" type="number" name="vid_length_sec" min="1" max="60" value="3">
+        </div>
+        <div>
+          <label class="label" for="theme">Theme</label>
+          <select id="theme" name="theme" class="input">
+            <option value="dark" selected>Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-6">
+        <button type="submit" class="btn primary">Speichern</button>
+      </div>
     </form>
   </main>
-  <script src="/assets/app.js"></script>
   <script>
-(async function(){
-  const form = document.getElementById('settings-form');
-  form.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const data = Object.fromEntries(new FormData(form).entries());
-    const patch = {
-      defaults: {
-        img_resolution: data.img_resolution,
-        vid_resolution: data.vid_resolution,
-        vid_fps: Number(data.vid_fps || 24),
-        vid_length_sec: Number(data.vid_length_sec || 3)
-      },
-      ui: {
-        theme: data.theme || 'dark'
-      }
-    };
+  // Load current settings on page load
+  document.addEventListener('DOMContentLoaded', async function(){
     try {
-      await LMS.fetchJSON('/api/settings', {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(patch)
-      });
-      LMS.toast('Einstellungen gespeichert', 'success');
+      const current = await LMS.fetchJSON('/api/settings').catch(() => null);
+      if (current && current.defaults) {
+        const {img_resolution, vid_resolution, vid_fps, vid_length_sec} = current.defaults;
+        if (img_resolution) document.getElementById('img_resolution').value = img_resolution;
+        if (vid_resolution) document.getElementById('vid_resolution').value = vid_resolution;
+        if (vid_fps) document.getElementById('vid_fps').value = vid_fps;
+        if (vid_length_sec) document.getElementById('vid_length_sec').value = vid_length_sec;
+      }
+      if (current && current.ui && current.ui.theme) {
+        document.getElementById('theme').value = current.ui.theme;
+      }
     } catch {}
   });
-})();
+  // Save settings
+  (async function(){
+    const form = document.getElementById('settings-form');
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(form).entries());
+      const patch = {
+        defaults: {
+          img_resolution: data.img_resolution,
+          vid_resolution: data.vid_resolution,
+          vid_fps: Number(data.vid_fps || 24),
+          vid_length_sec: Number(data.vid_length_sec || 3)
+        },
+        ui: {
+          theme: data.theme || 'dark'
+        }
+      };
+      try {
+        await LMS.fetchJSON('/api/settings', {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(patch)
+        });
+        LMS.toast('Einstellungen gespeichert', 'success');
+      } catch {
+        LMS.toast('Fehler beim Speichern der Einstellungen', 'error');
+      }
+    });
+  })();
   </script>
 </body>
 </html>

@@ -1,275 +1,321 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8"/>
+  <meta charset="UTF-8">
   <title>LocalMediaSuite – Video (SFW)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <link rel="icon" href="/assets/logo.ico">
-  <link rel="stylesheet" href="/assets/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Shared styling and logic -->
+  <link rel="stylesheet" href="assets/styles.css">
+  <script defer src="assets/app.js"></script>
 </head>
-<body class="bg-gray-900 text-gray-100">
-  <header class="container mx-auto py-4 flex items-center justify-between">
-    <div class="flex items-center gap-2">
-      <img src="/assets/logo.svg" alt="logo" style="height:28px"/>
-      <div class="font-semibold">LocalMediaSuite</div>
-      <div class="text-xs text-gray-400">Video (SFW)</div>
-    </div>
-    <nav class="flex gap-3 text-sm">
-      <a href="/index.html">Home</a>
-      <a href="/image.html">Image (SFW)</a>
-      <a href="/image_nsfw.html">Image (NSFW)</a>
-      <a href="/video.html" class="text-blue-400">Video (SFW)</a>
-      <a href="/video_nsfw.html" class="">Video (NSFW)</a>
-      <a href="/gallery.html">Gallery</a>
-      <a href="/catalog.html">Catalog</a>
-      <a href="/settings.html">Settings</a>
+<body>
+  <header>
+    <h1 class="text-xl font-bold">LocalMediaSuite</h1>
+    <nav class="flex gap-2 flex-wrap">
+      <a href="index.html">Home</a>
+      <a href="image.html">Image (SFW)</a>
+      <a href="image_nsfw.html">Image (NSFW)</a>
+      <a href="video.html" class="active">Video (SFW)</a>
+      <a href="video_nsfw.html">Video (NSFW)</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="catalog.html">Catalog</a>
+      <a href="settings.html">Settings</a>
     </nav>
   </header>
-
-  <main class="container mx-auto px-3 pb-10">
-    <!-- Modell-Tabs -->
-    <div id="model-tabs" class="card mb-4"></div>
-
-    <!-- Mode & Basics -->
-    <div class="card mb-4">
-      <div class="grid sm:grid-cols-3 gap-3">
-        <div>
-          <label class="label">Modus</label>
-          <select id="mode" class="input w-full">
-            <option value="text2video" selected>Text → Video</option>
-            <option value="img2video">Bild → Video</option>
-          </select>
-        </div>
-        <div class="sm:col-span-2 flex items-end justify-end">
-          <div class="text-xs text-gray-400">Pro Lauf wählbar. Der Model-Picker passt sich automatisch an.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Kategorien & Vorschläge -->
-    <div class="grid md:grid-cols-3 gap-3 mb-4">
-      <div class="card">
-        <div class="font-semibold mb-2">Kategorien</div>
-        <div id="cat-chips" class="flex flex-wrap gap-2"></div>
-      </div>
-      <div class="card md:col-span-2">
-        <div class="flex items-center justify-between mb-2">
-          <div class="font-semibold">Prompt-Vorschläge</div>
-          <div class="flex items-center gap-2">
-            <button id="btn-random" class="btn">Zufalls-Prompt</button>
-            <span class="text-xs text-gray-400">SFW</span>
-          </div>
-        </div>
-        <div id="prompt-suggestions" class="flex flex-wrap gap-2"></div>
-      </div>
-    </div>
-
-    <!-- Generator-Form -->
-    <form id="video-form" data-endpoint="/api/generate/video" class="card" enctype="multipart/form-data">
-      <input type="hidden" name="mode" id="mode_input" value="text2video"/>
-      <input type="hidden" name="nsfw" value="false"/>
-
-      <div class="grid md:grid-cols-2 gap-3">
-        <div>
-          <label class="label">Prompt</label>
-          <textarea id="prompt" name="prompt" rows="6" class="input w-full" placeholder="Beschreibe den Clip… (Startframe wird ggf. automatisch erzeugt)"></textarea>
-
-          <div id="init-block" class="mt-3 grid grid-cols-2 gap-3 hidden">
-            <div>
-              <label class="label">Upload (Startbild)</label>
-              <input type="file" name="init_image" accept="image/*" class="input w-full"/>
-            </div>
-            <div>
-              <label class="label">Remix (aus Galerie)</label>
-              <select id="remix" class="input w-full">
-                <option value="">— wählen —</option>
+  <main style="padding:2rem;max-width:1100px;margin:0 auto;">
+    <form id="video-form" action="/api/generate/universal" method="POST" enctype="multipart/form-data" data-endpoint="/api/generate/universal">
+      <input type="hidden" name="type" value="video">
+      <input type="hidden" id="mode_input" name="mode" value="text2video">
+      <h2 class="text-xl font-bold mb-4">Videogenerator (SFW)</h2>
+      <div class="generator-layout">
+        <div class="sidebar flex flex-col gap-4" style="flex:0 0 320px;">
+          <!-- Mode & model -->
+          <div class="card">
+            <div class="mb-4">
+              <label class="label" for="mode">Modus</label>
+              <select id="mode" class="input" name="mode_select">
+                <option value="text2video" selected>Text → Video</option>
+                <option value="img2video">Bild → Video</option>
               </select>
-              <input type="hidden" name="init_url" id="init_url"/>
+              <p class="text-sm text-muted mt-1">Pro Lauf wählbar. Der Model‑Picker passt sich automatisch an.</p>
             </div>
+            <div id="model-tabs" class=""></div>
           </div>
-          <div class="text-xs text-gray-400 mt-1">Hinweis: Für <b>Bild→Video</b> ist Upload oder Remix erforderlich. Bei <b>Text→Video</b> wird die Startframe automatisch generiert.</div>
-        </div>
-
-        <div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="label">Auflösung</label>
-              <select name="vid_resolution" class="input w-full">
-                <option selected>1280x720</option>
-                <option>1920x1080</option>
+          <!-- Settings -->
+          <div class="card">
+            <h3 class="text-md font-semibold mb-3">Einstellungen</h3>
+            <div class="mb-3">
+              <label class="label" for="vid_resolution">Auflösung</label>
+              <select id="vid_resolution" class="input">
+                <option value="1280x720" selected>1280×720</option>
+                <option value="1920x1080">1920×1080</option>
+                <option value="1024x576">1024×576</option>
               </select>
+              <input type="hidden" id="width_input" name="width" value="1280">
+              <input type="hidden" id="height_input" name="height" value="720">
+            </div>
+            <div class="mb-3">
+              <label class="label" for="fps">FPS</label>
+              <input id="fps" class="input" type="number" name="fps" min="1" max="60" value="24">
+            </div>
+            <div class="mb-3">
+              <label class="label" for="vid_length">Länge (Sek.)</label>
+              <input id="vid_length" class="input" type="number" min="1" max="60" value="3">
             </div>
             <div>
-              <label class="label">FPS</label>
-              <input type="number" name="vid_fps" class="input w-full" min="12" max="60" value="24"/>
-            </div>
-            <div>
-              <label class="label">Länge (Sek.)</label>
-              <input type="number" name="vid_length_sec" class="input w-full" min="1" max="30" value="3"/>
-            </div>
-            <div>
-              <label class="label">Frames (optional)</label>
-              <input type="number" name="num_frames_override" class="input w-full" min="8" max="65" value="0"/>
+              <label class="label" for="num_frames">Frames (optional)</label>
+              <input id="num_frames" class="input" type="number" name="num_frames" min="0" max="240" value="0">
             </div>
           </div>
+          <!-- Categories & random -->
+          <div class="card">
+            <h3 class="text-md font-semibold mb-3">Ideen & Kategorien</h3>
+            <div class="flex gap-2 mb-2">
+              <button type="button" id="btn-random" class="btn secondary w-full">Zufalls‑Prompt</button>
+            </div>
+            <div id="cat-chips" class="flex flex-wrap gap-2"></div>
+          </div>
         </div>
-      </div>
-
-      <div class="mt-4 flex items-center gap-2">
-        <button class="btn primary" type="submit">Generieren</button>
-        <button class="btn" type="button" id="btn-clear">Prompt leeren</button>
+        <!-- Main area -->
+        <div class="main-area flex flex-col gap-4" style="flex:1;">
+          <div class="card flex-1 flex flex-col gap-4">
+            <div>
+              <label class="label" for="prompt">Prompt</label>
+              <textarea id="prompt" name="prompt" class="input" rows="4" placeholder="Beschreibe den Clip… (Startframe wird ggf. automatisch erzeugt)" required></textarea>
+              <div id="prompt-suggestions" class="flex flex-wrap gap-2 mt-2"></div>
+            </div>
+            <div id="init-block">
+              <div class="mb-4">
+                <label class="label" for="init_image">Upload (Startbild)</label>
+                <input id="init_image" class="input" type="file" name="init_image" accept="image/*">
+                <p class="text-sm text-muted mt-1">Für Bild→Video ist Upload oder Remix erforderlich. Bei Text→Video wird die Startframe automatisch generiert.</p>
+                <div id="preview-container" class="mt-2 hidden">
+                  <img id="preview-img" src="" alt="Vorschau" style="max-width:100%; border-radius:0.5rem;">
+                </div>
+              </div>
+              <div>
+                <label class="label" for="remix">Remix (aus Galerie)</label>
+                <select id="remix" class="input">
+                  <option value="">— wählen —</option>
+                </select>
+                <input type="hidden" id="init_url" name="init_url">
+              </div>
+            </div>
+            <div class="flex gap-3">
+              <button type="submit" class="btn primary">Generieren</button>
+              <button type="button" id="btn-clear" class="btn secondary">Prompt leeren</button>
+            </div>
+          </div>
+          <div id="last-output" class="card hidden">
+            <h3 class="text-lg font-semibold mb-2">Letztes Ergebnis</h3>
+            <video id="last-vid" controls style="width:100%; border-radius:0.5rem;"></video>
+            <p class="text-sm text-muted mt-2">Du findest deine generierten Inhalte auch in der <a href="gallery.html" class="text-blue-400 underline">Galerie</a>.</p>
+          </div>
+        </div>
       </div>
     </form>
-
-    <!-- Player -->
-    <div id="last-output" class="card mt-4 hidden">
-      <div class="font-semibold mb-2">Ergebnis</div>
-      <video id="last-vid" class="w-full rounded" controls autoplay></video>
-    </div>
   </main>
-
-  <script src="/assets/app.js"></script>
   <script>
-  async function fetchSuggestions(domain, nsfw, purpose){{
+  // Preview logic for start frame upload
+  document.addEventListener('DOMContentLoaded', function(){
+    const fileInput = document.getElementById('init_image');
+    const previewContainer = document.getElementById('preview-container');
+    const previewImg = document.getElementById('preview-img');
+    fileInput.addEventListener('change', function(){
+      const file = this.files && this.files[0];
+      if(file){
+        const reader = new FileReader();
+        reader.onload = function(e){
+          previewImg.src = e.target.result;
+          previewContainer.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        previewContainer.classList.add('hidden');
+        previewImg.src = '';
+      }
+    });
+
+    // Resolution handling: update hidden width/height fields when user selects a resolution
+    const resSelect = document.getElementById('vid_resolution');
+    const widthField = document.getElementById('width_input');
+    const heightField = document.getElementById('height_input');
+    function updateResolution(){
+      const parts = (resSelect.value || '').split('x');
+      if(parts.length === 2){
+        widthField.value = parseInt(parts[0]);
+        heightField.value = parseInt(parts[1]);
+      }
+    }
+    if(resSelect){
+      resSelect.addEventListener('change', updateResolution);
+      updateResolution();
+    }
+
+    // Frames calculation: derive number of frames based on FPS and length (seconds)
+    const fpsInput = document.getElementById('fps');
+    const lengthInput = document.getElementById('vid_length');
+    const framesInput = document.getElementById('num_frames');
+    function updateFrames(){
+      const fpsVal = parseInt(fpsInput.value || '0');
+      const secVal = parseInt(lengthInput.value || '0');
+      if (!framesInput.hasAttribute('data-manual')){
+        if(fpsVal > 0 && secVal > 0){ framesInput.value = fpsVal * secVal; }
+      }
+    }
+    if(fpsInput && lengthInput && framesInput){
+      fpsInput.addEventListener('change', updateFrames);
+      lengthInput.addEventListener('change', updateFrames);
+      // When user manually edits frames input, mark as manual override
+      framesInput.addEventListener('input', ()=>{ framesInput.setAttribute('data-manual','true'); });
+      updateFrames();
+    }
+  });
+  </script>
+  <script>
+  /*
+    Hauptinitialisierung für die Videoseite.
+    Lädt Modelle und Promptvorschläge basierend auf SFW/NSFW und dem gewählten Modus.
+    Bindet den Model‑Picker an das Formular und setzt Erfolgsmeldungen.
+  */
+  async function fetchSuggestions(domain, nsfw, purpose){
     const urls = [
-      `/api/suggestions?domain=${{domain}}&nsfw=${{nsfw}}&purpose=${{purpose}}`,
-      `/api/suggestions?type=${{domain}}&nsfw=${{nsfw}}&purpose=${{purpose}}`,
-      `/api/suggestions?type=${{domain}}&nsfw=${{nsfw}}`
+      `/api/suggestions?domain=${domain}&nsfw=${nsfw}&purpose=${purpose}`,
+      `/api/suggestions?type=${domain}&nsfw=${nsfw}&purpose=${purpose}`,
+      `/api/suggestions?type=${domain}&nsfw=${nsfw}`
     ];
-    for (const u of urls){{ try{{ const r=await fetch(u); if(r.ok) return await r.json(); }}catch{{}} }}
-    if (purpose === "img2video"){{
-      return {{
+    for (const u of urls){ try{ const r = await fetch(u); if(r.ok) return await r.json(); }catch{} }
+    // Fallbacks – Beispielideen für Video
+    if (purpose === 'img2video'){
+      return {
         categories: [
-          {{ id:"motion", label:"Bewegung", ideas:[
-            "gentle camera drift, subtle parallax, natural motion blur",
-            "slow pan with subject movement, cinematic grading"
-          ]}},
-          {{ id:"detail", label:"Detail", ideas:[
-            "macro motion of textures, shallow depth of field",
-            "close-up highlights, specular motion, HDR look"
-          ]}}
+          { id:'motion', label:'Bewegung', ideas:[
+            'gentle camera drift, subtle parallax, natural motion blur',
+            'slow pan with subject movement, cinematic grading'
+          ]},
+          { id:'detail', label:'Detail', ideas:[
+            'macro motion of textures, shallow depth of field',
+            'close‑up highlights, specular motion, HDR look'
+          ]}
         ],
-        modifiers: ["cinematic motion grade, filmic grain", "HDR range, natural blur trails"]
-      }};
-    }} else {{
-      return {{
+        modifiers: ['cinematic motion grade, filmic grain', 'HDR range, natural blur trails']
+      };
+    } else {
+      return {
         categories: [
-          {{ id:"cinematic", label:"Cinematic", ideas:[
-            "cinematic car driving at sunset, aerial parallax, lens flares",
-            "forest canopy wind movement, volumetric light rays"
-          ]}},
-          {{ id:"nature", label:"Nature", ideas:[
-            "ocean waves closeup, foam details, stabilized handheld look",
-            "waterfall slow motion, mist particles"
-          ]}}
+          { id:'cinematic', label:'Cinematic', ideas:[
+            'cinematic car driving at sunset, aerial parallax, lens flares',
+            'forest canopy wind movement, volumetric light rays'
+          ]},
+          { id:'nature', label:'Nature', ideas:[
+            'ocean waves close‑up, foam details, stabilized handheld look',
+            'waterfall slow motion, mist particles'
+          ]}
         ],
-        modifiers: ["cinematic color grade, motion blur natural", "subtle film grain, high dynamic range"]
-      }};
-    }}
-  }}
-
-  async function fetchGalleryImages(){{
+        modifiers: ['cinematic color grade, motion blur natural', 'subtle film grain, high dynamic range']
+      };
+    }
+  }
+  async function fetchGalleryImages(){
     const urls = ['/api/files?type=image','/api/gallery?type=image','/api/files/images'];
-    for (const u of urls){{ try{{ const r=await fetch(u); if(r.ok) return await r.json(); }}catch{{}} }}
+    for (const u of urls){ try{ const r = await fetch(u); if(r.ok) return await r.json(); }catch{} }
     return [];
-  }}
-
-  function pushPrompt(textarea, addition){{
+  }
+  function pushPrompt(textarea, addition){
     const cur = textarea.value.trim();
-    if (!cur) {{ textarea.value = addition; return; }}
-    if (!cur.toLowerCase().includes(addition.toLowerCase())){{ textarea.value = cur + ", " + addition; }}
-  }}
-
-  (async function(){{
+    if (!cur) { textarea.value = addition; return; }
+    if (!cur.toLowerCase().includes(addition.toLowerCase())){ textarea.value = cur + ', ' + addition; }
+  }
+  (async function(){
     const NSFW = false;
-    let PURPOSE = "text2video";
-    const PAGE_KEY = () => `video:${{PURPOSE}}:${{NSFW?'nsfw':'sfw'}}`;
-
-    async function loadAndRenderModels(){{
+    let PURPOSE = 'text2video';
+    const PAGE_KEY = () => `video:${PURPOSE}:${NSFW?'nsfw':'sfw'}`;
+    async function loadAndRenderModels(){
       const models = await LMS.loadModels('video', NSFW, PURPOSE);
       const sel = LMS.getSelectedModel(PAGE_KEY());
       if(!sel && models.length) LMS.setSelectedModel(PAGE_KEY(), models[0].id);
-      LMS.renderModelTabs({{
+      LMS.renderModelTabs({
         container: document.getElementById('model-tabs'),
         models,
         onSelect: (id)=> LMS.setSelectedModel(PAGE_KEY(), id),
         activeId: LMS.getSelectedModel(PAGE_KEY()),
-        title: NSFW ? "Kompatible Video-Modelle (NSFW-geeignet)" : "Kompatible Video-Modelle (SVD)"
-      }});
-    }}
-
-    async function loadAndRenderSuggestions(){{
+        title: NSFW ? 'Kompatible Video‑Modelle (NSFW‑geeignet)' : 'Kompatible Video‑Modelle (SVD)'
+      });
+    }
+    async function loadAndRenderSuggestions(){
       const sug = await fetchSuggestions('video', NSFW, PURPOSE);
       const catWrap = document.getElementById('cat-chips');
       const ideasWrap = document.getElementById('prompt-suggestions');
       const txt = document.getElementById('prompt');
-      catWrap.innerHTML = ''; ideasWrap.innerHTML='';
-      (sug.categories||[]).forEach(c=>{{
+      catWrap.innerHTML = ''; ideasWrap.innerHTML = '';
+      (sug.categories||[]).forEach(c=>{
         const b = document.createElement('button');
         b.type='button'; b.className='chip'; b.textContent=c.label;
-        b.addEventListener('click', ()=>{{
+        b.addEventListener('click', ()=>{
           ideasWrap.innerHTML='';
-          (c.ideas||[]).forEach(p=>{{
+          (c.ideas||[]).forEach(p=>{
             const a=document.createElement('button');
             a.type='button'; a.className='btn ghost'; a.textContent=p;
             a.addEventListener('click', ()=> pushPrompt(txt, p));
             ideasWrap.appendChild(a);
-          }});
-        }});
+          });
+        });
         catWrap.appendChild(b);
-      }});
-      document.getElementById('btn-random').onclick = ()=>{{
+      });
+      document.getElementById('btn-random').onclick = ()=>{
         const cats = sug.categories||[]; if(!cats.length) return;
         const c = cats[Math.floor(Math.random()*cats.length)];
         const idea = (c.ideas||[])[Math.floor(Math.random()*(c.ideas||[]).length)] || '';
         const mod = (sug.modifiers||[])[Math.floor(Math.random()*(sug.modifiers||[]).length)] || '';
         const rp = [idea, mod].filter(Boolean).join(', ');
         if (rp) document.getElementById('prompt').value = rp;
-      }};
-    }}
+      };
 
-    // Remix populate
-    (async ()=>{{
+      // Auto-select the first category to immediately display its suggestions
+      const firstCatBtn = catWrap.querySelector('button');
+      if(firstCatBtn){ firstCatBtn.click(); }
+    }
+    async function applyMode(){
+      PURPOSE = modeSel.value;
+      modeHidden.value = PURPOSE;
+      // Show/hide start frame upload when switching between text and image mode
+      initBlock.classList.toggle('hidden', PURPOSE !== 'img2video');
+      await loadAndRenderModels();
+      await loadAndRenderSuggestions();
+    }
+    // Hook up elements
+    const modeSel = document.getElementById('mode');
+    const modeHidden = document.getElementById('mode_input');
+    const initBlock = document.getElementById('init-block');
+    modeSel.addEventListener('change', applyMode);
+    await applyMode();
+    // Populate remix select with gallery images
+    (async ()=>{
       const remixSel = document.getElementById('remix');
       const initUrl = document.getElementById('init_url');
-      if (remixSel){{
-        try{{ const files = await fetchGalleryImages();
-          (files||[]).forEach(f=>{{
+      if (remixSel){
+        try{ const files = await fetchGalleryImages();
+          (files.items||[]).forEach(f=>{
             const o = document.createElement('option');
             o.value = f.url || f.file || f.path || '';
             o.textContent = f.name || o.value.split('/').pop();
             remixSel.appendChild(o);
-          }});
-          remixSel.addEventListener('change', ()=>{{ initUrl.value = remixSel.value || ''; }});
-        }}catch(e){{ console.warn('remix list failed', e); }}
-      }}
-    }})();
-
-    const modeSel = document.getElementById('mode');
-    const modeHidden = document.getElementById('mode_input');
-    const initBlock = document.getElementById('init-block');
-
-    async function applyMode(){{
-      PURPOSE = modeSel.value;
-      modeHidden.value = PURPOSE;
-      initBlock.classList.toggle('hidden', PURPOSE !== 'img2video');
-      await loadAndRenderModels();
-      await loadAndRenderSuggestions();
-    }}
-
-    modeSel.addEventListener('change', applyMode);
-    await applyMode();
-
+          });
+          remixSel.addEventListener('change', ()=>{ initUrl.value = remixSel.value || ''; });
+        }catch(e){ console.warn('remix list failed', e); }
+      }
+    })();
+    // Attach model selection to form
     LMS.attachModelToForm(document.getElementById('video-form'), PAGE_KEY());
-    document.getElementById('btn-clear').addEventListener('click', ()=>{{ document.getElementById('prompt').value=''; }});
-
-    window.LMS.onGenerated = (url)=>{{
+    document.getElementById('btn-clear').addEventListener('click', ()=>{ document.getElementById('prompt').value=''; });
+    window.LMS.onGenerated = (url)=>{
       const box = document.getElementById('last-output');
       const vid = document.getElementById('last-vid');
       vid.src = url; vid.play();
       box.classList.remove('hidden');
-    }};
-  }})();
+      LMS.toast('Dein Video wurde generiert und ist in der Galerie verfügbar.', 'success');
+    };
+  })();
   </script>
 </body>
 </html>
