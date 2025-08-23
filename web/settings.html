@@ -1,115 +1,361 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>LocalMediaSuite – Settings</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="assets/styles.css">
-  <script defer src="assets/app.js"></script>
+  <meta name="color-scheme" content="dark" />
+  <style>
+    :root{ --bg:#0b1220; --panel:#0f172a; --stroke:#243244; --text:#e5e7eb; --muted:#94a3b8; --radius:16px; --gap:18px; --focus:#22d3ee; }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;background:var(--bg);color:var(--text);
+      font-family:system-ui,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)
+    }
+
+    /* Header */
+    header{
+      position:sticky;top:0;z-index:10;
+      background:#0f172acc;border-bottom:1px solid var(--stroke);backdrop-filter:blur(8px)
+    }
+    .topbar{
+      width:100%;
+      padding:16px clamp(10px, 2.4vw, 28px);
+      display:flex;align-items:center;justify-content:center;gap:12px
+    }
+    .logo-dot{ width:18px;height:18px;border-radius:50%;background:#22d3ee;box-shadow:0 0 18px #22d3ee }
+    .brand{
+      margin:0;font-weight:900;letter-spacing:.4px;text-align:center;
+      font-size:clamp(24px,3.8vw,40px);
+      text-shadow:0 0 8px rgba(229,231,235,.25),0 0 20px rgba(34,211,238,.28)
+    }
+    .subtitle{ color:var(--muted);font-size:clamp(12px,1.6vw,14px); text-align:center; margin-top:-6px }
+
+    /* Layout */
+    .wrap{ width:100%; padding: 16px clamp(10px, 2.4vw, 28px) 28px }
+    .grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--gap) }
+    @media (max-width:1000px){ .grid{ grid-template-columns:1fr } }
+
+    .card{
+      background:linear-gradient(180deg,#0f172a,#0b1320);
+      border:1px solid var(--stroke);
+      border-radius:var(--radius);
+      overflow:hidden
+    }
+    .card h3{
+      margin:0;padding:14px 16px;border-bottom:1px solid var(--stroke);
+      font-size:16px;letter-spacing:.2px;background:#0f172a
+    }
+    .card .body{ padding:14px 16px; display:grid; gap:12px }
+    .row{ display:grid; grid-template-columns:220px 1fr; gap:12px; align-items:center }
+    @media (max-width:700px){ .row{ grid-template-columns:1fr } .row label{ margin-bottom:6px } }
+    label{ color:var(--muted); font-size:13px }
+
+    input[type="text"], input[type="number"], select, textarea{
+      width:100%; background:#0b1320; color:var(--text);
+      border:1px solid var(--stroke); border-radius:12px; padding:10px 12px; font-size:14px;
+      outline:none; transition:border-color .12s ease, box-shadow .12s ease
+    }
+    input:focus, select:focus, textarea:focus{
+      border-color:var(--focus); box-shadow:0 0 0 2px rgba(34,211,238,.2)
+    }
+    .hint{ color:var(--muted); font-size:12px }
+
+    .switch{
+      --w:46px; --h:26px;
+      position:relative; width:var(--w); height:var(--h); border-radius:var(--h);
+      background:#1e293b; border:1px solid var(--stroke); cursor:pointer; transition:all .15s ease
+    }
+    .switch::after{
+      content:""; position:absolute; top:2px; left:2px; width:22px; height:22px; border-radius:50%;
+      background:#e5e7eb; transition:left .15s ease, background .15s ease
+    }
+    .switch.on{ background:#0ea5e9; border-color:#0891b2 }
+    .switch.on::after{ left:calc(var(--w) - 24px) ; background:#fff }
+
+    .actions{ display:flex; gap:10px; justify-content:flex-end; padding-top:8px }
+    .btn{
+      border:1px solid var(--stroke); border-radius:12px; background:#0e1626; color:var(--text);
+      padding:10px 14px; font-weight:700; cursor:pointer; transition:transform .1s ease,border-color .12s ease
+    }
+    .btn:hover{ transform:translateY(-1px); border-color:#3b4a5f }
+    .btn.primary{ border-color:var(--focus); box-shadow:0 0 0 2px rgba(34,211,238,.2) inset }
+    .sep{ height:1px; background:var(--stroke); margin:6px 0 }
+
+    .success{ color:#34d399; font-size:13px; display:none }
+    .error{ color:#f87171; font-size:13px; display:none }
+  </style>
 </head>
 <body>
   <header>
-    <h1 class="text-xl font-bold">LocalMediaSuite</h1>
-    <nav class="flex gap-2 flex-wrap">
-      <a href="index.html">Home</a>
-      <a href="image.html">Image (SFW)</a>
-      <a href="image_nsfw.html">Image (NSFW)</a>
-      <a href="video.html">Video (SFW)</a>
-      <a href="video_nsfw.html">Video (NSFW)</a>
-      <a href="gallery.html">Gallery</a>
-      <a href="catalog.html">Catalog</a>
-      <a href="settings.html" class="active">Settings</a>
-    </nav>
+    <div class="topbar">
+      <span class="logo-dot"></span>
+      <h1 class="brand">LocalMediaSuite</h1>
+      <span class="logo-dot"></span>
+    </div>
+    <div class="topbar" style="padding-top:0">
+      <div class="subtitle">Settings · Einheitliches UI, TV/Phone-ready</div>
+    </div>
   </header>
-  <main style="padding:2rem;max-width:700px;margin:0 auto;">
-    <form id="settings-form" class="card">
-      <h2 class="text-lg font-semibold mb-4">Einstellungen</h2>
-      <div class="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <label class="label" for="img_resolution">Image Resolution</label>
-          <select id="img_resolution" name="img_resolution" class="input">
-            <option value="768x768">768×768</option>
-            <option value="1024x768">1024×768</option>
-            <option value="1024x1024">1024×1024</option>
-            <option value="1536x1024">1536×1024</option>
-            <option value="1920x1080">1920×1080</option>
-          </select>
+
+  <div class="wrap">
+    <h2 style="margin:0 0 14px 0;font-size:18px;font-weight:800">Einstellungen</h2>
+    <p class="hint" style="margin:0 0 18px 0">Deine Änderungen werden lokal gespeichert. Backend-Integration kannst du später anbinden.</p>
+
+    <div class="grid">
+
+      <!-- Allgemein -->
+      <section class="card" id="card-general">
+        <h3>Allgemein</h3>
+        <div class="body">
+          <div class="row">
+            <label for="appName">App-Name</label>
+            <input id="appName" type="text" placeholder="LocalMediaSuite">
+          </div>
+          <div class="row">
+            <label for="slogan">Slogan</label>
+            <input id="slogan" type="text" placeholder="Smarte Medien. Schnell generiert.">
+          </div>
+          <div class="row">
+            <label>Dark Mode</label>
+            <div id="darkMode" class="switch on" role="switch" aria-checked="true" tabindex="0"></div>
+          </div>
+          <div class="actions">
+            <button class="btn" id="resetGeneral">Zurücksetzen</button>
+          </div>
         </div>
-        <div>
-          <label class="label" for="vid_resolution">Video Resolution</label>
-          <select id="vid_resolution" name="vid_resolution" class="input">
-            <option value="1280x720">1280×720</option>
-            <option value="1920x1080">1920×1080</option>
-            <option value="1024x576">1024×576</option>
-          </select>
+      </section>
+
+      <!-- Pfade -->
+      <section class="card" id="card-paths">
+        <h3>Pfade</h3>
+        <div class="body">
+          <div class="row">
+            <label for="pathImages">Bilder-Ordner</label>
+            <input id="pathImages" type="text" placeholder="G:\\mediasuit\\data\\images">
+          </div>
+          <div class="row">
+            <label for="pathVideos">Videos-Ordner</label>
+            <input id="pathVideos" type="text" placeholder="G:\\mediasuit\\data\\videos">
+          </div>
+          <div class="row">
+            <label for="pathCache">Cache-Ordner</label>
+            <input id="pathCache" type="text" placeholder="G:\\mediasuit\\cache">
+          </div>
+          <div class="actions">
+            <button class="btn" id="openFolders">Ordner öffnen</button>
+          </div>
         </div>
-        <div>
-          <label class="label" for="vid_fps">Video FPS</label>
-          <input id="vid_fps" class="input" type="number" name="vid_fps" min="1" max="60" value="24">
+      </section>
+
+      <!-- Modelle -->
+      <section class="card" id="card-models">
+        <h3>Modelle</h3>
+        <div class="body">
+          <div class="row">
+            <label for="imgModel">Bild-Modell</label>
+            <select id="imgModel">
+              <option value="sdxl">SDXL</option>
+              <option value="sd15">SD 1.5</option>
+              <option value="flux">FLUX</option>
+            </select>
+          </div>
+          <div class="row">
+            <label for="vidModel">Video-Modell</label>
+            <select id="vidModel">
+              <option value="svd15">SVD 1.5</option>
+              <option value="svdxt">SVD XT</option>
+              <option value="latents">Latents (fast)</option>
+            </select>
+          </div>
+          <div class="row">
+            <label>NSFW erlauben</label>
+            <div id="allowNsfw" class="switch" role="switch" aria-checked="false" tabindex="0"></div>
+          </div>
+          <div class="actions">
+            <button class="btn" id="refreshModels">Modelle neu laden</button>
+          </div>
         </div>
-        <div>
-          <label class="label" for="vid_length_sec">Video Length (sec)</label>
-          <input id="vid_length_sec" class="input" type="number" name="vid_length_sec" min="1" max="60" value="3">
+      </section>
+
+      <!-- Performance -->
+      <section class="card" id="card-perf">
+        <h3>Performance</h3>
+        <div class="body">
+          <div class="row">
+            <label for="gpuIndex">GPU Index</label>
+            <input id="gpuIndex" type="number" min="0" step="1" placeholder="0">
+          </div>
+          <div class="row">
+            <label for="batchSize">Batch Size</label>
+            <input id="batchSize" type="number" min="1" step="1" placeholder="2">
+          </div>
+          <div class="row">
+            <label for="precision">Precision</label>
+            <select id="precision">
+              <option value="fp16">FP16</option>
+              <option value="fp32">FP32</option>
+              <option value="bf16">BF16</option>
+            </select>
+          </div>
+          <div class="actions">
+            <button class="btn" id="runBenchmark">Benchmark</button>
+          </div>
         </div>
-        <div>
-          <label class="label" for="theme">Theme</label>
-          <select id="theme" name="theme" class="input">
-            <option value="dark" selected>Dark</option>
-            <option value="light">Light</option>
-          </select>
+      </section>
+
+      <!-- Netzwerk -->
+      <section class="card" id="card-network">
+        <h3>Netzwerk</h3>
+        <div class="body">
+          <div class="row">
+            <label for="host">Host</label>
+            <input id="host" type="text" placeholder="0.0.0.0">
+          </div>
+          <div class="row">
+            <label for="port">Port</label>
+            <input id="port" type="number" min="1" max="65535" placeholder="3000">
+          </div>
+          <div class="row">
+            <label for="authToken">Auth Token</label>
+            <input id="authToken" type="text" placeholder="optional">
+          </div>
+          <div class="actions">
+            <button class="btn" id="restartServer">Server neu starten</button>
+          </div>
         </div>
-      </div>
-      <div class="flex gap-3 mt-6">
-        <button type="submit" class="btn primary">Speichern</button>
-      </div>
-    </form>
-  </main>
+      </section>
+
+      <!-- Aktionen -->
+      <section class="card" id="card-actions">
+        <h3>Aktionen</h3>
+        <div class="body">
+          <div class="row">
+            <label>Konfiguration</label>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn" id="load">Laden</button>
+              <button class="btn" id="export">Exportieren</button>
+              <button class="btn primary" id="save">Speichern</button>
+            </div>
+          </div>
+          <div class="sep"></div>
+          <div class="success" id="okMsg">Gespeichert.</div>
+          <div class="error" id="errMsg">Fehler beim Speichern.</div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
   <script>
-  // Load current settings on page load
-  document.addEventListener('DOMContentLoaded', async function(){
-    try {
-      const current = await LMS.fetchJSON('/api/settings').catch(() => null);
-      if (current && current.defaults) {
-        const {img_resolution, vid_resolution, vid_fps, vid_length_sec} = current.defaults;
-        if (img_resolution) document.getElementById('img_resolution').value = img_resolution;
-        if (vid_resolution) document.getElementById('vid_resolution').value = vid_resolution;
-        if (vid_fps) document.getElementById('vid_fps').value = vid_fps;
-        if (vid_length_sec) document.getElementById('vid_length_sec').value = vid_length_sec;
+    // ---- kleine Helper
+    const $ = (sel) => document.querySelector(sel);
+    const getSwitch = (el) => el.classList.contains('on');
+    const setSwitch = (el, v) => { el.classList.toggle('on', !!v); el.setAttribute('aria-checked', !!v); };
+    const bindSwitch = (id) => {
+      const el = $(id);
+      el.addEventListener('click', () => setSwitch(el, !getSwitch(el)));
+      el.addEventListener('keydown', (e) => { if(e.key===' '||e.key==='Enter'){ e.preventDefault(); setSwitch(el, !getSwitch(el)); } });
+      return el;
+    };
+
+    // ---- Elemente
+    const appName = $('#appName');
+    const slogan = $('#slogan');
+    const darkMode = bindSwitch('#darkMode');
+    const pathImages = $('#pathImages');
+    const pathVideos = $('#pathVideos');
+    const pathCache  = $('#pathCache');
+    const imgModel = $('#imgModel');
+    const vidModel = $('#vidModel');
+    const allowNsfw = bindSwitch('#allowNsfw');
+    const gpuIndex = $('#gpuIndex');
+    const batchSize = $('#batchSize');
+    const precision = $('#precision');
+    const host = $('#host');
+    const port = $('#port');
+    const authToken = $('#authToken');
+
+    const okMsg = $('#okMsg'); const errMsg = $('#errMsg');
+
+    // ---- Load/Save aus localStorage
+    const KEY = 'lms_settings_v1';
+    function loadCfg(){
+      const raw = localStorage.getItem(KEY);
+      if(!raw) return;
+      try{
+        const s = JSON.parse(raw);
+        appName.value = s.appName ?? '';
+        slogan.value  = s.slogan ?? '';
+        setSwitch(darkMode, !!s.darkMode);
+        pathImages.value = s.pathImages ?? '';
+        pathVideos.value = s.pathVideos ?? '';
+        pathCache.value  = s.pathCache ?? '';
+        imgModel.value = s.imgModel ?? 'sdxl';
+        vidModel.value = s.vidModel ?? 'svd15';
+        setSwitch(allowNsfw, !!s.allowNsfw);
+        gpuIndex.value = s.gpuIndex ?? 0;
+        batchSize.value = s.batchSize ?? 2;
+        precision.value = s.precision ?? 'fp16';
+        host.value = s.host ?? '0.0.0.0';
+        port.value = s.port ?? 3000;
+        authToken.value = s.authToken ?? '';
+      }catch(e){ console.warn(e); }
+    }
+    function saveCfg(){
+      try{
+        const s = {
+          appName: appName.value.trim(),
+          slogan: slogan.value.trim(),
+          darkMode: getSwitch(darkMode),
+          pathImages: pathImages.value.trim(),
+          pathVideos: pathVideos.value.trim(),
+          pathCache:  pathCache.value.trim(),
+          imgModel: imgModel.value,
+          vidModel: vidModel.value,
+          allowNsfw: getSwitch(allowNsfw),
+          gpuIndex: Number(gpuIndex.value || 0),
+          batchSize: Number(batchSize.value || 2),
+          precision: precision.value,
+          host: host.value.trim(),
+          port: Number(port.value || 3000),
+          authToken: authToken.value.trim(),
+        };
+        localStorage.setItem(KEY, JSON.stringify(s));
+        okMsg.style.display='block'; errMsg.style.display='none';
+        setTimeout(()=>okMsg.style.display='none', 2000);
+      }catch(e){
+        errMsg.style.display='block'; okMsg.style.display='none';
       }
-      if (current && current.ui && current.ui.theme) {
-        document.getElementById('theme').value = current.ui.theme;
-      }
-    } catch {}
-  });
-  // Save settings
-  (async function(){
-    const form = document.getElementById('settings-form');
-    form.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(form).entries());
-      const patch = {
-        defaults: {
-          img_resolution: data.img_resolution,
-          vid_resolution: data.vid_resolution,
-          vid_fps: Number(data.vid_fps || 24),
-          vid_length_sec: Number(data.vid_length_sec || 3)
-        },
-        ui: {
-          theme: data.theme || 'dark'
-        }
-      };
-      try {
-        await LMS.fetchJSON('/api/settings', {
-          method: 'PUT',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(patch)
-        });
-        LMS.toast('Einstellungen gespeichert', 'success');
-      } catch {
-        LMS.toast('Fehler beim Speichern der Einstellungen', 'error');
-      }
+    }
+
+    // ---- Buttons
+    document.getElementById('save').addEventListener('click', saveCfg);
+    document.getElementById('load').addEventListener('click', loadCfg);
+    document.getElementById('export').addEventListener('click', () => {
+      const raw = localStorage.getItem(KEY) || '{}';
+      const blob = new Blob([raw], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'lms_settings.json';
+      a.click();
     });
-  })();
+    document.getElementById('resetGeneral').addEventListener('click', () => {
+      appName.value = 'LocalMediaSuite';
+      slogan.value  = 'Smarte Medien. Schnell generiert.';
+      setSwitch(darkMode, true);
+    });
+
+    // ---- Dummy-Aktionen (später echte API)
+    document.getElementById('refreshModels').addEventListener('click', ()=>alert('Modelle neu geladen (Demo)'));
+    document.getElementById('runBenchmark').addEventListener('click', ()=>alert('Benchmark gestartet (Demo)'));
+    document.getElementById('restartServer').addEventListener('click', ()=>alert('Server Neustart angefordert (Demo)'));
+    document.getElementById('openFolders').addEventListener('click', ()=>alert('Ordner öffnen (Demo)'));
+
+    // ---- Init
+    loadCfg();
   </script>
 </body>
 </html>

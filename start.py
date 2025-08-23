@@ -8,6 +8,7 @@ import socket
 import subprocess
 import logging
 from pathlib import Path
+from server.server import build_app
 
 # Configure logging
 logging.basicConfig(

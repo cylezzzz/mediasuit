@@ -1,0 +1,8 @@
+{
+  "backend": {
+    "type": "custom",
+    "respond_url": "http://127.0.0.1:8000/api/respond"
+  },
+  "temperature": 0.8,
+  "max_tokens": 128
+}

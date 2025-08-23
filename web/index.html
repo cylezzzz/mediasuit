@@ -1,53 +1,207 @@
-<!doctype html><html lang="de"><head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
-    <link rel="icon" type="image/png" href="/assets/logo.png" />
-    <link rel="icon" href="/assets/logo.ico" sizes="any" />
-    <meta name="theme-color" content="#0a0e13" />
-<title>LocalMediaSuite</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="/assets/styles.css" />
-<script defer src="/assets/app.js"></script>
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        base: { bg: "#0a0e13", card:"#111827", border:"#1f2937", text:"#f3f4f6", sub:"#9ca3af", accent:"#3b82f6" }
-      }
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>LocalMediaSuite – Home</title>
+  <meta name="color-scheme" content="dark" />
+  <style>
+    :root{ --bg:#0b1220; --panel:#0f172a; --stroke:#243244; --text:#e5e7eb; --muted:#94a3b8; --radius:16px; --gap:18px; }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0;background:var(--bg);color:var(--text);
+      font-family:system-ui,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)
     }
-  }
-}
-</script>
-</head><body>
-    <header class="sticky top-0 z-10 bg-[var(--bg)]/80 backdrop-blur border-b border-[var(--border)]">
-      <div class="max-w-6xl mx-auto flex items-center gap-4 p-4">
-        <img src="/assets/logo.svg" class="w-8 h-8" />
-        <nav class="flex gap-4 text-sm">
-          <a class="px-3 py-1 rounded bg-blue-600 text-white" href="/index.html">Home</a>
-          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/image.html">Image (SFW)</a>
-          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/image_nsfw.html">Image (NSFW)</a>
-          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/video.html">Video (SFW)</a>
-          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/video_nsfw.html">Video (NSFW)</a>
-          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/gallery.html">Galerie</a>
-          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/catalog.html">Katalog</a>
-          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/settings.html">Settings</a>
-        </nav>
-      </div>
-    </header>
-    <main class="max-w-6xl mx-auto p-4 space-y-6">
-<section class="card">
-  <h1 class="text-2xl font-semibold mb-2">LocalMediaSuite</h1>
-  <p class="text-base-sub">Willkommen. Wähle eine Funktion.</p>
-  <div class="grid md:grid-cols-3 gap-4 mt-4">
-    <a href="/image.html" class="card hover:ring-1 hover:ring-blue-500"><h3 class="font-semibold">Bild (SFW)</h3><p>Text→Bild, Bild→Bild</p></a>
-    <a href="/image_nsfw.html" class="card hover:ring-1 hover:ring-blue-500"><h3 class="font-semibold">Bild (NSFW)</h3><p>Ungefiltert, Adult</p></a>
-    <a href="/video.html" class="card hover:ring-1 hover:ring-blue-500"><h3 class="font-semibold">Video (SFW)</h3><p>Text→Video, Bild→Video</p></a>
-    <a href="/video_nsfw.html" class="card hover:ring-1 hover:ring-blue-500"><h3 class="font-semibold">Video (NSFW)</h3><p>Ungefiltert, Adult</p></a>
-    <a href="/gallery.html" class="card hover:ring-1 hover:ring-blue-500"><h3 class="font-semibold">Galerie</h3><p>Alle Ergebnisse mit Player</p></a>
-    <a href="/catalog.html" class="card hover:ring-1 hover:ring-blue-500"><h3 class="font-semibold">Katalog</h3><p>Modelle/Agenten (Ollama/SD/SVD)</p></a>
-  </div>
-</section>
-</main>
-    </body></html>
+
+    /* Header zentriert & groß */
+    header{
+      position:sticky;top:0;z-index:10;
+      background:#0f172acc;border-bottom:1px solid var(--stroke);backdrop-filter:blur(8px)
+    }
+    .topbar{
+      width:100%;
+      padding:16px clamp(10px, 2.4vw, 28px);
+      display:flex;align-items:center;justify-content:center;gap:12px
+    }
+    .logo-dot{ width:18px;height:18px;border-radius:50%;background:#22d3ee;box-shadow:0 0 18px #22d3ee }
+    .brand{
+      margin:0;font-weight:900;letter-spacing:.4px;text-align:center;
+      font-size:clamp(24px,3.8vw,40px);
+      text-shadow:0 0 8px rgba(229,231,235,.25),0 0 20px rgba(34,211,238,.28)
+    }
+    .subtitle{ color:var(--muted);font-size:clamp(12px,1.6vw,14px); text-align:center; margin-top:-6px }
+
+    /* Vollbreite mit schlanken Rändern */
+    .wrap{ width:100%; padding: 16px clamp(10px, 2.4vw, 28px) 28px }
+
+    /* Grid responsiv */
+    .grid{ display:grid; gap:var(--gap); grid-template-columns:repeat(3,minmax(0,1fr)) }
+    @media (max-width:1100px){ .grid{ grid-template-columns:repeat(2,1fr) } }
+    @media (max-width:640px) { .grid{ grid-template-columns:1fr } }
+
+    .card{border:1px solid var(--stroke);border-radius:var(--radius);overflow:hidden;background:linear-gradient(180deg,#0f172a,#0b1320)}
+    .card a{display:block;color:inherit;text-decoration:none}
+
+    /* >>> rechteckiger: mehr Höhe über clamp */
+    .thumb{
+      position:relative;
+      height:clamp(260px, 32vh, 360px);
+      border-bottom:1px solid var(--stroke);
+      background:#0b1320
+    }
+    .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s ease}
+    .thumb img.show{opacity:1}
+
+    .meta{padding:12px 14px}
+    .title{font-weight:800}
+    .desc{color:var(--muted);font-size:13px}
+    .badge{position:absolute;top:10px;right:10px;background:#fff;color:#000;border-radius:10px;padding:2px 8px;font-weight:900;font-size:12px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <span class="logo-dot"></span>
+      <h1 class="brand">LocalMediaSuite</h1>
+      <span class="logo-dot"></span>
+    </div>
+    <div class="topbar" style="padding-top:0">
+      <div id="slogan" class="subtitle">Smarte Medien. Schnell generiert.</div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <main class="grid">
+
+      <!-- BILD (SFW) -->
+      <article class="card">
+        <a href="image.html">
+          <div class="thumb" data-images="assets/thumbs/image_1.png,assets/thumbs/image_1_1.png,assets/thumbs/image_2.png,assets/thumbs/image_2_2.png">
+            <img alt="Bild (SFW)"><img alt="Bild (SFW)">
+          </div>
+          <div class="meta"><div class="title">BILD</div><div class="desc">Text→Bild, Bild→Bild</div></div>
+        </a>
+      </article>
+
+      <!-- BILD (NSFW) -->
+      <article class="card">
+        <a href="image_nsfw.html">
+          <div class="thumb" data-images="assets/thumbs/imageab18_1.png,assets/thumbs/imageab18_2.png,assets/thumbs/image_nsfw_1.png,assets/thumbs/image_nsfw_2.png">
+            <span class="badge">18+</span>
+            <img alt="Bild (NSFW)"><img alt="Bild (NSFW)">
+          </div>
+          <div class="meta"><div class="title">PORN BILD</div><div class="desc">Ungefiltert, Adult</div></div>
+        </a>
+      </article>
+
+      <!-- VIDEO (SFW) -->
+      <article class="card">
+        <a href="video.html">
+          <div class="thumb" data-images="assets/thumbs/video_1.png,assets/thumbs/video_1_1.png,assets/thumbs/video_2.png,assets/thumbs/video_2_2.png">
+            <img alt="Video (SFW)"><img alt="Video (SFW)">
+          </div>
+          <div class="meta"><div class="title">VIDEO</div><div class="desc">Text→Video, Bild→Video</div></div>
+        </a>
+      </article>
+
+      <!-- VIDEO (NSFW) -->
+      <article class="card">
+        <a href="video_nsfw.html">
+          <div class="thumb" data-images="assets/thumbs/video_nsfw_1.png,assets/thumbs/video_nsfw_1_1.png,assets/thumbs/video_nsfw_2.png,assets/thumbs/video_nsfw_2_2.png">
+            <span class="badge">18+</span>
+            <img alt="Video (NSFW)"><img alt="Video (NSFW)">
+          </div>
+          <div class="meta"><div class="title">PORN VIDEO</div><div class="desc">Ungefiltert, Adult</div></div>
+        </a>
+      </article>
+
+      <!-- GALERIE -->
+      <article class="card">
+        <a href="gallery.html">
+          <div class="thumb" data-images="assets/thumbs/gallery_1.png,assets/thumbs/gallery_1_1.png,assets/thumbs/gallery_2.png,assets/thumbs/gallery_2_2.png">
+            <img alt="Galerie"><img alt="Galerie">
+          </div>
+          <div class="meta"><div class="title">GALERIE</div><div class="desc">Alle Ergebnisse</div></div>
+        </a>
+      </article>
+
+      <!-- KATALOG -->
+      <article class="card">
+        <a href="catalog.html">
+          <div class="thumb" data-images="assets/thumbs/catalog_1.png,assets/thumbs/catalog_1_1.png,assets/thumbs/catalog_2.png,assets/thumbs/catalog_2_2.png">
+            <img alt="Katalog"><img alt="Katalog">
+          </div>
+          <div class="meta"><div class="title">KATALOG</div><div class="desc">Modelle & Agenten</div></div>
+        </a>
+      </article>
+
+      <!-- SETTINGS -->
+      <article class="card">
+        <a href="settings.html">
+          <div class="thumb" data-images="assets/thumbs/settings_1.png,assets/thumbs/settings_1_1.png,assets/thumbs/settings_2.png,assets/thumbs/settings_2_2.png">
+            <img alt="Settings"><img alt="Settings">
+          </div>
+          <div class="meta"><div class="title">SETTINGS</div><div class="desc">Server, Pfade, Devices</div></div>
+        </a>
+      </article>
+
+      <!-- ADVANCED IMAGE -->
+      <article class="card">
+        <a href="advanced_image.html">
+          <div class="thumb" data-images="assets/thumbs/advanced_image_1.png,assets/thumbs/advanced_image_1_1.png,assets/thumbs/advanced_image_2.png,assets/thumbs/advanced_image_2_2.png">
+            <img alt="Advanced Image"><img alt="Advanced Image">
+          </div>
+          <div class="meta"><div class="title">ADVANCED</div><div class="desc">Masking · Control · Batch</div></div>
+        </a>
+      </article>
+
+      <!-- FLIRT KI -->
+<article class="card">
+  <a href="flirt.html">
+    <div class="thumb" data-images="assets/thumbs/flirt_1.png,assets/thumbs/flirt_2.png,assets/thumbs/flirt_3.png,assets/thumbs/flirt_4.png">
+      <img alt="Flirt KI"><img alt="Flirt KI">
+    </div>
+    <div class="meta"><div class="title">FLIRT KI</div><div class="desc">Charmante Antworten</div></div>
+  </a>
+</article>
+
+  <script>
+    // ------- Synchroner Crossfade für ALLE Kacheln -------
+    const TICK_MS = 2000;
+
+    // Alle .thumbs konfigurieren (A/B Layer)
+    const thumbs = Array.from(document.querySelectorAll('.thumb')).map(t => {
+      const urls = (t.dataset.images||'').split(',').map(s => s.trim()).filter(Boolean);
+      const [imgA, imgB] = t.querySelectorAll('img');
+      // Preload
+      urls.forEach(u => { const i = new Image(); i.src = u; });
+      // Start
+      if (urls.length) {
+        imgA.src = urls[0]; imgA.classList.add('show');
+        imgB.src = urls[1 % urls.length];
+      }
+      return { urls, imgA, imgB, showA: true };
+    });
+
+    let step = 1;
+    setInterval(() => {
+      step++;
+      thumbs.forEach(o => {
+        const { urls, imgA, imgB } = o;
+        if (!urls.length) return;
+        const nextIdx = step % urls.length;
+        if (o.showA) { imgB.src = urls[nextIdx]; imgB.classList.add('show'); imgA.classList.remove('show'); }
+        else         { imgA.src = urls[nextIdx]; imgA.classList.add('show'); imgB.classList.remove('show'); }
+        o.showA = !o.showA;
+      });
+    }, TICK_MS);
+  </script>
+
+  <noscript>
+    <div style="margin:16px clamp(10px,2.4vw,28px);border:1px solid #334155;border-radius:14px;padding:14px;background:#0f172a;color:#e5e7eb">
+      JavaScript deaktiviert – die Previews wechseln dann nicht. Alle Links funktionieren trotzdem.
+    </div>
+  </noscript>
+</body>
+</html>

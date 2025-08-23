@@ -1,1397 +1,159 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>LocalMediaSuite – Image Transform & Animation (Adult)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="assets/styles.css">
-  <script defer src="assets/app.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>LocalMediaSuite – Advanced Image</title>
+  <meta name="color-scheme" content="dark" />
   <style>
-    .transform-workspace {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 20px;
+    :root{ --bg:#0b1220; --panel:#0f172a; --stroke:#243244; --text:#e5e7eb; --muted:#94a3b8; --radius:16px; --gap:18px; --focus:#22d3ee; }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0;background:var(--bg);color:var(--text);
+      font-family:system-ui,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)
     }
-    
-    .workspace-grid {
-      display: grid;
-      grid-template-columns: 300px 1fr 300px;
-      gap: 20px;
-      min-height: calc(100vh - 200px);
+    header{position:sticky;top:0;z-index:10;background:#0f172acc;border-bottom:1px solid var(--stroke);backdrop-filter:blur(8px)}
+    .topbar{width:100%;padding:16px clamp(10px,2.4vw,28px);display:flex;align-items:center;justify-content:center;gap:12px}
+    .logo-dot{width:18px;height:18px;border-radius:50%;background:#22d3ee;box-shadow:0 0 18px #22d3ee}
+    .brand{margin:0;font-weight:900;font-size:clamp(24px,3.8vw,40px);text-align:center;text-shadow:0 0 8px rgba(229,231,235,.25),0 0 20px rgba(34,211,238,.28)}
+    .subtitle{color:var(--muted);font-size:clamp(12px,1.6vw,14px);text-align:center;margin-top:-6px}
+
+    .wrap{width:100%;padding:16px clamp(10px,2.4vw,28px) 28px}
+    .grid{display:grid;grid-template-columns:2fr 1fr;gap:var(--gap)}
+    @media(max-width:1100px){.grid{grid-template-columns:1fr}}
+
+    .card{background:linear-gradient(180deg,#0f172a,#0b1320);border:1px solid var(--stroke);border-radius:var(--radius);overflow:hidden}
+    .card h3{margin:0;padding:14px 16px;border-bottom:1px solid var(--stroke);font-size:16px;background:#0f172a}
+    .card .body{padding:14px 16px;display:grid;gap:12px}
+    .row{display:grid;grid-template-columns:160px 1fr;gap:12px;align-items:center}
+    @media(max-width:700px){.row{grid-template-columns:1fr} .row label{margin-bottom:6px}}
+    label{color:var(--muted);font-size:13px}
+    input[type="text"],input[type="number"],select,textarea{
+      width:100%;background:#0b1320;color:var(--text);
+      border:1px solid var(--stroke);border-radius:12px;padding:10px 12px;font-size:14px;
+      outline:none;transition:border-color .12s ease,box-shadow .12s ease
     }
-    
-    .tools-panel {
-      background: linear-gradient(135deg, #1a1a1a, #2a1a2a);
-      border: 1px solid #e91e63;
-      border-radius: 15px;
-      padding: 20px;
-      height: fit-content;
-      position: sticky;
-      top: 20px;
-      box-shadow: 0 10px 30px rgba(233, 30, 99, 0.3);
-    }
-    
-    .canvas-area {
-      background: linear-gradient(135deg, #1a1a1a, #252525);
-      border: 2px solid #444;
-      border-radius: 15px;
-      padding: 20px;
-      position: relative;
-      min-height: 600px;
-      overflow: hidden;
-    }
-    
-    .properties-panel {
-      background: linear-gradient(135deg, #1a1a1a, #1a2a2a);
-      border: 1px solid #3b82f6;
-      border-radius: 15px;
-      padding: 20px;
-      height: fit-content;
-      position: sticky;
-      top: 20px;
-      box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
-    }
-    
-    .tool-section {
-      margin-bottom: 25px;
-      padding: 15px;
-      background: rgba(233, 30, 99, 0.05);
-      border-radius: 10px;
-      border: 1px solid rgba(233, 30, 99, 0.2);
-    }
-    
-    .tool-section h3 {
-      color: #e91e63;
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 15px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .tool-button {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 8px;
-      background: linear-gradient(135deg, #333, #444);
-      border: 1px solid #555;
-      border-radius: 8px;
-      color: #fff;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    
-    .tool-button.active {
-      background: linear-gradient(135deg, #e91e63, #ff1493);
-      border-color: #e91e63;
-      box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
-      transform: translateY(-1px);
-    }
-    
-    .tool-button:hover:not(.active) {
-      background: linear-gradient(135deg, #444, #555);
-      border-color: #666;
-      transform: translateY(-1px);
-    }
-    
-    .canvas-container {
-      position: relative;
-      width: 100%;
-      height: 500px;
-      border: 2px dashed #555;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      overflow: hidden;
-      background: linear-gradient(45deg, 
-        rgba(233, 30, 99, 0.03) 0%, 
-        rgba(255, 20, 147, 0.02) 50%,
-        rgba(139, 69, 19, 0.03) 100%);
-    }
-    
-    .canvas-container.has-image {
-      border-color: #e91e63;
-      border-style: solid;
-      box-shadow: 0 0 20px rgba(233, 30, 99, 0.3);
-    }
-    
-    .main-image {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      cursor: crosshair;
-      transition: all 0.3s ease;
-    }
-    
-    .annotation-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      pointer-events: none;
-      z-index: 10;
-    }
-    
-    .region-marker {
-      position: absolute;
-      border: 2px solid #e91e63;
-      background: rgba(233, 30, 99, 0.2);
-      border-radius: 4px;
-      min-width: 20px;
-      min-height: 20px;
-      cursor: move;
-      pointer-events: all;
-      transition: all 0.2s ease;
-    }
-    
-    .region-marker:hover {
-      border-color: #ff1493;
-      box-shadow: 0 0 10px rgba(233, 30, 99, 0.6);
-    }
-    
-    .region-marker.clothing {
-      border-color: #3b82f6;
-      background: rgba(59, 130, 246, 0.2);
-    }
-    
-    .region-marker.pose {
-      border-color: #10b981;
-      background: rgba(16, 185, 129, 0.2);
-    }
-    
-    .region-label {
-      position: absolute;
-      top: -25px;
-      left: 0;
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    
-    .property-group {
-      margin-bottom: 20px;
-      padding: 12px;
-      background: rgba(59, 130, 246, 0.05);
-      border-radius: 8px;
-      border: 1px solid rgba(59, 130, 246, 0.2);
-    }
-    
-    .property-group h4 {
-      color: #3b82f6;
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-    }
-    
-    .param-input {
-      width: 100%;
-      padding: 8px 12px;
-      background: linear-gradient(135deg, #2a2a2a, #333);
-      border: 1px solid #555;
-      border-radius: 6px;
-      color: #fff;
-      font-size: 12px;
-      margin-bottom: 8px;
-      transition: all 0.3s ease;
-    }
-    
-    .param-input:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
-    }
-    
-    .clothing-preset {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 10px;
-    }
-    
-    .clothing-chip {
-      padding: 6px 10px;
-      background: linear-gradient(135deg, #444, #555);
-      border: 1px solid #666;
-      border-radius: 15px;
-      font-size: 10px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      color: #ccc;
-    }
-    
-    .clothing-chip:hover {
-      background: linear-gradient(135deg, #e91e63, #ff1493);
-      border-color: #e91e63;
-      color: white;
-      transform: scale(1.05);
-    }
-    
-    .generate-section {
-      background: linear-gradient(135deg, rgba(233, 30, 99, 0.1), rgba(255, 20, 147, 0.05));
-      border: 2px solid #e91e63;
-      border-radius: 12px;
-      padding: 20px;
-      margin-top: 20px;
-    }
-    
-    .generate-btn {
-      width: 100%;
-      padding: 15px;
-      background: linear-gradient(45deg, #e91e63, #ff1493, #ff6b6b);
-      border: none;
-      border-radius: 10px;
-      color: white;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 10px;
-    }
-    
-    .generate-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(233, 30, 99, 0.5);
-    }
-    
-    .generate-btn:disabled {
-      background: #666;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-    
-    .upload-zone {
-      width: 100%;
-      height: 200px;
-      border: 2px dashed #666;
-      border-radius: 10px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      background: linear-gradient(135deg, rgba(233, 30, 99, 0.03), rgba(255, 20, 147, 0.02));
-    }
-    
-    .upload-zone:hover {
-      border-color: #e91e63;
-      background: rgba(233, 30, 99, 0.1);
-    }
-    
-    .upload-zone.dragover {
-      border-color: #ff1493;
-      background: rgba(233, 30, 99, 0.2);
-      transform: scale(1.02);
-    }
-    
-    .animation-controls {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-    }
-    
-    .anim-btn {
-      flex: 1;
-      padding: 8px;
-      background: linear-gradient(135deg, #333, #444);
-      border: 1px solid #555;
-      border-radius: 6px;
-      color: white;
-      font-size: 11px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    
-    .anim-btn:hover {
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-      border-color: #3b82f6;
-    }
-    
-    .progress-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(5px);
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-    }
-    
-    .progress-spinner {
-      width: 60px;
-      height: 60px;
-      border: 4px solid #333;
-      border-top: 4px solid #e91e63;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 20px;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    
-    .adult-warning {
-      background: linear-gradient(135deg, #2a2a2a, #333);
-      border: 2px solid #e91e63;
-      border-radius: 15px;
-      padding: 20px;
-      margin-bottom: 25px;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .adult-warning::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 6px;
-      height: 100%;
-      background: linear-gradient(180deg, #e91e63, #ff1493);
-    }
-    
-    .result-gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-top: 20px;
-    }
-    
-    .result-item {
-      position: relative;
-      border-radius: 10px;
-      overflow: hidden;
-      background: #222;
-      transition: all 0.3s ease;
-    }
-    
-    .result-item:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 25px rgba(233, 30, 99, 0.3);
-    }
-    
-    .result-image {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-    }
-    
-    .result-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(transparent, rgba(0,0,0,0.8));
-      color: white;
-      padding: 10px;
-      font-size: 11px;
-    }
+    textarea{resize:vertical;min-height:80px}
+    input:focus,select:focus,textarea:focus{border-color:var(--focus);box-shadow:0 0 0 2px rgba(34,211,238,.2)}
+    .btn{border:1px solid var(--stroke);border-radius:12px;background:#0e1626;color:var(--text);padding:10px 14px;font-weight:700;cursor:pointer}
+    .btn.primary{border-color:var(--focus);box-shadow:0 0 0 2px rgba(34,211,238,.2) inset}
+    .preview-box{background:#0b1320;border:1px solid var(--stroke);border-radius:var(--radius);min-height:240px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
   </style>
 </head>
 <body>
   <header>
-    <h1 class="text-xl font-bold">LocalMediaSuite</h1>
-    <nav class="flex gap-2 flex-wrap">
-      <a href="index.html">Home</a>
-      <a href="image.html">Image (SFW)</a>
-      <a href="image_nsfw.html">Image (NSFW)</a>
-      <a href="video.html">Video (SFW)</a>
-      <a href="video_nsfw.html">Video (NSFW)</a>
-      <a href="image_transform.html" class="active">Transform (Adult)</a>
-      <a href="gallery.html">Gallery</a>
-      <a href="catalog.html">Catalog</a>
-      <a href="settings.html">Settings</a>
-    </nav>
+    <div class="topbar">
+      <span class="logo-dot"></span>
+      <h1 class="brand">LocalMediaSuite</h1>
+      <span class="logo-dot"></span>
+    </div>
+    <div class="topbar" style="padding-top:0">
+      <div class="subtitle">Advanced Image · Masking · Control · Batch</div>
+    </div>
   </header>
 
-  <main class="transform-workspace">
-    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
-      <h2 style="background: linear-gradient(45deg, #e91e63, #ff1493); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 32px; font-weight: 700;">Advanced Image Transform & Animation</h2>
-      <span style="background: linear-gradient(45deg, #e91e63, #ff1493); color: white; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold;">18+ Adult Content</span>
-    </div>
-    
-    <div class="adult-warning">
-      <div style="color: #e91e63; font-weight: bold; margin-bottom: 10px; font-size: 18px;">🔞 Advanced Adult Content Manipulation</div>
-      <div style="font-size: 14px; color: #ccc; line-height: 1.6;">
-        Diese erweiterte Bildbearbeitungs-Suite ermöglicht präzise Manipulation von Bildinhalten für erwachsene Anwendungen:
-        <ul style="margin: 10px 0; padding-left: 20px;">
-          <li>• Pose- und Position-Anpassungen</li>
-          <li>• Kleidungs-Markierung und -Austausch</li>
-          <li>• Körper-Kontur-Bearbeitung</li>
-          <li>• Animation und Bewegungs-Simulation</li>
-          <li>• Lighting und Atmosphäre-Kontrolle</li>
-        </ul>
-        <div style="margin-top: 12px; font-size: 12px; color: #888;">
-          Alle Funktionen sind für verantwortungsvolle erwachsene Nutzung konzipiert. Respektiere lokale Gesetze und Einverständnis.
-        </div>
-      </div>
-    </div>
+  <div class="wrap">
+    <div class="grid">
 
-    <div class="workspace-grid">
-      <!-- Tools Panel -->
-      <div class="tools-panel">
-        <div class="tool-section">
-          <h3>🖼️ Image Input</h3>
-          <div class="upload-zone" id="upload-zone">
-            <input type="file" id="image-upload" accept="image/*" style="display: none;">
-            <div style="font-size: 40px; margin-bottom: 10px;">📁</div>
-            <div style="font-weight: 600; margin-bottom: 5px;">Bild hochladen</div>
-            <div style="font-size: 11px; color: #888;">
-              PNG, JPG, WEBP bis 20MB<br>
-              Oder per Drag & Drop
-            </div>
+      <!-- LEFT: Settings -->
+      <section class="card">
+        <h3>Erweiterte Bildgenerierung</h3>
+        <div class="body">
+          <div class="row">
+            <label for="prompt">Prompt</label>
+            <textarea id="prompt" placeholder="Ein fotorealistisches Portrait einer Cyberpunk-Stadt..."></textarea>
+          </div>
+          <div class="row">
+            <label for="negPrompt">Negativer Prompt</label>
+            <textarea id="negPrompt" placeholder="unscharf, low quality, artefacts..."></textarea>
+          </div>
+          <div class="row">
+            <label for="steps">Steps</label>
+            <input id="steps" type="number" value="30" min="1" max="200">
+          </div>
+          <div class="row">
+            <label for="guidance">Guidance Scale</label>
+            <input id="guidance" type="number" step="0.1" value="7.5" min="1" max="20">
+          </div>
+          <div class="row">
+            <label for="seed">Seed</label>
+            <input id="seed" type="number" placeholder="random">
+          </div>
+          <div class="row">
+            <label for="batch">Batch Size</label>
+            <input id="batch" type="number" value="1" min="1" max="8">
+          </div>
+          <div class="row">
+            <label for="format">Ausgabeformat</label>
+            <select id="format">
+              <option value="png">PNG</option>
+              <option value="jpg">JPG</option>
+              <option value="webp">WEBP</option>
+            </select>
+          </div>
+          <div class="row">
+            <label for="control">ControlNet</label>
+            <select id="control">
+              <option value="">-- deaktiviert --</option>
+              <option value="canny">Canny Edge</option>
+              <option value="depth">Depth Map</option>
+              <option value="pose">Pose Detection</option>
+            </select>
+          </div>
+          <div class="row">
+            <label for="mask">Maske</label>
+            <input id="mask" type="file" accept="image/*">
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button class="btn" id="reset">Zurücksetzen</button>
+            <button class="btn primary" id="generate">Generieren</button>
           </div>
         </div>
+      </section>
 
-        <div class="tool-section">
-          <h3>🎯 Annotation Tools</h3>
-          <button class="tool-button" data-tool="clothing" id="tool-clothing">
-            👗 Kleidung markieren
-          </button>
-          <button class="tool-button" data-tool="pose" id="tool-pose">
-            🕺 Pose-Punkte setzen
-          </button>
-          <button class="tool-button" data-tool="body" id="tool-body">
-            👤 Körper-Konturen
-          </button>
-          <button class="tool-button" data-tool="face" id="tool-face">
-            😊 Gesichts-Features
-          </button>
-          <button class="tool-button" data-tool="select" id="tool-select">
-            🔍 Auswahl-Tool
-          </button>
+      <!-- RIGHT: Preview -->
+      <section class="card">
+        <h3>Vorschau</h3>
+        <div class="body">
+          <div class="preview-box" id="preview">Noch kein Bild generiert.</div>
         </div>
+      </section>
 
-        <div class="tool-section">
-          <h3>✨ Transform Modes</h3>
-          <button class="tool-button" data-mode="pose_change" id="mode-pose">
-            🤸 Pose ändern
-          </button>
-          <button class="tool-button" data-mode="clothing_swap" id="mode-clothing">
-            👔 Kleidung tauschen
-          </button>
-          <button class="tool-button" data-mode="body_adjust" id="mode-body">
-            💪 Körper anpassen
-          </button>
-          <button class="tool-button" data-mode="animate" id="mode-animate">
-            🎬 Animieren
-          </button>
-          <button class="tool-button" data-mode="lighting" id="mode-lighting">
-            💡 Beleuchtung
-          </button>
-        </div>
-
-        <div class="tool-section">
-          <h3>🎨 Style Presets</h3>
-          <button class="tool-button" data-style="realistic" id="style-realistic">
-            📸 Fotorealistisch
-          </button>
-          <button class="tool-button" data-style="artistic" id="style-artistic">
-            🎨 Künstlerisch
-          </button>
-          <button class="tool-button" data-style="fantasy" id="style-fantasy">
-            ✨ Fantasy
-          </button>
-          <button class="tool-button" data-style="cinematic" id="style-cinematic">
-            🎬 Cineastisch
-          </button>
-        </div>
-      </div>
-
-      <!-- Canvas Area -->
-      <div class="canvas-area">
-        <div class="canvas-container" id="canvas-container">
-          <div id="image-placeholder" style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666; flex-direction: column;">
-            <div style="font-size: 60px; margin-bottom: 15px;">🎭</div>
-            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Advanced Image Transform Studio</div>
-            <div style="font-size: 14px; text-align: center; max-width: 400px; line-height: 1.4;">
-              Lade ein Bild hoch um mit der erweiterten Bearbeitung zu beginnen. 
-              Alle Tools für professionelle Adult-Content-Manipulation.
-            </div>
-          </div>
-          <img id="main-image" class="main-image" style="display: none;">
-          <div class="annotation-overlay" id="annotation-overlay"></div>
-        </div>
-
-        <div class="animation-controls">
-          <button class="anim-btn" id="preview-btn">👁️ Vorschau</button>
-          <button class="anim-btn" id="animate-btn">▶️ Animieren</button>
-          <button class="anim-btn" id="export-btn">💾 Exportieren</button>
-          <button class="anim-btn" id="clear-btn">🗑️ Zurücksetzen</button>
-        </div>
-
-        <div class="generate-section">
-          <textarea 
-            id="transform-prompt" 
-            class="param-input" 
-            rows="3" 
-            placeholder="Detaillierte Beschreibung der gewünschten Transformation... (z.B. 'Ändere Pose zu sitzend, elegante Haltung, Kleidung zu rotem Kleid, warme Beleuchtung')"
-          ></textarea>
-          
-          <button id="transform-btn" class="generate-btn">
-            🚀 Transformation Starten
-          </button>
-        </div>
-
-        <div class="result-gallery" id="result-gallery">
-          <!-- Generated results will appear here -->
-        </div>
-
-        <div class="progress-overlay" id="progress-overlay">
-          <div class="progress-spinner"></div>
-          <div style="color: white; font-weight: 600; margin-bottom: 10px;">Processing Transformation...</div>
-          <div id="progress-text" style="color: #ccc; font-size: 14px; text-align: center;">Initializing...</div>
-        </div>
-      </div>
-
-      <!-- Properties Panel -->
-      <div class="properties-panel">
-        <div class="property-group" id="clothing-properties" style="display: none;">
-          <h4>👗 Kleidungs-Einstellungen</h4>
-          <label style="font-size: 11px; color: #ccc;">Kleidungstyp:</label>
-          <select class="param-input" id="clothing-type">
-            <option value="">Automatisch erkennen</option>
-            <option value="dress">Kleid</option>
-            <option value="shirt">Shirt/Bluse</option>
-            <option value="pants">Hose</option>
-            <option value="underwear">Unterwäsche</option>
-            <option value="swimwear">Bademode</option>
-            <option value="lingerie">Dessous</option>
-            <option value="none">Entfernen</option>
-          </select>
-          
-          <label style="font-size: 11px; color: #ccc;">Farbe:</label>
-          <input type="color" class="param-input" id="clothing-color" value="#ff1493">
-          
-          <label style="font-size: 11px; color: #ccc;">Material:</label>
-          <select class="param-input" id="clothing-material">
-            <option value="fabric">Stoff</option>
-            <option value="silk">Seide</option>
-            <option value="leather">Leder</option>
-            <option value="lace">Spitze</option>
-            <option value="latex">Latex</option>
-            <option value="mesh">Netz</option>
-          </select>
-          
-          <div class="clothing-preset">
-            <div class="clothing-chip" data-clothing="elegant_dress">Elegantes Kleid</div>
-            <div class="clothing-chip" data-clothing="casual_outfit">Casual</div>
-            <div class="clothing-chip" data-clothing="lingerie_set">Dessous</div>
-            <div class="clothing-chip" data-clothing="swimwear">Bademode</div>
-            <div class="clothing-chip" data-clothing="fantasy_outfit">Fantasy</div>
-            <div class="clothing-chip" data-clothing="minimal">Minimal</div>
-          </div>
-        </div>
-
-        <div class="property-group" id="pose-properties" style="display: none;">
-          <h4>🕺 Pose-Einstellungen</h4>
-          <label style="font-size: 11px; color: #ccc;">Pose-Typ:</label>
-          <select class="param-input" id="pose-type">
-            <option value="standing">Stehend</option>
-            <option value="sitting">Sitzend</option>
-            <option value="lying">Liegend</option>
-            <option value="kneeling">Kniend</option>
-            <option value="dancing">Tanzend</option>
-            <option value="yoga">Yoga</option>
-            <option value="action">Action</option>
-          </select>
-          
-          <label style="font-size: 11px; color: #ccc;">Pose-Intensität:</label>
-          <input type="range" class="param-input" id="pose-strength" min="0.1" max="1.0" step="0.1" value="0.7">
-          
-          <label style="font-size: 11px; color: #ccc;">Natürlichkeit:</label>
-          <input type="range" class="param-input" id="pose-natural" min="0.0" max="1.0" step="0.1" value="0.8">
-        </div>
-
-        <div class="property-group" id="animation-properties" style="display: none;">
-          <h4>🎬 Animations-Einstellungen</h4>
-          <label style="font-size: 11px; color: #ccc;">Animations-Typ:</label>
-          <select class="param-input" id="animation-type">
-            <option value="subtle_movement">Subtile Bewegung</option>
-            <option value="breathing">Atmung</option>
-            <option value="hair_sway">Haar-Bewegung</option>
-            <option value="clothing_flow">Kleidung-Flow</option>
-            <option value="pose_transition">Pose-Übergang</option>
-            <option value="dance_movement">Tanz-Bewegung</option>
-          </select>
-          
-          <label style="font-size: 11px; color: #ccc;">Geschwindigkeit:</label>
-          <input type="range" class="param-input" id="anim-speed" min="0.1" max="2.0" step="0.1" value="1.0">
-          
-          <label style="font-size: 11px; color: #ccc;">Dauer (Sekunden):</label>
-          <input type="number" class="param-input" id="anim-duration" min="1" max="10" value="3">
-        </div>
-
-        <div class="property-group" id="lighting-properties" style="display: none;">
-          <h4>💡 Beleuchtungs-Einstellungen</h4>
-          <label style="font-size: 11px; color: #ccc;">Licht-Typ:</label>
-          <select class="param-input" id="lighting-type">
-            <option value="natural">Natürlich</option>
-            <option value="studio">Studio</option>
-            <option value="dramatic">Dramatisch</option>
-            <option value="romantic">Romantisch</option>
-            <option value="neon">Neon</option>
-            <option value="candlelight">Kerzenlicht</option>
-          </select>
-          
-          <label style="font-size: 11px; color: #ccc;">Intensität:</label>
-          <input type="range" class="param-input" id="lighting-intensity" min="0.1" max="2.0" step="0.1" value="1.0">
-          
-          <label style="font-size: 11px; color: #ccc;">Schatten:</label>
-          <input type="range" class="param-input" id="lighting-shadows" min="0.0" max="1.0" step="0.1" value="0.5">
-        </div>
-
-        <div class="property-group">
-          <h4>⚙️ Generelle Einstellungen</h4>
-          <label style="font-size: 11px; color: #ccc;">Qualität:</label>
-          <select class="param-input" id="quality-level">
-            <option value="draft">Draft (schnell)</option>
-            <option value="standard" selected>Standard</option>
-            <option value="high">Hoch</option>
-            <option value="ultra">Ultra (langsam)</option>
-          </select>
-          
-          <label style="font-size: 11px; color: #ccc;">Kreativität:</label>
-          <input type="range" class="param-input" id="creativity" min="0.1" max="2.0" step="0.1" value="1.2">
-          
-          <label style="font-size: 11px; color: #ccc;">Seed (optional):</label>
-          <input type="number" class="param-input" id="seed-value" placeholder="Für reproduzierbare Ergebnisse">
-        </div>
-
-        <div class="property-group">
-          <h4>📊 Model Settings</h4>
-          <label style="font-size: 11px; color: #ccc;">Base Model:</label>
-          <select class="param-input" id="base-model">
-            <option value="auto">Automatisch wählen</option>
-            <option value="realistic">Realistic Vision</option>
-            <option value="artistic">DreamShaper</option>
-            <option value="nsfw">NSFW Specialized</option>
-          </select>
-          
-          <label style="font-size: 11px; color: #ccc;">ControlNet Strength:</label>
-          <input type="range" class="param-input" id="controlnet-strength" min="0.3" max="1.0" step="0.05" value="0.8">
-        </div>
-      </div>
     </div>
-  </main>
+  </div>
 
   <script>
-    class AdvancedImageTransform {
-      constructor() {
-        this.currentTool = null;
-        this.currentMode = null;
-        this.currentStyle = 'realistic';
-        this.uploadedImage = null;
-        this.annotations = [];
-        this.isProcessing = false;
-        this.canvas = null;
-        this.ctx = null;
-        
-        this.init();
-      }
+    const prompt = document.getElementById('prompt');
+    const negPrompt = document.getElementById('negPrompt');
+    const steps = document.getElementById('steps');
+    const guidance = document.getElementById('guidance');
+    const seed = document.getElementById('seed');
+    const batch = document.getElementById('batch');
+    const format = document.getElementById('format');
+    const control = document.getElementById('control');
+    const mask = document.getElementById('mask');
+    const preview = document.getElementById('preview');
 
-      init() {
-        this.setupEventListeners();
-        this.initializeCanvas();
-        this.setupDragAndDrop();
-      }
+    document.getElementById('reset').addEventListener('click', () => {
+      prompt.value = "";
+      negPrompt.value = "";
+      steps.value = 30;
+      guidance.value = 7.5;
+      seed.value = "";
+      batch.value = 1;
+      format.value = "png";
+      control.value = "";
+      mask.value = "";
+      preview.textContent = "Noch kein Bild generiert.";
+    });
 
-      setupEventListeners() {
-        // File upload
-        document.getElementById('image-upload').addEventListener('change', (e) => {
-          this.handleImageUpload(e.target.files[0]);
-        });
-
-        // Upload zone click
-        document.getElementById('upload-zone').addEventListener('click', () => {
-          document.getElementById('image-upload').click();
-        });
-
-        // Tool buttons
-        document.querySelectorAll('[data-tool]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            this.selectTool(e.target.dataset.tool, e.target);
-          });
-        });
-
-        // Mode buttons
-        document.querySelectorAll('[data-mode]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            this.selectMode(e.target.dataset.mode, e.target);
-          });
-        });
-
-        // Style buttons
-        document.querySelectorAll('[data-style]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            this.selectStyle(e.target.dataset.style, e.target);
-          });
-        });
-
-        // Clothing presets
-        document.querySelectorAll('.clothing-chip').forEach(chip => {
-          chip.addEventListener('click', (e) => {
-            this.applyClothingPreset(e.target.dataset.clothing);
-          });
-        });
-
-        // Control buttons
-        document.getElementById('preview-btn').addEventListener('click', () => this.showPreview());
-        document.getElementById('animate-btn').addEventListener('click', () => this.startAnimation());
-        document.getElementById('export-btn').addEventListener('click', () => this.exportResult());
-        document.getElementById('clear-btn').addEventListener('click', () => this.clearAnnotations());
-
-        // Main transform button
-        document.getElementById('transform-btn').addEventListener('click', () => {
-          this.startTransformation();
-        });
-
-        // Canvas interaction
-        document.getElementById('canvas-container').addEventListener('click', (e) => {
-          this.handleCanvasClick(e);
-        });
-      }
-
-      setupDragAndDrop() {
-        const uploadZone = document.getElementById('upload-zone');
-        
-        uploadZone.addEventListener('dragover', (e) => {
-          e.preventDefault();
-          uploadZone.classList.add('dragover');
-        });
-
-        uploadZone.addEventListener('dragleave', () => {
-          uploadZone.classList.remove('dragover');
-        });
-
-        uploadZone.addEventListener('drop', (e) => {
-          e.preventDefault();
-          uploadZone.classList.remove('dragover');
-          
-          const files = e.dataTransfer.files;
-          if (files.length > 0) {
-            this.handleImageUpload(files[0]);
-          }
-        });
-      }
-
-      initializeCanvas() {
-        // Canvas wird dynamisch erstellt wenn Bild geladen wird
-      }
-
-      handleImageUpload(file) {
-        if (!file || !file.type.startsWith('image/')) {
-          this.showMessage('Bitte wähle eine gültige Bilddatei', 'error');
-          return;
-        }
-
-        if (file.size > 20 * 1024 * 1024) {
-          this.showMessage('Bildgröße sollte unter 20MB sein', 'error');
-          return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.uploadedImage = file;
-          this.displayImage(e.target.result);
-          this.showMessage('Bild erfolgreich geladen - wähle Tools und Modus', 'success');
-        };
-        reader.readAsDataURL(file);
-      }
-
-      displayImage(imageSrc) {
-        const placeholder = document.getElementById('image-placeholder');
-        const mainImage = document.getElementById('main-image');
-        const container = document.getElementById('canvas-container');
-
-        placeholder.style.display = 'none';
-        mainImage.style.display = 'block';
-        mainImage.src = imageSrc;
-        container.classList.add('has-image');
-
-        // Initialize overlay canvas for annotations
-        this.createAnnotationCanvas();
-      }
-
-      createAnnotationCanvas() {
-        const container = document.getElementById('canvas-container');
-        const overlay = document.getElementById('annotation-overlay');
-        
-        // Clear existing canvas
-        overlay.innerHTML = '';
-        
-        // Add click handler for annotations
-        overlay.addEventListener('click', (e) => this.handleCanvasClick(e));
-      }
-
-      selectTool(tool, element) {
-        // Clear previous tool selection
-        document.querySelectorAll('[data-tool]').forEach(btn => {
-          btn.classList.remove('active');
-        });
-        
-        element.classList.add('active');
-        this.currentTool = tool;
-        
-        // Show relevant properties panel
-        this.showPropertiesPanel(tool);
-        
-        this.showMessage(`Tool ausgewählt: ${this.getToolName(tool)}`, 'info');
-      }
-
-      selectMode(mode, element) {
-        // Clear previous mode selection
-        document.querySelectorAll('[data-mode]').forEach(btn => {
-          btn.classList.remove('active');
-        });
-        
-        element.classList.add('active');
-        this.currentMode = mode;
-        
-        this.showMessage(`Modus: ${this.getModeName(mode)}`, 'info');
-      }
-
-      selectStyle(style, element) {
-        // Clear previous style selection
-        document.querySelectorAll('[data-style]').forEach(btn => {
-          btn.classList.remove('active');
-        });
-        
-        element.classList.add('active');
-        this.currentStyle = style;
-        
-        this.showMessage(`Stil: ${this.getStyleName(style)}`, 'info');
-      }
-
-      showPropertiesPanel(tool) {
-        // Hide all property panels
-        document.querySelectorAll('.property-group').forEach(panel => {
-          if (panel.id.includes('-properties')) {
-            panel.style.display = 'none';
-          }
-        });
-
-        // Show relevant panel
-        const panelId = `${tool}-properties`;
-        const panel = document.getElementById(panelId);
-        if (panel) {
-          panel.style.display = 'block';
-        }
-      }
-
-      handleCanvasClick(e) {
-        if (!this.currentTool || !this.uploadedImage) {
-          this.showMessage('Bitte lade ein Bild und wähle ein Tool', 'warning');
-          return;
-        }
-
-        const container = document.getElementById('canvas-container');
-        const rect = container.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        this.addAnnotation(x, y, this.currentTool);
-      }
-
-      addAnnotation(x, y, type) {
-        const annotation = {
-          id: Date.now(),
-          x: x,
-          y: y,
-          type: type,
-          properties: this.getCurrentProperties(type)
-        };
-
-        this.annotations.push(annotation);
-        this.renderAnnotation(annotation);
-        
-        this.showMessage(`${this.getToolName(type)} Markierung hinzugefügt`, 'success');
-      }
-
-      renderAnnotation(annotation) {
-        const overlay = document.getElementById('annotation-overlay');
-        
-        const marker = document.createElement('div');
-        marker.className = `region-marker ${annotation.type}`;
-        marker.style.left = `${annotation.x - 10}px`;
-        marker.style.top = `${annotation.y - 10}px`;
-        marker.dataset.id = annotation.id;
-        
-        // Add label
-        const label = document.createElement('div');
-        label.className = 'region-label';
-        label.textContent = this.getToolName(annotation.type);
-        marker.appendChild(label);
-        
-        // Add click handler for removal
-        marker.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.removeAnnotation(annotation.id);
-        });
-        
-        overlay.appendChild(marker);
-      }
-
-      removeAnnotation(id) {
-        this.annotations = this.annotations.filter(a => a.id !== id);
-        const marker = document.querySelector(`[data-id="${id}"]`);
-        if (marker) marker.remove();
-        
-        this.showMessage('Markierung entfernt', 'info');
-      }
-
-      getCurrentProperties(type) {
-        const properties = {};
-        
-        switch(type) {
-          case 'clothing':
-            properties.clothingType = document.getElementById('clothing-type').value;
-            properties.color = document.getElementById('clothing-color').value;
-            properties.material = document.getElementById('clothing-material').value;
-            break;
-          case 'pose':
-            properties.poseType = document.getElementById('pose-type').value;
-            properties.strength = document.getElementById('pose-strength').value;
-            properties.natural = document.getElementById('pose-natural').value;
-            break;
-          case 'animation':
-            properties.animationType = document.getElementById('animation-type').value;
-            properties.speed = document.getElementById('anim-speed').value;
-            properties.duration = document.getElementById('anim-duration').value;
-            break;
-        }
-        
-        return properties;
-      }
-
-      applyClothingPreset(preset) {
-        const presetConfig = {
-          'elegant_dress': { type: 'dress', color: '#8b0000', material: 'silk' },
-          'casual_outfit': { type: 'shirt', color: '#0066cc', material: 'fabric' },
-          'lingerie_set': { type: 'underwear', color: '#ff1493', material: 'lace' },
-          'swimwear': { type: 'swimwear', color: '#00ffff', material: 'fabric' },
-          'fantasy_outfit': { type: 'dress', color: '#9932cc', material: 'silk' },
-          'minimal': { type: 'none', color: '#ffffff', material: 'fabric' }
-        };
-
-        const config = presetConfig[preset];
-        if (config) {
-          document.getElementById('clothing-type').value = config.type;
-          document.getElementById('clothing-color').value = config.color;
-          document.getElementById('clothing-material').value = config.material;
-          
-          this.showMessage(`Kleidungs-Preset "${preset}" angewendet`, 'success');
-        }
-      }
-
-      async startTransformation() {
-        if (!this.uploadedImage) {
-          this.showMessage('Bitte lade zuerst ein Bild hoch', 'error');
-          return;
-        }
-
-        if (!this.currentMode) {
-          this.showMessage('Bitte wähle einen Transformations-Modus', 'error');
-          return;
-        }
-
-        const prompt = document.getElementById('transform-prompt').value.trim();
-        if (!prompt) {
-          this.showMessage('Bitte beschreibe die gewünschte Transformation', 'error');
-          return;
-        }
-
-        this.isProcessing = true;
-        this.showProgress();
-        this.updateTransformButton(true);
-
-        try {
-          // Prepare enhanced form data
-          const formData = new FormData();
-          formData.append('init_image', this.uploadedImage);
-          formData.append('prompt', this.buildEnhancedPrompt(prompt));
-          formData.append('mode', 'img2img');
-          formData.append('nsfw', 'true');
-          
-          // Add transform-specific parameters
-          formData.append('transform_mode', this.currentMode);
-          formData.append('style', this.currentStyle);
-          formData.append('annotations', JSON.stringify(this.annotations));
-          
-          // Quality and generation parameters
-          formData.append('width', '1024');
-          formData.append('height', '1024');
-          formData.append('num_inference_steps', this.getStepsForQuality());
-          formData.append('guidance_scale', '8.0');
-          formData.append('strength', this.getStrengthForMode());
-          
-          // Advanced parameters
-          const creativity = document.getElementById('creativity').value;
-          formData.append('creativity_factor', creativity);
-          
-          const seed = document.getElementById('seed-value').value;
-          if (seed) formData.append('seed', seed);
-          
-          // Simulate processing
-          this.simulateTransformProgress();
-          
-          // Make API call (simulated for now)
-          await this.simulateAPICall();
-          
-          // Show success result
-          this.showTransformResult();
-          this.showMessage('🎭 Transformation erfolgreich abgeschlossen!', 'success');
-
-        } catch (error) {
-          console.error('Transformation failed:', error);
-          this.showMessage('Transformation fehlgeschlagen: ' + error.message, 'error');
-        } finally {
-          this.isProcessing = false;
-          this.hideProgress();
-          this.updateTransformButton(false);
-        }
-      }
-
-      buildEnhancedPrompt(basePrompt) {
-        let enhancedPrompt = basePrompt;
-        
-        // Add mode-specific enhancements
-        switch(this.currentMode) {
-          case 'pose_change':
-            enhancedPrompt += ', dynamic pose, natural body positioning, anatomically correct';
-            break;
-          case 'clothing_swap':
-            enhancedPrompt += ', detailed clothing, fabric textures, realistic draping';
-            break;
-          case 'body_adjust':
-            enhancedPrompt += ', natural body proportions, realistic anatomy';
-            break;
-          case 'animate':
-            enhancedPrompt += ', motion blur, dynamic movement, fluid animation';
-            break;
-          case 'lighting':
-            enhancedPrompt += ', professional lighting, dramatic shadows, atmospheric mood';
-            break;
-        }
-        
-        // Add style enhancements
-        switch(this.currentStyle) {
-          case 'realistic':
-            enhancedPrompt += ', photorealistic, high detail, professional photography';
-            break;
-          case 'artistic':
-            enhancedPrompt += ', artistic interpretation, creative style, enhanced aesthetics';
-            break;
-          case 'fantasy':
-            enhancedPrompt += ', fantasy elements, magical atmosphere, ethereal quality';
-            break;
-          case 'cinematic':
-            enhancedPrompt += ', cinematic lighting, movie quality, dramatic composition';
-            break;
-        }
-        
-        // Add technical quality terms
-        enhancedPrompt += ', ultra detailed, high resolution, masterpiece quality';
-        
-        return enhancedPrompt;
-      }
-
-      getStepsForQuality() {
-        const quality = document.getElementById('quality-level').value;
-        const steps = {
-          'draft': 20,
-          'standard': 30,
-          'high': 40,
-          'ultra': 50
-        };
-        return steps[quality] || 30;
-      }
-
-      getStrengthForMode() {
-        const strengths = {
-          'pose_change': 0.85,
-          'clothing_swap': 0.75,
-          'body_adjust': 0.90,
-          'animate': 0.60,
-          'lighting': 0.45
-        };
-        return strengths[this.currentMode] || 0.75;
-      }
-
-      simulateTransformProgress() {
-        const steps = [
-          { progress: 10, text: 'Bild analysieren und Regionen erkennen...' },
-          { progress: 25, text: 'KI-Modelle für Transformation laden...' },
-          { progress: 40, text: `${this.getModeName(this.currentMode)} anwenden...` },
-          { progress: 60, text: 'Details verfeinern und Qualität optimieren...' },
-          { progress: 80, text: 'Realismus und Konsistenz prüfen...' },
-          { progress: 95, text: 'Finalisierung und Export vorbereiten...' }
-        ];
-
-        let currentStep = 0;
-        const interval = setInterval(() => {
-          if (currentStep < steps.length && this.isProcessing) {
-            const step = steps[currentStep];
-            this.updateProgress(step.progress, step.text);
-            currentStep++;
-          } else {
-            clearInterval(interval);
-          }
-        }, 2000);
-      }
-
-      async simulateAPICall() {
-        // Simulate API processing time
-        const quality = document.getElementById('quality-level').value;
-        const delays = {
-          'draft': 5000,
-          'standard': 8000,
-          'high': 12000,
-          'ultra': 18000
-        };
-        
-        await new Promise(resolve => setTimeout(resolve, delays[quality] || 8000));
-      }
-
-      showTransformResult() {
-        // Create a mock result for demonstration
-        const resultGallery = document.getElementById('result-gallery');
-        const timestamp = Date.now();
-        
-        const resultItem = document.createElement('div');
-        resultItem.className = 'result-item';
-        resultItem.innerHTML = `
-          <img class="result-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 150'%3E%3Crect fill='%23333' width='200' height='150'/%3E%3Ctext x='100' y='75' text-anchor='middle' fill='%23e91e63' font-size='14'%3ETransformed%3C/text%3E%3C/svg%3E" alt="Transformation Result">
-          <div class="result-overlay">
-            <div style="font-weight: 600;">${this.getModeName(this.currentMode)}</div>
-            <div>${this.currentStyle} • ${document.getElementById('quality-level').value}</div>
-          </div>
-        `;
-        
-        // Add click handler for full view
-        resultItem.addEventListener('click', () => {
-          this.showFullResult(resultItem);
-        });
-        
-        resultGallery.appendChild(resultItem);
-        
-        // Smooth scroll to result
-        resultItem.scrollIntoView({ behavior: 'smooth' });
-      }
-
-      showFullResult(resultItem) {
-        // Create modal for full result view
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0,0,0,0.9);
-          backdrop-filter: blur(10px);
-          z-index: 1000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-        `;
-        
-        modal.innerHTML = `
-          <div style="max-width: 90vw; max-height: 90vh; position: relative;">
-            <img style="max-width: 100%; max-height: 100%; border-radius: 10px; box-shadow: 0 20px 60px rgba(233,30,99,0.5);" src="${resultItem.querySelector('.result-image').src}">
-            <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 8px; border-radius: 6px; font-size: 24px; cursor: pointer;">×</div>
-            <div style="position: absolute; bottom: 10px; left: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 15px; border-radius: 8px;">
-              <div style="font-weight: 700; margin-bottom: 5px;">${this.getModeName(this.currentMode)} Result</div>
-              <div style="font-size: 12px; color: #ccc;">Style: ${this.currentStyle} • Quality: ${document.getElementById('quality-level').value}</div>
-            </div>
-          </div>
-        `;
-        
-        modal.addEventListener('click', () => {
-          document.body.removeChild(modal);
-        });
-        
-        document.body.appendChild(modal);
-      }
-
-      showProgress() {
-        document.getElementById('progress-overlay').style.display = 'flex';
-      }
-
-      hideProgress() {
-        setTimeout(() => {
-          document.getElementById('progress-overlay').style.display = 'none';
-        }, 1000);
-      }
-
-      updateProgress(percentage, text) {
-        document.getElementById('progress-text').textContent = text;
-      }
-
-      updateTransformButton(isProcessing) {
-        const button = document.getElementById('transform-btn');
-        
-        if (isProcessing) {
-          button.disabled = true;
-          button.innerHTML = '⏳ Processing Transformation...';
-        } else {
-          button.disabled = false;
-          button.innerHTML = '🚀 Transformation Starten';
-        }
-      }
-
-      showPreview() {
-        if (!this.uploadedImage) {
-          this.showMessage('Kein Bild geladen', 'warning');
-          return;
-        }
-        
-        this.showMessage('🔍 Vorschau-Modus aktiviert - Zeigt Annotationen', 'info');
-        
-        // Highlight all annotations
-        document.querySelectorAll('.region-marker').forEach(marker => {
-          marker.style.animation = 'pulse 1s ease-in-out 3';
-        });
-      }
-
-      startAnimation() {
-        if (!this.uploadedImage) {
-          this.showMessage('Kein Bild geladen', 'warning');
-          return;
-        }
-        
-        this.showMessage('🎬 Animation wird vorbereitet...', 'info');
-        
-        // Simulate animation preparation
-        setTimeout(() => {
-          this.showMessage('Animation bereit - nutze Transform um zu generieren', 'success');
-        }, 2000);
-      }
-
-      exportResult() {
-        if (!this.uploadedImage) {
-          this.showMessage('Kein Ergebnis zum Exportieren', 'warning');
-          return;
-        }
-        
-        this.showMessage('💾 Export-Funktionen verfügbar nach Transformation', 'info');
-      }
-
-      clearAnnotations() {
-        this.annotations = [];
-        document.getElementById('annotation-overlay').innerHTML = '';
-        this.showMessage('Alle Markierungen entfernt', 'success');
-      }
-
-      // Helper methods for names
-      getToolName(tool) {
-        const names = {
-          'clothing': 'Kleidung',
-          'pose': 'Pose',
-          'body': 'Körper',
-          'face': 'Gesicht',
-          'select': 'Auswahl'
-        };
-        return names[tool] || tool;
-      }
-
-      getModeName(mode) {
-        const names = {
-          'pose_change': 'Pose ändern',
-          'clothing_swap': 'Kleidung tauschen',
-          'body_adjust': 'Körper anpassen',
-          'animate': 'Animieren',
-          'lighting': 'Beleuchtung'
-        };
-        return names[mode] || mode;
-      }
-
-      getStyleName(style) {
-        const names = {
-          'realistic': 'Fotorealistisch',
-          'artistic': 'Künstlerisch',
-          'fantasy': 'Fantasy',
-          'cinematic': 'Cineastisch'
-        };
-        return names[style] || style;
-      }
-
-      showMessage(message, type = 'info') {
-        // Use the global LMS toast system
-        if (window.LMS && window.LMS.toast) {
-          window.LMS.toast(message, type);
-        } else {
-          console.log(`${type.toUpperCase()}: ${message}`);
-        }
-      }
-    }
-
-    // Initialize when DOM is loaded
-    document.addEventListener('DOMContentLoaded', () => {
-      new AdvancedImageTransform();
-      
-      // Add enhanced styling
-      const enhancedStyle = document.createElement('style');
-      enhancedStyle.textContent = `
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(1.1); }
-        }
-        
-        .region-marker {
-          animation: fadeIn 0.3s ease-in-out;
-        }
-        
-        @keyframes fadeIn {
-          from { opacity: 0; transform: scale(0.8); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        
-        .result-item {
-          animation: slideInUp 0.5s ease-out;
-        }
-        
-        @keyframes slideInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .canvas-container.has-image {
-          animation: borderGlow 2s ease-in-out infinite alternate;
-        }
-        
-        @keyframes borderGlow {
-          from { box-shadow: 0 0 20px rgba(233, 30, 99, 0.3); }
-          to { box-shadow: 0 0 30px rgba(233, 30, 99, 0.6); }
-        }
-        
-        .tool-button.active {
-          animation: activeGlow 2s ease-in-out infinite alternate;
-        }
-        
-        @keyframes activeGlow {
-          from { box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4); }
-          to { box-shadow: 0 6px 20px rgba(233, 30, 99, 0.6); }
-        }
-      `;
-      document.head.appendChild(enhancedStyle);
+    document.getElementById('generate').addEventListener('click', () => {
+      // Hier später POST zum Backend
+      preview.textContent = "Generierung läuft...";
+      setTimeout(() => {
+        preview.innerHTML = "<img src='assets/thumbs/advanced_image_1.png' style='max-width:100%;border-radius:12px'>";
+      }, 2000);
     });
   </script>
 </body>

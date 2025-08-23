@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Flirt KI · MediaSuite</title>
+  <meta name="color-scheme" content="dark" />
+  <style>
+    :root{ --bg:#0b1220; --panel:#0f172a; --stroke:#243244; --text:#e5e7eb; --muted:#94a3b8; --radius:12px; --gap:18px; --focus:#22d3ee; }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{ margin:0;background:#0b1220;color:#e5e7eb;
+      font-family:system-ui,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+      padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      display:flex;flex-direction:column }
+    header{position:sticky;top:0;z-index:10;background:#0f172acc;border-bottom:1px solid var(--stroke);backdrop-filter:blur(8px)}
+    .topbar{width:100%;padding:16px clamp(10px,2.4vw,28px);display:flex;align-items:center;justify-content:center;gap:12px}
+    .logo-dot{width:18px;height:18px;border-radius:50%;background:#22d3ee;box-shadow:0 0 18px #22d3ee}
+    .brand{margin:0;font-weight:900;font-size:clamp(24px,3.8vw,40px);text-align:center;text-shadow:0 0 8px rgba(229,231,235,.25),0 0 20px rgba(34,211,238,.28)}
+    .subtitle{color:#94a3b8;font-size:clamp(12px,1.6vw,14px);text-align:center;margin-top:-6px}
+
+    .wrap{flex:1;display:flex;flex-direction:column;max-width:1100px;margin:auto;width:100%;padding:16px clamp(10px,2.4vw,28px)}
+    .row{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+    select,input,textarea{background:#0b1320;color:#e5e7eb;border:1px solid #243244;border-radius:10px;padding:8px 10px}
+    .btn{border:1px solid #243244;border-radius:12px;background:#0e1626;color:#e5e7eb;padding:10px 14px;font-weight:700;cursor:pointer}
+    .btn.primary{border-color:#22d3ee;box-shadow:0 0 0 2px rgba(34,211,238,.2) inset}
+    .btn.ghost{background:transparent}
+    .muted{color:#94a3b8;font-size:12px}
+
+    .pill{padding:6px 10px;border:1px solid #243244;border-radius:999px;background:#0e1626;font-size:13px}
+    .sep{height:1px;background:#243244;margin:8px 0}
+
+    .chat-box{flex:1;min-height:260px;background:#0b1320;border:1px solid #243244;border-radius:12px;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+    .msg{position:relative;padding:12px 14px;border-radius:14px;max-width:72%;line-height:1.4;font-size:14px}
+    .from-her{align-self:flex-start;background:#2563eb;color:#fff;border-bottom-left-radius:4px}
+    .from-ai{align-self:flex-end;background:#10b981;color:#fff;font-weight:500;border-bottom-right-radius:4px}
+    .analysis{align-self:flex-start;background:#1f2937;color:#e5e7eb;border:1px dashed #374151;max-width:86%}
+    .analysis small{display:block;color:#9ca3af;margin-top:6px}
+    .actions{position:absolute;right:6px;bottom:-26px;display:flex;gap:6px;opacity:.85}
+    .rate{border:1px solid #0b1320;background:#0b1320;color:#e5e7eb;border-radius:12px;padding:2px 8px;font-size:12px;cursor:pointer}
+    .rate:hover{border-color:#22d3ee}
+
+    .switch{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--stroke);padding:8px 10px;border-radius:999px;background:#0e1626}
+    .switch input{appearance:none;width:34px;height:20px;border-radius:999px;background:#334155;position:relative;outline:none;cursor:pointer}
+    .switch input:after{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#e5e7eb;transition:left .15s}
+    .switch input:checked{background:#0ea5e9}
+    .switch input:checked:after{left:16px}
+
+    .flag {display:inline-block; padding:6px 10px; border-radius:999px; font-weight:800}
+    .flag.go {background:#065f46; color:#ecfdf5; border:1px solid #064e3b}
+    .flag.chill {background:#92400e; color:#fffbeb; border:1px solid #78350f}
+    .flag.next {background:#7f1d1d; color:#fee2e2; border:1px solid #7f1d1d}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <span class="logo-dot"></span>
+      <h1 class="brand">Flirt KI</h1>
+      <span class="logo-dot"></span>
+    </div>
+    <div class="topbar" style="padding-top:0">
+      <div class="subtitle">Charakter-Profile · Analyse-Bubble · Score-Ampel · Trend</div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <!-- Profile & Controls -->
+    <div class="row">
+      <select id="profileSelect" title="Aktives Profil"></select>
+      <button class="btn" id="btnNew"   type="button">Neu</button>
+      <button class="btn" id="btnEdit"  type="button">Bearbeiten</button>
+      <button class="btn" id="btnClone" type="button">Duplizieren</button>
+      <button class="btn ghost" id="btnDelete" type="button">Löschen</button>
+      <label class="switch">
+        <span>Analyse aktiv</span>
+        <input id="anToggle" type="checkbox" checked />
+      </label>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- Chat -->
+    <div class="chat-box" id="chat"></div>
+
+    <div class="row" style="margin-top:12px">
+      <textarea id="inputMsg" rows="2" style="flex:1" placeholder="Nachricht eingeben… (Enter = Senden, Shift+Enter = neue Zeile)"></textarea>
+      <button class="btn primary" id="btnGen" type="button">Antwort generieren</button>
+    </div>
+
+    <div class="row">
+      <button class="btn" id="btnExport" type="button">Profil-Export</button>
+      <button class="btn" id="btnImport" type="button">Profil-Import</button>
+    </div>
+  </div>
+
+  <script>
+    // Config
+    let CFG = { backend: { respond_url: "http://127.0.0.1:8000/api/respond" }};
+    try { fetch("flirt.config.json").then(r=>r.json()).then(j=>{ if(j) CFG=j; }); } catch {}
+
+    const chat = document.getElementById("chat");
+    const inputMsg = document.getElementById("inputMsg");
+
+    // ENTER-Key: senden
+    inputMsg.addEventListener("keydown", (e)=>{
+      if(e.key==="Enter" && !e.shiftKey){
+        e.preventDefault();
+        document.getElementById("btnGen").click();
+      }
+    });
+
+    // Beispiel: Buttons funktionsfähig halten
+    document.getElementById("btnNew")?.addEventListener("click", ()=>alert("Neues Profil anlegen (implementiert in deiner Version)"));
+    document.getElementById("btnEdit")?.addEventListener("click", ()=>alert("Profil bearbeiten"));
+    document.getElementById("btnClone")?.addEventListener("click", ()=>alert("Profil duplizieren"));
+    document.getElementById("btnDelete")?.addEventListener("click", ()=>alert("Profil löschen"));
+    document.getElementById("btnExport")?.addEventListener("click", ()=>alert("Profil exportieren"));
+    document.getElementById("btnImport")?.addEventListener("click", ()=>alert("Profil importieren"));
+    document.getElementById("btnGen")?.addEventListener("click", ()=>alert("Antwort generieren (API-Call an /api/respond)"));
+  </script>
+</body>
+</html>

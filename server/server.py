@@ -1,145 +1,154 @@
-# server/server.py - Vollständig erweitert um alle neuen Features
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.staticfiles import StaticFiles
+from __future__ import annotations
 
-# Alle Router importieren
-from .routes.models import router as models_router
-from .routes.generate import router as generate_router
-from .routes.settings import router as settings_router
-from .routes.files import router as files_router
-from .routes.status import router as status_router
-from .routes.ops import router as ops_router
-from .routes.suggestions import router as suggestions_router
-from .routes.recommend import router as recommend_router
-from .routes.universal_generate import router as universal_router  # NEU
+import os, json, time, platform, socket
+from typing import List, Dict, Any
 
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+import httpx
+
+BOOT_TS = time.time()
+
+# ------------------------------------------------------------
+# App-Grundgerüst
+# ------------------------------------------------------------
+app = FastAPI(title="MediaSuite Server", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # lokal ok
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ------------------------------------------------------------
+# Static Web Mount: G:\mediasuit\web -> /
+# ------------------------------------------------------------
+HERE = os.path.dirname(os.path.abspath(__file__))
+WEB_DIR = os.getenv(
+    "WEB_DIR",
+    os.path.abspath(os.path.join(HERE, "..", "web"))
+)
+
+if not os.path.isdir(WEB_DIR):
+    # Fallback: aktuelles Verzeichnis, damit / nicht 404 wirft
+    WEB_DIR = os.getcwd()
+
+# Root liefert index.html aus WEB_DIR
+app.mount("/", StaticFiles(directory=WEB_DIR, html=True), name="web")
+
+# ------------------------------------------------------------
+# Ollama Settings (für LLM-Aufrufe)
+# ------------------------------------------------------------
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
+OLLAMA_CHAT = f"{OLLAMA_URL}/api/chat"
+OLLAMA_TAGS = f"{OLLAMA_URL}/api/tags"
+MODEL       = os.getenv("MODEL", "llama3.1:latest")
+TEMPERATURE = float(os.getenv("TEMPERATURE", "0.8"))
+MAX_TOKENS  = int(os.getenv("MAX_TOKENS", "128"))
+
+async def _ollama_chat(system: str, user: str) -> str:
+    payload = {
+        "model": MODEL,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user",   "content": user},
+        ],
+        "options": {"temperature": TEMPERATURE, "num_predict": MAX_TOKENS}
+    }
+    async with httpx.AsyncClient(timeout=60) as client:
+        r = await client.post(OLLAMA_CHAT, json=payload)
+        if r.status_code != 200:
+            raise HTTPException(status_code=502, detail=f"Ollama error: {r.text}")
+        data = r.json()
+        return (data.get("message", {}) or {}).get("content", "").strip()
+
+# ------------------------------------------------------------
+# Unified Endpoint: Analyse + Antwort in einem Call
+# ------------------------------------------------------------
+class RespondReq(BaseModel):
+    analysis_system: str
+    analysis_user: str
+    reply_system: str
+    reply_user: str
+
+@app.post("/api/respond")
+async def respond(req: RespondReq):
+    # 1) Analyse (erwartet kompaktes JSON vom Modell)
+    raw_ana = await _ollama_chat(req.analysis_system, req.analysis_user)
+    analysis = None
+    try:
+        analysis = json.loads(raw_ana)
+    except Exception:
+        try:
+            s = raw_ana.find("{"); e = raw_ana.rfind("}")
+            if s != -1 and e != -1 and e > s:
+                analysis = json.loads(raw_ana[s:e+1])
+        except Exception:
+            analysis = None
+
+    # 2) Antwort
+    reply_text = await _ollama_chat(req.reply_system, req.reply_user)
+
+    return {
+        "ok": True,
+        "analysis": analysis,
+        "raw_analysis": raw_ana,
+        "reply": reply_text,
+    }
+
+# ------------------------------------------------------------
+# Basis-API für deine UI (keine 404 mehr)
+# ------------------------------------------------------------
+@app.get("/api/health")
+async def health():
+    return {"ok": True, "status": "running", "uptime_sec": int(time.time() - BOOT_TS)}
+
+@app.get("/api/status")
+async def status():
+    return {
+        "ok": True,
+        "host": socket.gethostname(),
+        "ip": socket.gethostbyname(socket.gethostname()) if hasattr(socket, "gethostname") else "127.0.0.1",
+        "platform": platform.platform(),
+        "python": platform.python_version(),
+        "uptime_sec": int(time.time() - BOOT_TS),
+        "model": MODEL,
+        "ollama_url": OLLAMA_URL,
+    }
+
+@app.get("/api/ops")
+async def ops():
+    # Hier könntest du laufende Jobs ausgeben; vorerst leer
+    return {"ok": True, "ops": []}
+
+@app.get("/api/models")
+async def models():
+    # Versuche echte Ollama-Modelle zu holen; fallbacks sicher
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            r = await client.get(OLLAMA_TAGS)
+            if r.status_code == 200:
+                data = r.json()  # {"models":[{"name": "...", ...}]}
+                names = [m.get("name") for m in data.get("models", []) if m.get("name")]
+                return {"ok": True, "models": names}
+    except Exception:
+        pass
+    # Fallback
+    return {"ok": True, "models": [MODEL]}
+
+# ------------------------------------------------------------
+# Launcher-Hook
+# ------------------------------------------------------------
 def build_app():
-    app = FastAPI(
-        title="LocalMediaSuite", 
-        version="2.0.0",
-        description="Universal AI Media Generation Suite with Multi-Backend Support"
-    )
-
-    # === API-Router ===
-    app.include_router(models_router,      prefix="/api", tags=["Models"])
-    app.include_router(generate_router,    prefix="/api", tags=["Generation - Legacy"])
-    app.include_router(universal_router,   prefix="/api", tags=["Generation - Universal"])  # NEU
-    app.include_router(settings_router,    prefix="/api", tags=["Settings"])
-    app.include_router(files_router,       prefix="/api", tags=["Files"])
-    app.include_router(status_router,      prefix="/api", tags=["Status"])
-    app.include_router(ops_router,         prefix="/api", tags=["Operations"])
-    app.include_router(suggestions_router, prefix="/api", tags=["Suggestions"])
-    app.include_router(recommend_router,   prefix="/api", tags=["Recommendations & Catalog"])
-
-    # === Static: Outputs + Web-UI ===
-    # /outputs -> outputs/ (damit Gallery URLs funktionieren)
-    app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
-    # Root-Web: / -> web/ (liefert index.html etc.)
-    app.mount("/", StaticFiles(directory="web", html=True), name="web")
-
-    # === Einheitliche Fehler-JSON ===
-    @app.exception_handler(StarletteHTTPException)
-    async def http_ex_handler(request: Request, exc: StarletteHTTPException):
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={"ok": False, "error": {
-                "code": exc.status_code,
-                "message": str(exc.detail),
-                "path": str(request.url.path),
-            }},
-        )
-
-    @app.exception_handler(Exception)
-    async def unhandled_ex(request: Request, exc: Exception):
-        import traceback
-        print(f"Unhandled exception: {exc}")
-        traceback.print_exc()
-        
-        return JSONResponse(
-            status_code=500,
-            content={"ok": False, "error": {
-                "code": 500,
-                "message": "Interner Serverfehler - Details in Logs",
-                "path": str(request.url.path),
-                "details": str(exc) if app.debug else "Debug-Modus deaktiviert",
-            }},
-        )
-
-    # === Health Check ===
-    @app.get("/api/health")
-    async def health_check():
-        return {"ok": True, "status": "healthy", "service": "LocalMediaSuite", "version": "2.0.0"}
-
-    # === System Info Endpoint ===
-    @app.get("/api/info")
-    async def system_info():
-        """Erweiterte Systeminfos mit Backend-Status"""
-        import platform
-        
-        # Backend Status
-        backends = {}
-        try:
-            import torch
-            backends["torch"] = {
-                "available": True,
-                "version": torch.__version__,
-                "cuda_available": torch.cuda.is_available(),
-                "device_count": torch.cuda.device_count() if torch.cuda.is_available() else 0
-            }
-        except ImportError:
-            backends["torch"] = {"available": False}
-        
-        try:
-            import diffusers
-            backends["diffusers"] = {
-                "available": True,
-                "version": diffusers.__version__
-            }
-        except ImportError:
-            backends["diffusers"] = {"available": False}
-        
-        try:
-            import transformers
-            backends["transformers"] = {
-                "available": True,
-                "version": transformers.__version__
-            }
-        except ImportError:
-            backends["transformers"] = {"available": False}
-        
-        try:
-            from llama_cpp import Llama
-            backends["llama_cpp"] = {"available": True}
-        except ImportError:
-            backends["llama_cpp"] = {"available": False}
-        
-        try:
-            import onnxruntime
-            backends["onnxruntime"] = {
-                "available": True,
-                "version": onnxruntime.__version__,
-                "providers": onnxruntime.get_available_providers()
-            }
-        except ImportError:
-            backends["onnxruntime"] = {"available": False}
-
-        return {
-            "ok": True,
-            "system": {
-                "platform": platform.platform(),
-                "python_version": platform.python_version(),
-                "architecture": platform.machine()
-            },
-            "backends": backends,
-            "features": {
-                "universal_generation": True,
-                "multi_backend_support": True,
-                "auto_model_detection": True,
-                "catalog_installation": True,
-                "nsfw_support": True
-            }
-        }
-
+    """Von start.py importiert."""
     return app
+
+# Direktstart zum Testen (optional)
+if __name__ == "__main__":
+    import uvicorn
+    print(f"Serving WEB from: {WEB_DIR}")
+    uvicorn.run(app, host="0.0.0.0", port=3000)
