@@ -86,7 +86,9 @@
           </div>
         </div>
         <div class="main-area flex flex-col gap-4" style="flex:1;">
-          <div class="card flex-1 flex flex-col gap-4">
+          <!-- Large preview area -->
+          <div id="display-container" class="card hidden" style="min-height:360px; display:flex; align-items:center; justify-content:center;"></div>
+          <div class="card flex flex-col gap-4">
             <div>
               <label class="label" for="prompt">Prompt</label>
               <textarea id="prompt" name="prompt" class="input" rows="4" placeholder="Beschreibe das Bild..." required></textarea>
@@ -114,11 +116,6 @@
               <button type="button" id="btn-clear" class="btn secondary">Prompt leeren</button>
             </div>
           </div>
-          <div id="last-output" class="card hidden">
-            <h3 class="text-lg font-semibold mb-2">Letztes Ergebnis</h3>
-            <img id="last-img" src="" alt="Letztes Bild" style="max-width:100%; border-radius:0.5rem;">
-            <p class="text-sm text-muted mt-2">Du findest deine generierten Inhalte auch in der <a href="gallery.html" class="text-blue-400 underline">Galerie</a>.</p>
-          </div>
         </div>
       </div>
     </form>
@@ -130,16 +127,30 @@
     const previewImg = document.getElementById('preview-img');
     fileInput.addEventListener('change', function(){
       const file = this.files && this.files[0];
+      const display = document.getElementById('display-container');
       if(file){
         const reader = new FileReader();
         reader.onload = function(e){
           previewImg.src = e.target.result;
           previewContainer.classList.remove('hidden');
+          if(display){
+            display.innerHTML = '';
+            const imgEl = document.createElement('img');
+            imgEl.src = e.target.result;
+            imgEl.style.maxWidth = '100%';
+            imgEl.style.borderRadius = '0.5rem';
+            display.appendChild(imgEl);
+            display.classList.remove('hidden');
+          }
         };
         reader.readAsDataURL(file);
       } else {
         previewContainer.classList.add('hidden');
         previewImg.src = '';
+        if(display){
+          display.classList.add('hidden');
+          display.innerHTML = '';
+        }
       }
     });
 
@@ -303,9 +314,16 @@
     document.getElementById('btn-clear').addEventListener('click', ()=>{ document.getElementById('prompt').value=''; });
 
     window.LMS.onGenerated = (url)=>{
-      const box = document.getElementById('last-output');
-      const img = document.getElementById('last-img');
-      img.src = url; box.classList.remove('hidden');
+      const display = document.getElementById('display-container');
+      if(display){
+        display.innerHTML = '';
+        const imgEl = document.createElement('img');
+        imgEl.src = url;
+        imgEl.style.maxWidth = '100%';
+        imgEl.style.borderRadius = '0.5rem';
+        display.appendChild(imgEl);
+        display.classList.remove('hidden');
+      }
       LMS.toast('Dein Bild wurde generiert und ist in der Galerie verfügbar.', 'success');
     };
   })();
