@@ -1,144 +1,466 @@
-# start.py – LocalMediaSuite mit verpflichtender Desktop-UI
+# start.py – LocalMediaSuite Enhanced Startup
 from __future__ import annotations
 import threading
 import time
 import sys
 import os
+import socket
+import subprocess
+import logging
+from pathlib import Path
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 HOST = "0.0.0.0"
 PORT = 3000
-RELOAD = False  # bei Bedarf True setzen (Entwicklung)
+RELOAD = "--reload" in sys.argv or "--dev" in sys.argv
 
-def print_bind_addresses(port: int):
-    # Robuste Ermittlung erreichbarer IPv4-URLs (ohne Zusatzlibs)
-    urls = set()
+def check_dependencies():
+    """Check if all required dependencies are available"""
+    missing_deps = []
+    
+    # Check core dependencies
     try:
-        import socket
-        # bevorzugt: UDP "connect" trick
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
+        import fastapi
+        import uvicorn
+        import pydantic
+    except ImportError as e:
+        missing_deps.append(f"FastAPI stack: {e}")
+    
+    # Check optional dependencies
+    optional_missing = []
+    try:
+        import torch
+    except ImportError:
+        optional_missing.append("torch (für GPU-Beschleunigung)")
+    
+    try:
+        import diffusers
+    except ImportError:
+        optional_missing.append("diffusers (für KI-Generierung)")
+    
+    if missing_deps:
+        print("❌ Kritische Abhängigkeiten fehlen:")
+        for dep in missing_deps:
+            print(f"   - {dep}")
+        print("\n💡 Installiere sie mit: pip install -r requirements.txt")
+        return False
+    
+    if optional_missing:
+        print("⚠️ Optionale Abhängigkeiten fehlen:")
+        for dep in optional_missing:
+            print(f"   - {dep}")
+        print("   KI-Generierung wird möglicherweise nicht funktionieren.\n")
+    
+    return True
+
+def setup_directories():
+    """Create necessary directories if they don't exist"""
+    dirs_to_create = [
+        "outputs/images",
+        "outputs/videos", 
+        "models/image",
+        "models/video",
+        "models/llm",
+        "config"
+    ]
+    
+    for dir_path in dirs_to_create:
+        Path(dir_path).mkdir(parents=True, exist_ok=True)
+        
+    # Create .gitkeep files for empty directories
+    for dir_path in dirs_to_create:
+        gitkeep_path = Path(dir_path) / ".gitkeep"
+        if not gitkeep_path.exists():
+            gitkeep_path.touch()
+    
+    logger.info("📁 Verzeichnisstruktur erstellt/überprüft")
+
+def get_local_ip():
+    """Get the local IP address"""
+    try:
+        # Connect to a remote address to determine local IP
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             s.connect(("8.8.8.8", 80))
-            ip = s.getsockname()[0]
-            if ip and not ip.startswith("127."):
-                urls.add(f"http://{ip}:{port}/")
-        finally:
-            s.close()
-        # weitere Interfaces grob abfragen
-        host = socket.gethostname()
-        for info in socket.getaddrinfo(host, None):
-            if info[0] == socket.AF_INET:
-                ip = info[4][0]
-                if ip and not ip.startswith("127."):
-                    urls.add(f"http://{ip}:{port}/")
+            return s.getsockname()[0]
     except Exception:
-        pass
-    urls.add(f"http://127.0.0.1:{port}/")
-    urls.add(f"http://localhost:{port}/")
+        return "127.0.0.1"
 
-    print("\n=== LocalMediaSuite erreichbar unter: ===")
-    for u in sorted(urls):
-        print(f"  -> {u}")
-    print("========================================\n")
-
+def print_startup_info(port: int):
+    """Print startup information with all available URLs"""
+    local_ip = get_local_ip()
+    
+    print("\n" + "="*60)
+    print("🚀 LocalMediaSuite gestartet!")
+    print("="*60)
+    print(f"📡 Server läuft auf Port {port}")
+    print("\n🌐 Erreichbar unter:")
+    print(f"   • Lokal:      http://127.0.0.1:{port}")
+    print(f"   • Netzwerk:   http://{local_ip}:{port}")
+    print(f"   • Localhost:  http://localhost:{port}")
+    
+    if local_ip != "127.0.0.1":
+        print(f"\n📱 Für mobile Geräte im Netzwerk: http://{local_ip}:{port}")
+    
+    print("\n🎯 Verfügbare Seiten:")
+    print("   • /             - Startseite")
+    print("   • /image.html   - Bild-Generator (SFW)")
+    print("   • /image_nsfw.html - Bild-Generator (NSFW)")
+    print("   • /video.html   - Video-Generator (SFW)")
+    print("   • /video_nsfw.html - Video-Generator (NSFW)")
+    print("   • /gallery.html - Galerie")
+    print("   • /catalog.html - Modell-Katalog")
+    print("   • /settings.html - Einstellungen")
+    
+    print("\n🔧 API-Endpunkte:")
+    print(f"   • http://{local_ip}:{port}/api/status")
+    print(f"   • http://{local_ip}:{port}/api/models")
+    print(f"   • http://{local_ip}:{port}/docs (FastAPI Dokumentation)")
+    
+    print("\n" + "="*60)
+    print("💡 Tipp: Öffne die Desktop-UI für Live-Status und Systeminfos")
+    print("🛑 Beenden: Strg+C oder Desktop-UI schließen")
+    print("="*60 + "\n")
 
 def run_server(host: str, port: int, reload: bool = False):
-    # Startet Uvicorn synchron (blockierend) – wir rufen das in einem Thread auf.
-    import uvicorn
-    from uvicorn import Config, Server
-    from server.server import build_app
-
-    cfg = Config(app=build_app, host=host, port=port, reload=reload, log_level="info")
-    server = Server(cfg)
-    server.run()
-
+    """Start the FastAPI server"""
+    try:
+        import uvicorn
+        from server.server import build_app
+        
+        app = build_app()
+        
+        # Configure uvicorn with better settings
+        config = uvicorn.Config(
+            app=app,
+            host=host, 
+            port=port,
+            reload=reload,
+            log_level="info",
+            access_log=True,
+            server_header=False,
+            date_header=False
+        )
+        
+        server = uvicorn.Server(config)
+        server.run()
+        
+    except Exception as e:
+        logger.error(f"Server startup failed: {e}")
+        sys.exit(1)
 
 def start_with_ui(host: str, port: int, reload: bool = False):
-    """
-    Startet den FastAPI-Server im Hintergrundthread und zeigt eine Desktop-UI (Tkinter),
-    die dauerhaft Systemstatus & laufende Vorgänge pollt und darstellt.
-    """
-    print_bind_addresses(port)
-
-    # Server als Daemon-Thread starten
-    t = threading.Thread(target=run_server, args=(host, port, reload), daemon=True)
-    t.start()
-
-    # ---- Desktop-UI (Tkinter) ----
-    import tkinter as tk
-    from tkinter import ttk
-    import urllib.request, json
-
-    def fetch_json(url, timeout=2):
+    """Start server with desktop UI"""
+    
+    # Setup
+    setup_directories()
+    print_startup_info(port)
+    
+    # Start server in background thread
+    server_thread = threading.Thread(
+        target=run_server, 
+        args=(host, port, reload), 
+        daemon=True,
+        name="FastAPIServer"
+    )
+    server_thread.start()
+    
+    # Give server time to start
+    time.sleep(2)
+    
+    # Check if server started successfully
+    try:
+        import urllib.request
+        urllib.request.urlopen(f"http://127.0.0.1:{port}/api/health", timeout=5)
+        logger.info("✅ Server erfolgreich gestartet")
+    except Exception as e:
+        logger.error(f"❌ Server nicht erreichbar: {e}")
+        print("⚠️  Server möglicherweise nicht gestartet. Prüfe die Logs.")
+    
+    # ---- Desktop UI (Tkinter) ----
+    try:
+        import tkinter as tk
+        from tkinter import ttk, messagebox
+        import urllib.request
+        import json
+    except ImportError:
+        logger.error("Tkinter nicht verfügbar - starte ohne Desktop-UI")
+        print("🖥️  Desktop-UI nicht verfügbar (Tkinter fehlt)")
+        print("💻 Server läuft trotzdem - öffne Browser manuell")
+        
+        # Keep main thread alive
         try:
-            with urllib.request.urlopen(url, timeout=timeout) as r:
-                return json.loads(r.read().decode("utf-8"))
-        except Exception:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            logger.info("👋 Server beendet")
+            return
+
+    def fetch_json(url, timeout=3):
+        """Fetch JSON data from URL with error handling"""
+        try:
+            with urllib.request.urlopen(url, timeout=timeout) as response:
+                return json.loads(response.read().decode('utf-8'))
+        except Exception as e:
+            logger.debug(f"API call failed: {url} - {e}")
             return None
 
+    # Create main window
     root = tk.Tk()
-    root.title("LocalMediaSuite – Server UI")
-    root.geometry("760x480")
-
-    # Header
-    header = ttk.Frame(root, padding=8)
-    header.pack(fill="x")
-    ttk.Label(header, text="LocalMediaSuite", font=("Segoe UI", 14, "bold")).pack(side="left")
-    ttk.Label(header, text=f" http://localhost:{port}", foreground="#4a8").pack(side="left", padx=8)
-
-    # Systemstatus
-    stat = ttk.LabelFrame(root, text="Systemstatus", padding=8)
-    stat.pack(fill="x", padx=8, pady=4)
-    lbl_os = ttk.Label(stat, text="OS: -"); lbl_os.pack(anchor="w")
-    lbl_py = ttk.Label(stat, text="Python: -"); lbl_py.pack(anchor="w")
-    lbl_cpu = ttk.Label(stat, text="CPU: -"); lbl_cpu.pack(anchor="w")
-    lbl_ram = ttk.Label(stat, text="RAM: -"); lbl_ram.pack(anchor="w")
-
-    # Aktuelle Vorgänge
-    opsf = ttk.LabelFrame(root, text="Aktuelle Vorgänge", padding=8)
-    opsf.pack(fill="both", expand=True, padx=8, pady=4)
-    cols = ("id","kind","status","progress","since")
-    tree = ttk.Treeview(opsf, columns=cols, show="headings", height=12)
-    for c in cols:
-        tree.heading(c, text=c)
-        tree.column(c, width=120 if c!="id" else 200, anchor="w")
-    tree.pack(fill="both", expand=True)
-
-    # Polling-Loop (1 Hz)
-    def tick():
-        st = fetch_json(f"http://localhost:{port}/api/status")
-        if st and st.get("ok"):
-            sysinfo = st.get("system", {})
-            lbl_os.config(text=f"OS: {sysinfo.get('os','-')}")
-            lbl_py.config(text=f"Python: {sysinfo.get('python','-')}")
-            lbl_cpu.config(text=f"CPU: {sysinfo.get('cpu_percent','-')}%")
-            lbl_ram.config(text=f"RAM: {sysinfo.get('ram_percent','-')}% ({sysinfo.get('total_ram_gb','-')} GB)")
-
-        ops = fetch_json(f"http://localhost:{port}/api/ops")
-        if ops and ops.get("ok"):
-            tree.delete(*tree.get_children())
-            now = time.time()
-            for op in ops["ops"]:
-                since = int(now - op.get("ts_start", now))
-                tree.insert("", "end", values=(
-                    op.get("id"),
-                    op.get("kind"),
-                    op.get("status"),
-                    f"{op.get('progress',0):.2f}",
-                    f"{since}s",
+    root.title("LocalMediaSuite – Server Control")
+    root.geometry("900x600")
+    root.configure(bg='#1a1a1a')
+    
+    # Configure styling
+    style = ttk.Style()
+    style.theme_use('clam')
+    style.configure('TLabel', background='#1a1a1a', foreground='white')
+    style.configure('TFrame', background='#1a1a1a')
+    style.configure('TLabelFrame', background='#1a1a1a', foreground='white')
+    
+    # Header Frame
+    header_frame = ttk.Frame(root, padding=10)
+    header_frame.pack(fill="x")
+    
+    title_label = ttk.Label(
+        header_frame, 
+        text="LocalMediaSuite Server", 
+        font=('Arial', 16, 'bold')
+    )
+    title_label.pack(side="left")
+    
+    url_label = ttk.Label(
+        header_frame, 
+        text=f"🌐 http://{get_local_ip()}:{port}",
+        font=('Arial', 10),
+        foreground='#4CAF50'
+    )
+    url_label.pack(side="right")
+    
+    # System Status Frame
+    status_frame = ttk.LabelFrame(root, text="📊 Systemstatus", padding=10)
+    status_frame.pack(fill="x", padx=10, pady=5)
+    
+    status_labels = {}
+    status_info = [
+        ('os', 'Betriebssystem: -'),
+        ('python', 'Python: -'),
+        ('cpu', 'CPU: -%'),
+        ('ram', 'RAM: -% (- GB)'),
+        ('server', 'Server: Starte...')
+    ]
+    
+    for key, text in status_info:
+        label = ttk.Label(status_frame, text=text)
+        label.pack(anchor="w", pady=2)
+        status_labels[key] = label
+    
+    # Operations Frame
+    ops_frame = ttk.LabelFrame(root, text="⚡ Laufende Vorgänge", padding=10)
+    ops_frame.pack(fill="both", expand=True, padx=10, pady=5)
+    
+    # Operations Treeview
+    columns = ('operation', 'status', 'progress', 'duration')
+    ops_tree = ttk.Treeview(ops_frame, columns=columns, show="headings", height=8)
+    
+    ops_tree.heading('operation', text='Vorgang')
+    ops_tree.heading('status', text='Status')
+    ops_tree.heading('progress', text='Fortschritt')
+    ops_tree.heading('duration', text='Dauer')
+    
+    ops_tree.column('operation', width=200)
+    ops_tree.column('status', width=100)
+    ops_tree.column('progress', width=100)
+    ops_tree.column('duration', width=100)
+    
+    # Scrollbar for treeview
+    ops_scrollbar = ttk.Scrollbar(ops_frame, orient="vertical", command=ops_tree.yview)
+    ops_tree.configure(yscrollcommand=ops_scrollbar.set)
+    
+    ops_tree.pack(side="left", fill="both", expand=True)
+    ops_scrollbar.pack(side="right", fill="y")
+    
+    # Control Buttons Frame
+    controls_frame = ttk.Frame(root, padding=10)
+    controls_frame.pack(fill="x")
+    
+    def open_browser():
+        """Open browser with main URL"""
+        try:
+            import webbrowser
+            webbrowser.open(f"http://{get_local_ip()}:{port}")
+        except Exception as e:
+            messagebox.showerror("Fehler", f"Browser konnte nicht geöffnet werden: {e}")
+    
+    def refresh_data():
+        """Manually refresh all data"""
+        update_status()
+    
+    # Buttons
+    ttk.Button(controls_frame, text="🌐 Browser öffnen", command=open_browser).pack(side="left", padx=5)
+    ttk.Button(controls_frame, text="🔄 Aktualisieren", command=refresh_data).pack(side="left", padx=5)
+    
+    # Status indicator
+    status_indicator = ttk.Label(controls_frame, text="🔴 Starte...", foreground='orange')
+    status_indicator.pack(side="right", padx=5)
+    
+    def update_status():
+        """Update all status information"""
+        # System status
+        system_data = fetch_json(f"http://127.0.0.1:{port}/api/status")
+        if system_data and system_data.get("ok"):
+            sys_info = system_data.get("system", {})
+            status_labels['os'].config(text=f"Betriebssystem: {sys_info.get('os', 'Unbekannt')}")
+            status_labels['python'].config(text=f"Python: {sys_info.get('python', 'Unbekannt')}")
+            status_labels['cpu'].config(text=f"CPU: {sys_info.get('cpu_percent', 0):.1f}%")
+            status_labels['ram'].config(text=f"RAM: {sys_info.get('ram_percent', 0):.1f}% ({sys_info.get('total_ram_gb', 0):.1f} GB)")
+            status_labels['server'].config(text="Server: ✅ Online")
+            status_indicator.config(text="🟢 Online", foreground='green')
+        else:
+            status_labels['server'].config(text="Server: ❌ Offline")
+            status_indicator.config(text="🔴 Offline", foreground='red')
+        
+        # Operations status
+        ops_data = fetch_json(f"http://127.0.0.1:{port}/api/ops")
+        ops_tree.delete(*ops_tree.get_children())
+        
+        if ops_data and ops_data.get("ok"):
+            ops_list = ops_data.get("ops", [])
+            current_time = time.time()
+            
+            for op in ops_list[-10:]:  # Show last 10 operations
+                start_time = op.get("ts_start", current_time)
+                duration = int(current_time - start_time)
+                progress = f"{op.get('progress', 0):.1f}%"
+                
+                # Format operation name
+                op_name = op.get('kind', 'Unknown')
+                if op.get('params', {}).get('prompt'):
+                    prompt_preview = op['params']['prompt'][:30] + "..." if len(op['params']['prompt']) > 30 else op['params']['prompt']
+                    op_name += f": {prompt_preview}"
+                
+                # Status with emoji
+                status = op.get('status', 'unknown')
+                status_display = {
+                    'running': '🔄 Läuft',
+                    'done': '✅ Fertig', 
+                    'error': '❌ Fehler'
+                }.get(status, status)
+                
+                ops_tree.insert("", "end", values=(
+                    op_name,
+                    status_display,
+                    progress,
+                    f"{duration}s"
                 ))
+    
+    # Update loop
+    def update_loop():
+        """Periodic update loop"""
+        update_status()
+        root.after(2000, update_loop)  # Update every 2 seconds
+    
+    # Start update loop
+    root.after(1000, update_loop)  # Start after 1 second
+    
+    def on_closing():
+        """Handle window closing"""
+        if messagebox.askokcancel("Beenden", "LocalMediaSuite Server beenden?"):
+            logger.info("👋 Desktop-UI geschlossen - Server wird beendet")
+            root.destroy()
+            os._exit(0)  # Force exit to stop server thread
+    
+    root.protocol("WM_DELETE_WINDOW", on_closing)
+    
+    # Start UI
+    try:
+        root.mainloop()
+    except KeyboardInterrupt:
+        logger.info("👋 Unterbrochen durch Benutzer")
+    except Exception as e:
+        logger.error(f"UI Error: {e}")
 
-        root.after(1000, tick)
+def start_headless(host: str, port: int, reload: bool = False):
+    """Start server without UI (headless mode)"""
+    setup_directories()
+    print_startup_info(port)
+    
+    try:
+        run_server(host, port, reload)
+    except KeyboardInterrupt:
+        logger.info("👋 Server beendet durch Benutzer")
+    except Exception as e:
+        logger.error(f"Server Error: {e}")
 
-    root.after(800, tick)
+def main():
+    """Main entry point with argument parsing"""
+    
+    # Parse command line arguments
+    if len(sys.argv) > 1:
+        if sys.argv[1] in ['--help', '-h']:
+            print("""
+LocalMediaSuite Startup Script
 
-    def on_close():
-        # UI zu -> Prozess beendet; der Server-Thread ist daemon und folgt dem Prozessende.
-        root.destroy()
+Usage:
+  python start.py [options]
 
-    root.protocol("WM_DELETE_WINDOW", on_close)
-    root.mainloop()
+Options:
+  --headless     Starte ohne Desktop-UI
+  --reload       Aktiviere Hot-Reload für Entwicklung
+  --dev          Alias für --reload
+  --port PORT    Verwende anderen Port (default: 3000)
+  --host HOST    Bind zu anderer Adresse (default: 0.0.0.0)
+  --help, -h     Zeige diese Hilfe
 
+Beispiele:
+  python start.py                    # Normal mit Desktop-UI
+  python start.py --headless         # Ohne UI
+  python start.py --dev              # Entwicklungsmodus
+  python start.py --port 8080        # Anderer Port
+  python start.py --headless --port 8080  # Kombiniert
+""")
+            return
+
+    # Parse port
+    port = PORT
+    if '--port' in sys.argv:
+        try:
+            port_idx = sys.argv.index('--port') + 1
+            port = int(sys.argv[port_idx])
+        except (IndexError, ValueError):
+            print("❌ Ungültiger Port angegeben")
+            sys.exit(1)
+
+    # Parse host
+    host = HOST
+    if '--host' in sys.argv:
+        try:
+            host_idx = sys.argv.index('--host') + 1
+            host = sys.argv[host_idx]
+        except IndexError:
+            print("❌ Ungültiger Host angegeben")
+            sys.exit(1)
+
+    # Parse other flags
+    headless = '--headless' in sys.argv
+    reload = '--reload' in sys.argv or '--dev' in sys.argv
+
+    # Check dependencies first
+    if not check_dependencies():
+        sys.exit(1)
+
+    # Start appropriate mode
+    if headless:
+        logger.info("🖥️  Starte im Headless-Modus (ohne Desktop-UI)")
+        start_headless(host, port, reload)
+    else:
+        logger.info("🖥️  Starte mit Desktop-UI")
+        start_with_ui(host, port, reload)
 
 if __name__ == "__main__":
-    # Immer UI starten – Status ist zentral.
-    start_with_ui(HOST, PORT, RELOAD)
+    main()

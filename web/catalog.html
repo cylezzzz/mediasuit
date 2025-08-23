@@ -1,165 +1,579 @@
-<!doctype html><html lang="de"><head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
-    <link rel="icon" type="image/png" href="/assets/logo.png" />
-    <link rel="icon" href="/assets/logo.ico" sizes="any" />
-    <meta name="theme-color" content="#0a0e13" />
-<title>LocalMediaSuite</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="/assets/styles.css" />
-<script defer src="/assets/app.js"></script>
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        base: { bg: "#0a0e13", card:"#111827", border:"#1f2937", text:"#f3f4f6", sub:"#9ca3af", accent:"#3b82f6" }
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
+  <link rel="icon" type="image/png" href="/assets/logo.png" />
+  <link rel="icon" href="/assets/logo.ico" sizes="any" />
+  <meta name="theme-color" content="#0a0e13" />
+  <title>LocalMediaSuite – Katalog</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/assets/styles.css" />
+  <script defer src="/assets/app.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            base: { bg: "#0a0e13", card:"#111827", border:"#1f2937", text:"#f3f4f6", sub:"#9ca3af", accent:"#3b82f6" }
+          }
+        }
       }
     }
-  }
-}
-</script>
-</head><body>
-    <header class="sticky top-0 z-10 bg-[var(--bg)]/80 backdrop-blur border-b border-[var(--border)]">
-      <div class="max-w-6xl mx-auto flex items-center gap-4 p-4">
-        <img src="/assets/logo.svg" class="w-8 h-8" />
-        <nav class="flex gap-4 text-sm">
-          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/index.html">Home</a>
-          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/image.html">Image (SFW)</a>
-          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/image_nsfw.html">Image (NSFW)</a>
-          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/video.html">Video (SFW)</a>
-          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/video_nsfw.html">Video (NSFW)</a>
-          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/gallery.html">Galerie</a>
-          <a class="px-3 py-1 rounded bg-blue-600 text-white" href="/catalog.html">Katalog</a>
-          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/settings.html">Settings</a>
-        </nav>
-      </div>
-    </header>
-    <main class="max-w-6xl mx-auto p-4 space-y-6">
-<section class="card">
-  <h2 class="text-xl font-semibold mb-2">Katalog</h2>
-        <div id="rec" class="card mb-4">
-          <div class="flex items-center justify-between mb-2">
-            <div class="font-semibold">Empfohlene Modelle (ultra-realistisch)</div>
-            <div class="text-xs text-[var(--sub)]">Direktinstallation in den richtigen Ordner</div>
-          </div>
-          <div id="rec-list" class="grid md:grid-cols-2 gap-2"></div>
-        </div>
-  <div class="flex gap-2 mb-4">
-    <button data-type="image" class="tab px-3 py-1 rounded bg-blue-600 text-white">Image</button>
-    <button data-type="video" class="tab px-3 py-1 rounded hover:bg-gray-800">Video</button>
-    <button data-type="llm" class="tab px-3 py-1 rounded hover:bg-gray-800">LLM (Ollama)</button>
-    <label class="ml-auto inline-flex items-center gap-2 text-sm">
-      <input id="nsfw" type="checkbox" class="scale-125"><span>Nur NSFW‑fähig</span>
-    </label>
-  </div>
-  <div id="list" class="grid md:grid-cols-2 gap-3"></div>
-</section>
-<script>
-(async function(){
-  let current = 'image';
-  async function redraw(){
-    const nsfw = document.getElementById('nsfw').checked;
-    const items = await LMS.loadModels(current, nsfw);
-    const list = document.getElementById('list');
-    list.innerHTML = '';
-    if (items.length === 0) {
-      list.innerHTML = '<div class="text-base-sub">Keine Einträge gefunden.</div>';
-      return;
-    }
-    for (const m of items) {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `<div class="flex justify-between items-start">
+  </script>
+</head>
+<body>
+  <header class="sticky top-0 z-10 bg-[var(--bg-primary)]/90 backdrop-blur border-b border-[var(--border-primary)]">
+    <div class="max-w-6xl mx-auto flex items-center gap-4 p-4">
+      <img src="/assets/logo.svg" class="w-8 h-8" alt="Logo" />
+      <div class="font-semibold text-xl">LocalMediaSuite</div>
+      <nav class="flex gap-3 text-sm ml-auto">
+        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/index.html">Home</a>
+        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/image.html">Image (SFW)</a>
+        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/image_nsfw.html">Image (NSFW)</a>
+        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/video.html">Video (SFW)</a>
+        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/video_nsfw.html">Video (NSFW)</a>
+        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/gallery.html">Galerie</a>
+        <a class="px-3 py-1 rounded bg-blue-600 text-white" href="/catalog.html">Katalog</a>
+        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/settings.html">Settings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-4 space-y-6">
+    <!-- Header -->
+    <div class="card">
+      <div class="flex items-center justify-between mb-4">
         <div>
-          <div class="font-semibold">${m.name}</div>
-          <div class="text-sm text-gray-400">${m.type.toUpperCase()} ${m.backend ? '('+m.backend+')': ''}</div>
-          <div class="text-sm">${m.recommended_use || ''}</div>
-          <div class="text-xs text-gray-400">${(m.tags||[]).join(', ')}</div>
+          <h1 class="text-2xl font-semibold text-white">Modell-Katalog</h1>
+          <p class="text-gray-400 mt-1">Installiere neue KI-Modelle oder verwalte vorhandene</p>
         </div>
-        ${m.has_sidecar ? '<span class="text-xs bg-green-700 text-white px-2 py-1 rounded">Sidecar</span>' : ''}
-      </div>`;
-      list.appendChild(card);
-    }
-  }
-  document.querySelectorAll('.tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(b=>b.classList.remove('bg-blue-600','text-white'));
-      btn.classList.add('bg-blue-600','text-white');
-      current = btn.dataset.type;
-      redraw();
-        // load recommendations
-        (async function(){
-          try{
-            const rImg = await LMS.api('/api/recommendations?type=image');
-            const rVid = await LMS.api('/api/recommendations?type=video');
-            const list = document.getElementById('rec-list');
-            ;[...rImg, ...rVid].forEach(r=>{
-              const d=document.createElement('div'); d.className='card';
-              d.innerHTML = `<div class='flex justify-between gap-2'>
+        <button id="refresh-models" class="btn secondary">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          Aktualisieren
+        </button>
+      </div>
+
+      <!-- Quick Install Recommendations -->
+      <div class="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-blue-800/50 rounded-lg p-4 mb-4">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-2xl">🚀</span>
+          <h3 class="font-semibold text-blue-400">Empfohlene Modelle (Ein-Klick-Installation)</h3>
+        </div>
+        <p class="text-sm text-gray-300 mb-3">Diese Modelle werden automatisch heruntergeladen und installiert:</p>
+        <div id="recommendations-grid" class="grid md:grid-cols-2 gap-3">
+          <!-- Wird dynamisch gefüllt -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter & View Controls -->
+    <div class="card">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex gap-2">
+          <button data-type="all" class="filter-tab active">🔍 Alle Modelle</button>
+          <button data-type="image" class="filter-tab">🖼️ Bild-Modelle</button>
+          <button data-type="video" class="filter-tab">🎥 Video-Modelle</button>
+          <button data-type="llm" class="filter-tab">🤖 LLM (Ollama)</button>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <label class="flex items-center gap-2 text-sm">
+            <input id="nsfw-only" type="checkbox" class="rounded"/>
+            <span>Nur NSFW-fähig</span>
+          </label>
+          
+          <select id="sort-by" class="input text-sm">
+            <option value="name">Nach Name</option>
+            <option value="size">Nach Größe</option>
+            <option value="type">Nach Typ</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Installation Progress -->
+    <div id="install-progress" class="card hidden">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="loading w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <span class="font-semibold">Installation läuft...</span>
+      </div>
+      <div id="install-status" class="text-sm text-gray-400">Bereite Download vor...</div>
+      <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
+        <div id="install-progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Models List -->
+    <div class="card">
+      <h2 class="text-xl font-semibold mb-4">
+        <span id="models-title">Installierte Modelle</span>
+        <span id="models-count" class="text-sm text-gray-400 ml-2">(0 gefunden)</span>
+      </h2>
+      
+      <div id="models-loading" class="text-center py-8 text-gray-400">
+        <div class="loading">Lade Modelle...</div>
+      </div>
+      
+      <div id="models-grid" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 hidden">
+        <!-- Wird dynamisch gefüllt -->
+      </div>
+      
+      <div id="models-empty" class="text-center py-8 hidden">
+        <div class="text-6xl mb-4">📦</div>
+        <h3 class="text-lg font-semibold text-gray-300 mb-2">Keine Modelle gefunden</h3>
+        <p class="text-gray-400 mb-4">Installiere dein erstes Modell über die Empfehlungen oben.</p>
+      </div>
+    </div>
+
+    <!-- Manual Install Modal -->
+    <div id="manual-install-modal" class="fixed inset-0 bg-black/80 backdrop-blur z-50 hidden">
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 max-w-lg w-full p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold">Modell manuell installieren</h3>
+            <button id="close-manual-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+          </div>
+          
+          <form id="manual-install-form" class="space-y-4">
+            <div>
+              <label class="label">Hugging Face Repository ID</label>
+              <input type="text" id="manual-repo-id" class="input w-full" placeholder="z.B. runwayml/stable-diffusion-v1-5" required />
+              <div class="text-xs text-gray-400 mt-1">Format: username/repository-name</div>
+            </div>
+            
+            <div>
+              <label class="label">Modell-Typ</label>
+              <select id="manual-type" class="input w-full" required>
+                <option value="image">Bild-Modell</option>
+                <option value="video">Video-Modell</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="label">Lokaler Name (optional)</label>
+              <input type="text" id="manual-name" class="input w-full" placeholder="Wird aus Repository-Name generiert" />
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="manual-nsfw" />
+              <label for="manual-nsfw" class="text-sm">NSFW-fähig</label>
+            </div>
+            
+            <div class="flex gap-3 pt-4">
+              <button type="submit" class="btn primary flex-1">Installieren</button>
+              <button type="button" id="cancel-manual" class="btn secondary">Abbrechen</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (async function(){
+      let currentFilter = 'all';
+      let currentSort = 'name';
+      let showNSFWOnly = false;
+      let allModels = [];
+      let installQueue = [];
+
+      const elements = {
+        refreshBtn: document.getElementById('refresh-models'),
+        recommendationsGrid: document.getElementById('recommendations-grid'),
+        filterTabs: document.querySelectorAll('.filter-tab'),
+        nsfwOnly: document.getElementById('nsfw-only'),
+        sortBy: document.getElementById('sort-by'),
+        installProgress: document.getElementById('install-progress'),
+        installStatus: document.getElementById('install-status'),
+        installProgressBar: document.getElementById('install-progress-bar'),
+        modelsLoading: document.getElementById('models-loading'),
+        modelsGrid: document.getElementById('models-grid'),
+        modelsEmpty: document.getElementById('models-empty'),
+        modelsTitle: document.getElementById('models-title'),
+        modelsCount: document.getElementById('models-count'),
+        manualModal: document.getElementById('manual-install-modal'),
+        closeManualModal: document.getElementById('close-manual-modal'),
+        manualForm: document.getElementById('manual-install-form'),
+        cancelManual: document.getElementById('cancel-manual')
+      };
+
+      // Utility Functions
+      function formatFileSize(bytes) {
+        if (!bytes || bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+      }
+
+      // Load Recommendations
+      async function loadRecommendations() {
+        try {
+          const [imageRecs, videoRecs] = await Promise.all([
+            LMS.fetchJSON('/api/recommendations?type=image').catch(() => []),
+            LMS.fetchJSON('/api/recommendations?type=video').catch(() => [])
+          ]);
+
+          const allRecs = [...imageRecs, ...videoRecs];
+          
+          elements.recommendationsGrid.innerHTML = allRecs.map(rec => `
+            <div class="bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:border-blue-600 transition-colors">
+              <div class="flex justify-between items-start mb-2">
                 <div>
-                  <div class='font-semibold'>${r.name}</div>
-                  <div class='text-sm text-gray-400'>${r.type.toUpperCase()} • HF: ${r.repo_id}</div>
-                  <div class='text-sm'>${r.recommended_use||''}</div>
-                  <div class='text-xs text-gray-400'>${(r.tags||[]).join(', ')}</div>
+                  <div class="font-semibold text-blue-400">${rec.name}</div>
+                  <div class="text-sm text-gray-400">${rec.type.toUpperCase()} • ${rec.repo_id}</div>
+                  ${rec.nsfw_capable ? '<span class="text-xs bg-pink-600 text-white px-2 py-1 rounded mt-1 inline-block">🔞 NSFW</span>' : ''}
                 </div>
-                <button class='px-3 py-1 rounded bg-blue-600 text-white' data-repo='${r.repo_id}' data-type='${r.type}' data-name='${r.name}'>Installieren</button>
-              </div>`;
-              list.appendChild(d);
+                <button class="install-rec-btn btn primary text-sm" 
+                        data-repo="${rec.repo_id}" 
+                        data-type="${rec.type}" 
+                        data-name="${rec.name}"
+                        data-nsfw="${rec.nsfw_capable}">
+                  Installieren
+                </button>
+              </div>
+              <div class="text-sm text-gray-300 mb-2">${rec.recommended_use || 'Keine Beschreibung verfügbar'}</div>
+              <div class="flex flex-wrap gap-1">
+                ${(rec.tags || []).map(tag => `<span class="text-xs bg-blue-900/50 text-blue-300 px-2 py-1 rounded">${tag}</span>`).join('')}
+              </div>
+            </div>
+          `).join('');
+
+          // Attach event listeners to install buttons
+          elements.recommendationsGrid.querySelectorAll('.install-rec-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              const button = e.target;
+              const originalText = button.textContent;
+              
+              try {
+                button.disabled = true;
+                button.textContent = 'Installiere...';
+                
+                await installModel({
+                  repo_id: button.dataset.repo,
+                  type: button.dataset.type,
+                  name: button.dataset.name,
+                  nsfw_capable: button.dataset.nsfw === 'true'
+                });
+                
+                button.textContent = '✅ Installiert';
+                button.classList.remove('btn-primary');
+                button.classList.add('bg-green-600');
+                
+                // Refresh models list
+                setTimeout(loadModels, 2000);
+                
+              } catch (error) {
+                console.error('Installation failed:', error);
+                LMS.toast('Installation fehlgeschlagen: ' + error.message, 'error');
+                button.textContent = originalText;
+                button.disabled = false;
+              }
             });
-            list.querySelectorAll('button').forEach(b=>{
-              b.addEventListener('click', async()=>{
-                b.disabled=true; const t=b.textContent; b.textContent='Installiere...';
-                try{
-                  await LMS.installModel({repo_id:b.dataset.repo, type:b.dataset.type, name:b.dataset.name});
-                  LMS.toast('Installiert');
-                  await LMS.api('/api/models/refresh',{method:'POST'});
-                  await redraw();
-                }catch(e){ LMS.toast('Installation fehlgeschlagen'); console.error(e); }
-                finally{ b.disabled=false; b.textContent=t; }
-              });
-            });
-          }catch(e){ console.error(e); }
-        })();
-    });
-  });
-  document.getElementById('nsfw').addEventListener('change', redraw);
-  redraw();
-        // load recommendations
-        (async function(){
-          try{
-            const rImg = await LMS.api('/api/recommendations?type=image');
-            const rVid = await LMS.api('/api/recommendations?type=video');
-            const list = document.getElementById('rec-list');
-            ;[...rImg, ...rVid].forEach(r=>{
-              const d=document.createElement('div'); d.className='card';
-              d.innerHTML = `<div class='flex justify-between gap-2'>
-                <div>
-                  <div class='font-semibold'>${r.name}</div>
-                  <div class='text-sm text-gray-400'>${r.type.toUpperCase()} • HF: ${r.repo_id}</div>
-                  <div class='text-sm'>${r.recommended_use||''}</div>
-                  <div class='text-xs text-gray-400'>${(r.tags||[]).join(', ')}</div>
+          });
+
+        } catch (error) {
+          console.error('Failed to load recommendations:', error);
+          elements.recommendationsGrid.innerHTML = `
+            <div class="col-span-full text-center text-gray-400 py-4">
+              ❌ Empfehlungen konnten nicht geladen werden
+            </div>
+          `;
+        }
+      }
+
+      // Load Models
+      async function loadModels() {
+        try {
+          elements.modelsLoading.classList.remove('hidden');
+          elements.modelsGrid.classList.add('hidden');
+          elements.modelsEmpty.classList.add('hidden');
+
+          const models = await LMS.fetchJSON('/api/models');
+          allModels = Array.isArray(models) ? models : [];
+
+          applyFiltersAndRender();
+
+        } catch (error) {
+          console.error('Failed to load models:', error);
+          elements.modelsLoading.innerHTML = `
+            <div class="text-red-400">
+              ❌ Fehler beim Laden der Modelle<br>
+              <button onclick="loadModels()" class="btn primary mt-2">Erneut versuchen</button>
+            </div>
+          `;
+        }
+      }
+
+      // Apply Filters and Render
+      function applyFiltersAndRender() {
+        let filtered = [...allModels];
+
+        // Type filter
+        if (currentFilter !== 'all') {
+          filtered = filtered.filter(m => m.type === currentFilter);
+        }
+
+        // NSFW filter
+        if (showNSFWOnly) {
+          filtered = filtered.filter(m => m.nsfw_capable);
+        }
+
+        // Sort
+        filtered.sort((a, b) => {
+          switch (currentSort) {
+            case 'size':
+              return (b.size_bytes || 0) - (a.size_bytes || 0);
+            case 'type':
+              return (a.type || '').localeCompare(b.type || '');
+            default: // name
+              return (a.name || '').localeCompare(b.name || '');
+          }
+        });
+
+        renderModels(filtered);
+      }
+
+      // Render Models
+      function renderModels(models) {
+        elements.modelsLoading.classList.add('hidden');
+        
+        const typeLabel = currentFilter === 'all' ? 'Alle Modelle' : 
+                         currentFilter === 'image' ? 'Bild-Modelle' :
+                         currentFilter === 'video' ? 'Video-Modelle' : 'LLM-Modelle';
+        
+        elements.modelsTitle.textContent = typeLabel;
+        elements.modelsCount.textContent = `(${models.length} gefunden)`;
+
+        if (models.length === 0) {
+          elements.modelsGrid.classList.add('hidden');
+          elements.modelsEmpty.classList.remove('hidden');
+          return;
+        }
+
+        elements.modelsEmpty.classList.add('hidden');
+        elements.modelsGrid.classList.remove('hidden');
+
+        elements.modelsGrid.innerHTML = models.map(model => {
+          const typeIcon = model.type === 'image' ? '🖼️' : 
+                          model.type === 'video' ? '🎥' : '🤖';
+          const backendLabel = model.backend === 'diffusers_dir' ? 'Diffusers' : 
+                              model.backend === 'diffusers_single' ? 'Single File' : 
+                              model.backend === 'ollama' ? 'Ollama' : model.backend;
+          
+          return `
+            <div class="model-card bg-gray-800/30 border border-gray-700 rounded-lg p-4 hover:border-blue-600 transition-all duration-200">
+              <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center gap-2">
+                  <span class="text-2xl">${typeIcon}</span>
+                  <div>
+                    <div class="font-semibold text-white">${model.name}</div>
+                    <div class="text-sm text-gray-400">${model.type.toUpperCase()} • ${backendLabel}</div>
+                  </div>
                 </div>
-                <button class='px-3 py-1 rounded bg-blue-600 text-white' data-repo='${r.repo_id}' data-type='${r.type}' data-name='${r.name}'>Installieren</button>
-              </div>`;
-              list.appendChild(d);
+                
+                <div class="flex flex-col items-end gap-1">
+                  ${model.nsfw_capable ? '<span class="text-xs bg-pink-600 text-white px-2 py-1 rounded">🔞</span>' : ''}
+                  ${model.has_sidecar ? '<span class="text-xs bg-green-600 text-white px-2 py-1 rounded">📄 Sidecar</span>' : ''}
+                </div>
+              </div>
+
+              <div class="mb-3">
+                ${model.recommended_use ? `
+                  <p class="text-sm text-gray-300 mb-2">${model.recommended_use}</p>
+                ` : ''}
+                
+                <div class="flex flex-wrap gap-1 mb-2">
+                  ${(model.tags || []).map(tag => 
+                    `<span class="text-xs bg-blue-900/50 text-blue-300 px-2 py-1 rounded">${tag}</span>`
+                  ).join('')}
+                </div>
+
+                <div class="text-xs text-gray-400 space-y-1">
+                  ${model.size_bytes ? `<div>💾 ${formatFileSize(model.size_bytes)}</div>` : ''}
+                  ${model.path ? `<div>📁 ${model.path.replace(/^.*[\\\/]/, '...')}</div>` : ''}
+                  <div>🔧 Modalitäten: ${(model.modalities || []).join(', ')}</div>
+                </div>
+              </div>
+
+              <div class="flex gap-2">
+                <button class="btn secondary text-sm flex-1" onclick="showModelDetails('${model.id}')">
+                  Details
+                </button>
+                ${model.backend !== 'ollama' ? `
+                  <button class="btn bg-red-600 hover:bg-red-700 text-sm" onclick="deleteModel('${model.id}')">
+                    🗑️
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Install Model Function
+      async function installModel({ repo_id, type, name, nsfw_capable }) {
+        return new Promise((resolve, reject) => {
+          // Show progress
+          elements.installProgress.classList.remove('hidden');
+          elements.installStatus.textContent = `Installiere ${name}...`;
+          elements.installProgressBar.style.width = '0%';
+
+          // Simulate progress (since we don't have real progress from API)
+          let progress = 0;
+          const progressInterval = setInterval(() => {
+            progress += Math.random() * 10;
+            if (progress > 90) progress = 90;
+            elements.installProgressBar.style.width = progress + '%';
+          }, 500);
+
+          // Actual installation
+          LMS.installModel({ repo_id, type, name })
+            .then(result => {
+              clearInterval(progressInterval);
+              elements.installProgressBar.style.width = '100%';
+              elements.installStatus.textContent = 'Installation abgeschlossen!';
+              
+              setTimeout(() => {
+                elements.installProgress.classList.add('hidden');
+              }, 2000);
+              
+              LMS.toast(`${name} erfolgreich installiert!`, 'success');
+              resolve(result);
+            })
+            .catch(error => {
+              clearInterval(progressInterval);
+              elements.installProgress.classList.add('hidden');
+              reject(error);
             });
-            list.querySelectorAll('button').forEach(b=>{
-              b.addEventListener('click', async()=>{
-                b.disabled=true; const t=b.textContent; b.textContent='Installiere...';
-                try{
-                  await LMS.installModel({repo_id:b.dataset.repo, type:b.dataset.type, name:b.dataset.name});
-                  LMS.toast('Installiert');
-                  await LMS.api('/api/models/refresh',{method:'POST'});
-                  await redraw();
-                }catch(e){ LMS.toast('Installation fehlgeschlagen'); console.error(e); }
-                finally{ b.disabled=false; b.textContent=t; }
-              });
-            });
-          }catch(e){ console.error(e); }
-        })();
-})();
-</script>
-</main>
-    </body></html>
+        });
+      }
+
+      // Event Listeners
+      elements.filterTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          elements.filterTabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          currentFilter = tab.dataset.type;
+          applyFiltersAndRender();
+        });
+      });
+
+      elements.nsfwOnly.addEventListener('change', (e) => {
+        showNSFWOnly = e.target.checked;
+        applyFiltersAndRender();
+      });
+
+      elements.sortBy.addEventListener('change', (e) => {
+        currentSort = e.target.value;
+        applyFiltersAndRender();
+      });
+
+      elements.refreshBtn.addEventListener('click', () => {
+        loadModels();
+        loadRecommendations();
+      });
+
+      // Manual Install Modal
+      elements.closeManualModal.addEventListener('click', () => {
+        elements.manualModal.classList.add('hidden');
+      });
+
+      elements.cancelManual.addEventListener('click', () => {
+        elements.manualModal.classList.add('hidden');
+      });
+
+      elements.manualForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const repoId = document.getElementById('manual-repo-id').value;
+        const type = document.getElementById('manual-type').value;
+        const name = document.getElementById('manual-name').value || repoId.split('/').pop();
+        const nsfwCapable = document.getElementById('manual-nsfw').checked;
+
+        try {
+          elements.manualModal.classList.add('hidden');
+          await installModel({ repo_id: repoId, type, name, nsfw_capable: nsfwCapable });
+          setTimeout(loadModels, 2000);
+        } catch (error) {
+          LMS.toast('Manuelle Installation fehlgeschlagen: ' + error.message, 'error');
+        }
+      });
+
+      // Global functions for inline handlers
+      window.showModelDetails = (modelId) => {
+        const model = allModels.find(m => m.id === modelId);
+        if (model) {
+          LMS.toast(`Modell Details: ${model.name}\nPfad: ${model.path}\nBackend: ${model.backend}`, 'info', 5000);
+        }
+      };
+
+      window.deleteModel = async (modelId) => {
+        if (!confirm('Möchten Sie dieses Modell wirklich löschen?')) return;
+        
+        try {
+          await LMS.fetchJSON(`/api/models/${modelId}`, { method: 'DELETE' });
+          LMS.toast('Modell gelöscht', 'success');
+          loadModels();
+        } catch (error) {
+          LMS.toast('Löschen fehlgeschlagen: ' + error.message, 'error');
+        }
+      };
+
+      // Add Manual Install Button to page
+      const manualInstallBtn = document.createElement('button');
+      manualInstallBtn.className = 'btn secondary';
+      manualInstallBtn.innerHTML = '➕ Manuell installieren';
+      manualInstallBtn.addEventListener('click', () => {
+        elements.manualModal.classList.remove('hidden');
+      });
+      elements.refreshBtn.parentNode.insertBefore(manualInstallBtn, elements.refreshBtn);
+
+      // Enhanced Filter Tabs Styling
+      const style = document.createElement('style');
+      style.textContent = `
+        .filter-tab {
+          padding: 0.5rem 1rem;
+          border-radius: 0.5rem;
+          font-weight: 500;
+          font-size: 0.875rem;
+          color: rgb(156, 163, 175);
+          background: transparent;
+          border: 1px solid transparent;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .filter-tab:hover {
+          color: rgb(243, 244, 246);
+          background: rgb(55, 65, 81);
+        }
+        .filter-tab.active {
+          color: white;
+          background: rgb(59, 130, 246);
+          border-color: rgb(59, 130, 246);
+        }
+        .model-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .loading {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Initial Load
+      await Promise.all([loadModels(), loadRecommendations()]);
+    })();
+  </script>
+</body>
+</html>

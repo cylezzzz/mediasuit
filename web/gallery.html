@@ -1,53 +1,518 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8"/>
-  <title>LocalMediaSuite – Gallery</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <link rel="icon" href="/assets/logo.ico">
-</head>
-<body class="bg-gray-900 text-gray-100">
-  <header><h1>Gallery</h1></header>
-  <main class="container mx-auto p-3">
-    <select id="type"><option value="image">Images</option><option value="video">Videos</option></select>
-    <div id="gallery-list" class="grid gap-4 mt-3"></div>
-  </main>
-  <script src="/assets/app.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
+  <link rel="icon" type="image/png" href="/assets/logo.png" />
+  <link rel="icon" href="/assets/logo.ico" sizes="any" />
+  <meta name="theme-color" content="#0a0e13" />
+  <title>LocalMediaSuite – Galerie</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/assets/styles.css" />
+  <script defer src="/assets/app.js"></script>
   <script>
-(async function(){
-  const listEl = document.getElementById('gallery-list');
-  const filterSel = document.getElementById('type');
-
-  async function refresh(){
-    const type = (filterSel && filterSel.value) || 'image';
-    try {
-      const res = await LMS.fetchJSON(`/api/files?type=${type}`);
-      render(res.items || []);
-    } catch {}
-  }
-
-  function render(items){
-    listEl.innerHTML = '';
-    items.forEach(it=>{
-      const card = document.createElement('div');
-      card.className = 'card';
-      if (it.url.endsWith('.mp4')) {
-        card.innerHTML = `<video src="${it.url}" controls preload="metadata" class="w-full rounded"></video><div class="text-xs mt-1">${it.name}</div>`;
-      } else {
-        card.innerHTML = `<img src="${it.url}" class="max-w-full rounded"/><div class="text-xs mt-1">${it.name}</div>`;
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            base: { bg: "#0a0e13", card:"#111827", border:"#1f2937", text:"#f3f4f6", sub:"#9ca3af", accent:"#3b82f6" }
+          }
+        }
       }
-      listEl.appendChild(card);
-    });
-  }
+    }
+  </script>
+</head>
+<body>
+  <header class="sticky top-0 z-10 bg-[var(--bg-primary)]/90 backdrop-blur border-b border-[var(--border-primary)]">
+    <div class="max-w-6xl mx-auto flex items-center gap-4 p-4">
+      <img src="/assets/logo.svg" class="w-8 h-8" alt="Logo" />
+      <div class="font-semibold text-xl">LocalMediaSuite</div>
+      <nav class="flex gap-3 text-sm ml-auto">
+        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/index.html">Home</a>
+        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/image.html">Image (SFW)</a>
+        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/image_nsfw.html">Image (NSFW)</a>
+        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/video.html">Video (SFW)</a>
+        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/video_nsfw.html">Video (NSFW)</a>
+        <a class="px-3 py-1 rounded bg-blue-600 text-white" href="/gallery.html">Galerie</a>
+        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/catalog.html">Katalog</a>
+        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/settings.html">Settings</a>
+      </nav>
+    </div>
+  </header>
 
-  await refresh();
-  setInterval(refresh, 5000);
-  try {
-    const bc = new BroadcastChannel('lms-events');
-    bc.onmessage = (e)=>{ if (e.data && e.data.type === 'generated') refresh(); };
-  } catch {}
-  if (filterSel) filterSel.addEventListener('change', refresh);
-})();
+  <main class="max-w-7xl mx-auto p-4 space-y-6">
+    <!-- Header & Controls -->
+    <div class="card">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <div>
+          <h1 class="text-2xl font-semibold text-white">Galerie</h1>
+          <p class="text-gray-400 mt-1">Alle generierten Inhalte mit integriertem Player</p>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <!-- Type Filter -->
+          <div class="flex bg-gray-800 rounded-lg p-1">
+            <button id="filter-image" class="filter-btn active px-3 py-1 rounded text-sm font-medium transition-all duration-200">
+              🖼️ Bilder
+            </button>
+            <button id="filter-video" class="filter-btn px-3 py-1 rounded text-sm font-medium transition-all duration-200">
+              🎥 Videos
+            </button>
+            <button id="filter-all" class="filter-btn px-3 py-1 rounded text-sm font-medium transition-all duration-200">
+              📁 Alle
+            </button>
+          </div>
+          
+          <!-- Sort Options -->
+          <select id="sort-select" class="input bg-gray-800 border-gray-600 text-sm">
+            <option value="newest">Neueste zuerst</option>
+            <option value="oldest">Älteste zuerst</option>
+            <option value="name">Nach Name</option>
+            <option value="size">Nach Größe</option>
+          </select>
+          
+          <!-- Refresh Button -->
+          <button id="refresh-btn" class="btn secondary">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Aktualisieren
+          </button>
+        </div>
+      </div>
+      
+      <!-- Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div class="bg-blue-900/20 border border-blue-800 rounded-lg p-3">
+          <div class="text-2xl font-bold text-blue-400" id="stat-images">0</div>
+          <div class="text-sm text-gray-400">Bilder</div>
+        </div>
+        <div class="bg-purple-900/20 border border-purple-800 rounded-lg p-3">
+          <div class="text-2xl font-bold text-purple-400" id="stat-videos">0</div>
+          <div class="text-sm text-gray-400">Videos</div>
+        </div>
+        <div class="bg-green-900/20 border border-green-800 rounded-lg p-3">
+          <div class="text-2xl font-bold text-green-400" id="stat-total">0</div>
+          <div class="text-sm text-gray-400">Gesamt</div>
+        </div>
+        <div class="bg-yellow-900/20 border border-yellow-800 rounded-lg p-3">
+          <div class="text-2xl font-bold text-yellow-400" id="stat-size">0 MB</div>
+          <div class="text-sm text-gray-400">Speicher</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gallery Grid -->
+    <div class="card">
+      <div id="gallery-status" class="text-center py-8 text-gray-400">
+        <div class="loading">Lade Galerie...</div>
+      </div>
+      
+      <div id="gallery-grid" class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 hidden">
+        <!-- Items werden hier dynamisch eingefügt -->
+      </div>
+      
+      <!-- Empty State -->
+      <div id="empty-state" class="text-center py-12 hidden">
+        <div class="text-6xl mb-4">📸</div>
+        <h3 class="text-lg font-semibold text-gray-300 mb-2">Keine Inhalte gefunden</h3>
+        <p class="text-gray-400 mb-4">Generiere dein erstes Bild oder Video über die entsprechenden Seiten.</p>
+        <div class="flex gap-2 justify-center">
+          <a href="/image.html" class="btn primary">Bild erstellen</a>
+          <a href="/video.html" class="btn secondary">Video erstellen</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fullscreen Modal -->
+    <div id="fullscreen-modal" class="fixed inset-0 bg-black/90 backdrop-blur z-50 hidden">
+      <div class="absolute inset-4 flex items-center justify-center">
+        <!-- Close Button -->
+        <button id="close-fullscreen" class="absolute top-4 right-4 z-10 text-white hover:text-gray-300 text-3xl">
+          ×
+        </button>
+        
+        <!-- Navigation Buttons -->
+        <button id="prev-media" class="absolute left-4 top-1/2 -translate-y-1/2 z-10 text-white hover:text-gray-300 text-4xl hidden">
+          ‹
+        </button>
+        <button id="next-media" class="absolute right-4 top-1/2 -translate-y-1/2 z-10 text-white hover:text-gray-300 text-4xl hidden">
+          ›
+        </button>
+        
+        <!-- Media Container -->
+        <div id="fullscreen-content" class="max-w-full max-h-full flex items-center justify-center">
+          <!-- Dynamically loaded content -->
+        </div>
+        
+        <!-- Info Panel -->
+        <div id="info-panel" class="absolute bottom-4 left-4 right-4 bg-black/70 backdrop-blur rounded-lg p-4 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <div id="media-name" class="font-semibold"></div>
+              <div id="media-details" class="text-sm text-gray-300"></div>
+            </div>
+            <div class="flex gap-2">
+              <button id="download-btn" class="btn secondary text-sm">
+                📥 Download
+              </button>
+              <button id="delete-btn" class="btn bg-red-600 hover:bg-red-700 text-sm">
+                🗑️ Löschen
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (async function(){
+      let currentFilter = 'all';
+      let currentSort = 'newest';
+      let allItems = [];
+      let filteredItems = [];
+      let currentMediaIndex = 0;
+
+      const elements = {
+        filterImage: document.getElementById('filter-image'),
+        filterVideo: document.getElementById('filter-video'),
+        filterAll: document.getElementById('filter-all'),
+        sortSelect: document.getElementById('sort-select'),
+        refreshBtn: document.getElementById('refresh-btn'),
+        galleryStatus: document.getElementById('gallery-status'),
+        galleryGrid: document.getElementById('gallery-grid'),
+        emptyState: document.getElementById('empty-state'),
+        fullscreenModal: document.getElementById('fullscreen-modal'),
+        closeFullscreen: document.getElementById('close-fullscreen'),
+        prevMedia: document.getElementById('prev-media'),
+        nextMedia: document.getElementById('next-media'),
+        fullscreenContent: document.getElementById('fullscreen-content'),
+        infoPanel: document.getElementById('info-panel'),
+        mediaName: document.getElementById('media-name'),
+        mediaDetails: document.getElementById('media-details'),
+        downloadBtn: document.getElementById('download-btn'),
+        deleteBtn: document.getElementById('delete-btn'),
+        statImages: document.getElementById('stat-images'),
+        statVideos: document.getElementById('stat-videos'),
+        statTotal: document.getElementById('stat-total'),
+        statSize: document.getElementById('stat-size')
+      };
+
+      // Utility Functions
+      function formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+      }
+
+      function formatDate(timestamp) {
+        return new Date(timestamp * 1000).toLocaleString('de-DE');
+      }
+
+      function isVideo(filename) {
+        return /\.(mp4|mov|avi|mkv|webm)$/i.test(filename);
+      }
+
+      function isImage(filename) {
+        return /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(filename);
+      }
+
+      // Data Loading
+      async function loadGalleryData() {
+        try {
+          elements.galleryStatus.innerHTML = '<div class="loading">Lade Inhalte...</div>';
+          
+          const [imageRes, videoRes] = await Promise.all([
+            LMS.fetchJSON('/api/files?type=image').catch(() => ({items: []})),
+            LMS.fetchJSON('/api/files?type=video').catch(() => ({items: []}))
+          ]);
+
+          const images = (imageRes.items || []).map(item => ({...item, type: 'image'}));
+          const videos = (videoRes.items || []).map(item => ({...item, type: 'video'}));
+          
+          allItems = [...images, ...videos].sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
+          
+          updateStats();
+          applyFiltersAndRender();
+
+        } catch (error) {
+          console.error('Failed to load gallery:', error);
+          elements.galleryStatus.innerHTML = `
+            <div class="text-red-400">
+              ❌ Fehler beim Laden der Galerie<br>
+              <button onclick="loadGalleryData()" class="btn primary mt-2">Erneut versuchen</button>
+            </div>
+          `;
+        }
+      }
+
+      // Statistics Update
+      function updateStats() {
+        const images = allItems.filter(item => item.type === 'image');
+        const videos = allItems.filter(item => item.type === 'video');
+        const totalSize = allItems.reduce((sum, item) => sum + (item.size || 0), 0);
+
+        elements.statImages.textContent = images.length;
+        elements.statVideos.textContent = videos.length;
+        elements.statTotal.textContent = allItems.length;
+        elements.statSize.textContent = formatFileSize(totalSize);
+      }
+
+      // Filtering & Sorting
+      function applyFiltersAndRender() {
+        // Filter
+        if (currentFilter === 'image') {
+          filteredItems = allItems.filter(item => item.type === 'image');
+        } else if (currentFilter === 'video') {
+          filteredItems = allItems.filter(item => item.type === 'video');
+        } else {
+          filteredItems = [...allItems];
+        }
+
+        // Sort
+        switch (currentSort) {
+          case 'oldest':
+            filteredItems.sort((a, b) => (a.mtime || 0) - (b.mtime || 0));
+            break;
+          case 'name':
+            filteredItems.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            break;
+          case 'size':
+            filteredItems.sort((a, b) => (b.size || 0) - (a.size || 0));
+            break;
+          default: // newest
+            filteredItems.sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
+        }
+
+        renderGallery();
+      }
+
+      // Gallery Rendering
+      function renderGallery() {
+        if (filteredItems.length === 0) {
+          elements.galleryGrid.classList.add('hidden');
+          elements.galleryStatus.classList.add('hidden');
+          elements.emptyState.classList.remove('hidden');
+          return;
+        }
+
+        elements.emptyState.classList.add('hidden');
+        elements.galleryStatus.classList.add('hidden');
+        elements.galleryGrid.classList.remove('hidden');
+
+        elements.galleryGrid.innerHTML = filteredItems.map((item, index) => {
+          const isVideoFile = item.type === 'video';
+          const thumbnailClass = isVideoFile ? 'video-thumbnail' : 'image-thumbnail';
+          
+          return `
+            <div class="gallery-item group cursor-pointer" data-index="${index}">
+              <div class="aspect-square bg-gray-800 rounded-lg overflow-hidden relative">
+                ${isVideoFile ? `
+                  <video 
+                    src="${item.url}" 
+                    class="w-full h-full object-cover ${thumbnailClass}"
+                    preload="metadata"
+                    muted
+                  ></video>
+                  <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="text-white text-2xl">▶️</div>
+                  </div>
+                  <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                    🎥 VIDEO
+                  </div>
+                ` : `
+                  <img 
+                    src="${item.url}" 
+                    alt="${item.name}"
+                    class="w-full h-full object-cover ${thumbnailClass}"
+                    loading="lazy"
+                  />
+                  <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                    🖼️ BILD
+                  </div>
+                `}
+                
+                <!-- Hover Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div class="absolute bottom-2 left-2 right-2">
+                    <div class="text-white font-medium text-sm truncate">${item.name}</div>
+                    <div class="text-gray-300 text-xs flex items-center justify-between">
+                      <span>${formatFileSize(item.size || 0)}</span>
+                      <span>${formatDate(item.mtime || 0).split(' ')[0]}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Add click listeners
+        elements.galleryGrid.querySelectorAll('.gallery-item').forEach((item, index) => {
+          item.addEventListener('click', () => openFullscreen(index));
+        });
+      }
+
+      // Fullscreen Modal
+      function openFullscreen(index) {
+        currentMediaIndex = index;
+        const item = filteredItems[index];
+        
+        elements.fullscreenModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        updateFullscreenContent();
+        updateNavigationButtons();
+      }
+
+      function closeFullscreen() {
+        elements.fullscreenModal.classList.add('hidden');
+        document.body.style.overflow = '';
+        
+        // Pause any playing video
+        const video = elements.fullscreenContent.querySelector('video');
+        if (video) video.pause();
+      }
+
+      function updateFullscreenContent() {
+        const item = filteredItems[currentMediaIndex];
+        if (!item) return;
+
+        const isVideoFile = item.type === 'video';
+        
+        elements.fullscreenContent.innerHTML = isVideoFile ? `
+          <video 
+            src="${item.url}" 
+            controls 
+            autoplay 
+            class="max-w-full max-h-full rounded-lg"
+            style="max-height: calc(100vh - 200px);"
+          ></video>
+        ` : `
+          <img 
+            src="${item.url}" 
+            alt="${item.name}"
+            class="max-w-full max-h-full rounded-lg object-contain"
+            style="max-height: calc(100vh - 200px);"
+          />
+        `;
+
+        // Update info panel
+        elements.mediaName.textContent = item.name;
+        elements.mediaDetails.innerHTML = `
+          <div class="flex gap-4 text-sm">
+            <span>📊 ${formatFileSize(item.size || 0)}</span>
+            <span>📅 ${formatDate(item.mtime || 0)}</span>
+            <span>🏷️ ${item.type.toUpperCase()}</span>
+          </div>
+        `;
+
+        // Update download button
+        elements.downloadBtn.onclick = () => {
+          const a = document.createElement('a');
+          a.href = item.url;
+          a.download = item.name;
+          a.click();
+        };
+      }
+
+      function updateNavigationButtons() {
+        const hasPrev = currentMediaIndex > 0;
+        const hasNext = currentMediaIndex < filteredItems.length - 1;
+        
+        elements.prevMedia.classList.toggle('hidden', !hasPrev);
+        elements.nextMedia.classList.toggle('hidden', !hasNext);
+      }
+
+      function navigateMedia(direction) {
+        const newIndex = currentMediaIndex + direction;
+        if (newIndex >= 0 && newIndex < filteredItems.length) {
+          currentMediaIndex = newIndex;
+          updateFullscreenContent();
+          updateNavigationButtons();
+        }
+      }
+
+      // Event Listeners
+      elements.filterImage.addEventListener('click', () => setFilter('image'));
+      elements.filterVideo.addEventListener('click', () => setFilter('video'));
+      elements.filterAll.addEventListener('click', () => setFilter('all'));
+      
+      elements.sortSelect.addEventListener('change', (e) => {
+        currentSort = e.target.value;
+        applyFiltersAndRender();
+      });
+      
+      elements.refreshBtn.addEventListener('click', loadGalleryData);
+      
+      // Modal controls
+      elements.closeFullscreen.addEventListener('click', closeFullscreen);
+      elements.prevMedia.addEventListener('click', () => navigateMedia(-1));
+      elements.nextMedia.addEventListener('click', () => navigateMedia(1));
+      
+      // Keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        if (!elements.fullscreenModal.classList.contains('hidden')) {
+          switch (e.key) {
+            case 'Escape':
+              closeFullscreen();
+              break;
+            case 'ArrowLeft':
+              navigateMedia(-1);
+              break;
+            case 'ArrowRight':
+              navigateMedia(1);
+              break;
+          }
+        }
+      });
+
+      // Close on background click
+      elements.fullscreenModal.addEventListener('click', (e) => {
+        if (e.target === elements.fullscreenModal) {
+          closeFullscreen();
+        }
+      });
+
+      function setFilter(type) {
+        currentFilter = type;
+        
+        // Update UI
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+          btn.classList.remove('active', 'bg-blue-600', 'text-white');
+          btn.classList.add('text-gray-400');
+        });
+        
+        const activeBtn = type === 'image' ? elements.filterImage : 
+                         type === 'video' ? elements.filterVideo : elements.filterAll;
+        activeBtn.classList.add('active', 'bg-blue-600', 'text-white');
+        activeBtn.classList.remove('text-gray-400');
+        
+        applyFiltersAndRender();
+      }
+
+      // Auto-refresh via BroadcastChannel
+      try {
+        const bc = new BroadcastChannel('lms-events');
+        bc.onmessage = (e) => {
+          if (e.data && e.data.type === 'generated') {
+            setTimeout(loadGalleryData, 1000); // Kurze Verzögerung für File-System
+          }
+        };
+      } catch (e) {
+        console.warn('BroadcastChannel not supported:', e);
+      }
+
+      // Auto-refresh every 30 seconds
+      setInterval(loadGalleryData, 30000);
+
+      // Initial load
+      await loadGalleryData();
+    })();
   </script>
 </body>
 </html>
