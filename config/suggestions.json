@@ -1,289 +1,183 @@
 {
   "image": {
     "sfw": {
-      "Portrait": {
-        "prompts": [
-          "Ultra-realistic studio portrait, Rembrandt lighting, medium close-up",
-          "Cinematic portrait with lens flare, shallow depth of field",
-          "Outdoor candid portrait in natural sunlight"
-        ],
-        "modifiers": [
-          "8k", "photorealistic", "HDR", "studio lighting", "rim light",
-          "cinematic shadows", "skin texture", "high detail", "film grain"
-        ]
-      },
-      "Landscape": {
-        "prompts": [
-          "Snowy mountain range under dramatic sunset sky",
-          "Tropical beach with turquoise water and palm trees",
-          "Ancient ruins in the middle of a dense jungle"
-        ],
-        "modifiers": [
-          "epic scale", "wide angle", "golden hour",
-          "foggy atmosphere", "long exposure", "volumetric light"
-        ]
-      },
-      "Architecture": {
-        "prompts": [
-          "Cyberpunk city skyline at night with neon lights",
-          "Futuristic interior with glass and steel",
-          "Baroque palace with intricate decorations"
-        ],
-        "modifiers": [
-          "architectural photography", "isometric view",
-          "hyper detailed", "symmetry", "matte painting"
-        ]
-      },
-      "Fashion": {
-        "prompts": [
-          "High fashion editorial shot in studio",
-          "Street fashion photography with neon signs",
-          "Avantgarde couture dress in museum hall"
-        ],
-        "modifiers": [
-          "dramatic lighting", "glamour", "cinematic color grading",
-          "dynamic pose", "soft focus", "editorial photography"
-        ]
-      },
-      "Anime / Manga": {
-        "prompts": [
-          "Anime character in battle stance, glowing sword",
-          "Romantic anime couple under cherry blossoms",
-          "Cyberpunk anime cityscape at night"
-        ],
-        "modifiers": [
-          "cel shading", "bright colors", "lineart detail",
-          "dynamic perspective", "dramatic lighting", "stylized"
-        ]
-      },
-      "Sci-Fi": {
-        "prompts": [
-          "Spaceship landing on alien planet with multiple moons",
-          "Futuristic soldier in powered armor",
-          "Alien city under glowing nebula sky"
-        ],
-        "modifiers": [
-          "cyberpunk", "holograms", "futuristic design",
-          "neon glow", "atmospheric lighting"
-        ]
-      },
-      "Fantasy": {
-        "prompts": [
-          "Medieval knight fighting dragon in storm",
-          "Mystical forest with glowing runes",
-          "Elven queen in ancient palace"
-        ],
-        "modifiers": [
-          "epic fantasy", "magical lighting", "dark moody",
-          "cinematic composition", "ultra detailed"
-        ]
-      },
-      "Horror": {
-        "prompts": [
-          "Haunted house at night with fog",
-          "Zombie apocalypse survivor portrait",
-          "Creepy forest with hidden figures"
-        ],
-        "modifiers": [
-          "dark atmosphere", "grainy film", "low light",
-          "moody lighting", "cinematic horror style"
-        ]
-      },
-      "Food": {
-        "prompts": [
-          "Close-up of gourmet dish with steam",
-          "Flat lay of colorful breakfast table",
-          "Macro shot of melting chocolate"
-        ],
-        "modifiers": [
-          "macro photography", "high detail", "studio light",
-          "realistic texture", "advertisement style"
-        ]
-      },
-      "Vehicles": {
-        "prompts": [
-          "Supercar on neon-lit highway",
-          "Steampunk airship in cloudy sky",
-          "Motorcycle racing on desert road"
-        ],
-        "modifiers": [
-          "motion blur", "chrome reflections",
-          "studio shot", "dynamic angle"
-        ]
-      },
-      "Animals": {
-        "prompts": [
-          "Tiger in the jungle, photorealistic",
-          "Husky dog in snowy mountains",
-          "Fantasy dragon in flight"
-        ],
-        "modifiers": [
-          "macro detail", "wildlife photography",
-          "action shot", "nature documentary style"
-        ]
-      },
-      "Abstract / Artistic": {
-        "prompts": [
-          "Colorful fractal art in 3D",
-          "Glitch aesthetic cyber artwork",
-          "Surreal melting landscape painting"
-        ],
-        "modifiers": [
-          "psychedelic", "glitch art", "vivid colors",
-          "HDR", "experimental"
-        ]
-      }
+      "categories": [
+        {
+          "id": "portrait",
+          "label": "Portrait",
+          "prompts": [
+            "ultra-realistic studio portrait, headshot, symmetrical face, neutral background, natural skin, subtle makeup",
+            "cinematic outdoor portrait, golden hour, warm rim light, shallow depth of field, background bokeh, candid expression",
+            "beauty close-up portrait, pore-level skin texture, clean makeup, even tone, high fidelity color"
+          ]
+        },
+        {
+          "id": "landscape",
+          "label": "Landscape",
+          "prompts": [
+            "vast mountain range, dramatic sky, distant haze, alpine valley, realistic terrain, natural colors",
+            "ocean shoreline at sunset, wet reflective sand, glowing clouds, gentle waves, long exposure look"
+          ]
+        },
+        {
+          "id": "product",
+          "label": "Product",
+          "prompts": [
+            "luxury wristwatch macro, brushed steel, sapphire crystal reflections, spotless surface, studio product photo",
+            "isolated product on white seamless, crisp edges, shadow under object, color-accurate, dust-free"
+          ]
+        },
+        {
+          "id": "sci-fi",
+          "label": "Sci-Fi",
+          "prompts": [
+            "cyberpunk alley at night, neon signs, rain-soaked asphalt reflections, crowd silhouettes, atmospheric haze"
+          ]
+        },
+        {
+          "id": "anime",
+          "label": "Anime",
+          "prompts": [
+            "anime hero leaping, dynamic perspective, speed lines, intense expression, stylized shading"
+          ]
+        }
+      ],
+      "modifiers": [
+        "8k detail",
+        "cel shading",
+        "clean background",
+        "color accurate",
+        "color graded",
+        "film grain",
+        "golden hour",
+        "high contrast",
+        "high detail",
+        "high dynamic range",
+        "high microcontrast",
+        "long exposure",
+        "matte grade",
+        "neon glow",
+        "photorealistic",
+        "polarized reflections",
+        "sharp focus",
+        "sharp shadow",
+        "skin texture",
+        "soft motion hint",
+        "studio lighting",
+        "subtle film grain",
+        "thick outlines",
+        "true white",
+        "ultra detailed",
+        "vivid colors",
+        "volumetric fog",
+        "volumetric light",
+        "wide angle"
+      ]
     },
     "nsfw": {
-      "Glamour": {
-        "prompts": [
-          "Studio glamour shot with lingerie, soft light",
-          "Boudoir in satin sheets, moody shadows",
-          "Retro pin-up inspired glamour portrait"
-        ],
-        "modifiers": [
-          "soft focus", "silky skin texture", "tasteful",
-          "cinematic shadows", "photorealistic"
-        ]
-      },
-      "Artistic Nude": {
-        "prompts": [
-          "Fine-art nude silhouette in backlight",
-          "Classical nude study in chiaroscuro style",
-          "Soft pastel toned artistic nude"
-        ],
-        "modifiers": [
-          "dramatic shadows", "soft light", "grainy film",
-          "tasteful composition"
-        ]
-      },
-      "Cosplay NSFW": {
-        "prompts": [
-          "Suggestive cosplay character in stylized armor",
-          "Erotic cosplay in neon-lit studio",
-          "Fantasy cosplay with sensual undertones"
-        ],
-        "modifiers": [
-          "dynamic pose", "studio light", "glamour style",
-          "detailed costume", "soft focus"
-        ]
-      },
-      "Erotica Explicit": {
-        "prompts": [
-          "Explicit erotic couple scene, photorealistic",
-          "Solo erotic pose on bed with cinematic light",
-          "Hardcore adult explicit photo"
-        ],
-        "modifiers": [
-          "realistic skin texture", "explicit detail",
-          "cinematic shadows", "high resolution"
-        ]
-      },
-      "Fetish / Taboo": {
-        "prompts": [
-          "Leather and latex fetish studio shot",
-          "Bondage themed artistic scene",
-          "Foot fetish close-up in glamour style"
-        ],
-        "modifiers": [
-          "dark moody lighting", "glossy texture",
-          "fetish aesthetic", "cinematic focus"
-        ]
-      }
+      "categories": [
+        {
+          "id": "glamour",
+          "label": "Glamour",
+          "prompts": [
+            "glamour lingerie studio portrait, soft silky skin, elegant pose, tasteful composition, photorealistic"
+          ]
+        },
+        {
+          "id": "artistic_nude",
+          "label": "Artistic Nude",
+          "prompts": [
+            "fine-art nude, chiaroscuro, tasteful pose, sculptural highlights, shadow play"
+          ]
+        },
+        {
+          "id": "erotica_explicit",
+          "label": "Erotica Explicit",
+          "prompts": [
+            "explicit erotic scene, realistic anatomy, cinematic composition, photorealistic skin"
+          ]
+        }
+      ],
+      "modifiers": [
+        "cinematic shadows",
+        "color accurate",
+        "color graded",
+        "dramatic shadows",
+        "fine-art",
+        "high detail",
+        "skin texture",
+        "soft focus",
+        "subtle film grain",
+        "tasteful"
+      ]
     }
   },
   "video": {
     "sfw": {
-      "Cinematic": {
-        "prompts": [
-          "Drone shot over futuristic city skyline",
-          "Slow-motion pan over mountain lake",
-          "Tracking shot through neon-lit alley"
-        ],
-        "modifiers": [
-          "anamorphic lens flare", "cinematic grade",
-          "motion blur", "depth of field"
-        ]
-      },
-      "Product Teaser": {
-        "prompts": [
-          "Rotating product showcase with reflections",
-          "Macro slow-motion drink pour",
-          "Commercial teaser shot with clean background"
-        ],
-        "modifiers": [
-          "studio lighting", "advertisement style",
-          "slow motion", "sharp detail"
-        ]
-      },
-      "Nature Documentary": {
-        "prompts": [
-          "Time-lapse of stars over desert",
-          "Slow-motion bird flight sequence",
-          "Underwater coral reef macro shot"
-        ],
-        "modifiers": [
-          "timelapse", "macro lens", "cinematic grade",
-          "natural light", "HDR"
-        ]
-      },
-      "Sports / Action": {
-        "prompts": [
-          "Slow-motion football goal shot",
-          "Skateboard trick in urban setting",
-          "Cyclist sprint with dynamic camera"
-        ],
-        "modifiers": [
-          "slow motion", "dynamic angle",
-          "motion blur", "high fps"
-        ]
-      },
-      "Music Video": {
-        "prompts": [
-          "Concert stage with laser lights",
-          "Artist performing in neon city",
-          "Abstract visualizer synced to beat"
-        ],
-        "modifiers": [
-          "beat-synced motion", "flashing lights",
-          "cinematic grade", "music video style"
-        ]
-      }
+      "categories": [
+        {
+          "id": "cinematic",
+          "label": "Cinematic",
+          "prompts": [
+            "tracking shot through neon alley, atmospheric haze, puddle reflections, crowd silhouettes, cinematic grade",
+            "slow pan across calm mountain lake at sunrise, morning mist, warm light, serene mood"
+          ]
+        },
+        {
+          "id": "product_teaser",
+          "label": "Product Teaser",
+          "prompts": [
+            "hero product rotation, glossy reflections, clean white background, crisp edges"
+          ]
+        },
+        {
+          "id": "sports___action",
+          "label": "Sports / Action",
+          "prompts": [
+            "skateboarder performs kickflip in urban alley, handheld feel, dynamic angle, gritty vibe"
+          ]
+        }
+      ],
+      "modifiers": [
+        "HDR look",
+        "advertisement look",
+        "anamorphic flare",
+        "deep contrast",
+        "dynamic angle",
+        "handheld vibe",
+        "motion blur natural",
+        "polished reflections",
+        "slow motion",
+        "smooth pan",
+        "studio lighting",
+        "subtle film grain"
+      ]
     },
     "nsfw": {
-      "Glamour Motion": {
-        "prompts": [
-          "Slow pan over lingerie model",
-          "Boudoir video clip in moody light",
-          "Soft motion glamour sequence"
-        ],
-        "modifiers": [
-          "tasteful", "slow zoom", "soft light",
-          "cinematic", "high detail"
-        ]
-      },
-      "Erotic Video": {
-        "prompts": [
-          "Explicit couple scene with cinematic light",
-          "Solo erotic dance clip in studio",
-          "Adult motion scene photorealistic"
-        ],
-        "modifiers": [
-          "high fps", "explicit detail",
-          "realistic motion", "cinematic shadows"
-        ]
-      },
-      "Fetish Video": {
-        "prompts": [
-          "Latex fetish video clip",
-          "Bondage scene with cinematic lighting",
-          "Taboo glamour fetish motion"
-        ],
-        "modifiers": [
-          "dark moody", "glossy texture",
-          "cinematic angle", "fetish detail"
-        ]
-      }
+      "categories": [
+        {
+          "id": "glamour_motion",
+          "label": "Glamour Motion",
+          "prompts": [
+            "boudoir glamour motion, elegant pose, silky fabric, shallow depth of field, tasteful composition"
+          ]
+        },
+        {
+          "id": "erotic_video",
+          "label": "Erotic Video",
+          "prompts": [
+            "explicit adult motion scene, photorealistic anatomy, cinematic framing, soft skin texture"
+          ]
+        }
+      ],
+      "modifiers": [
+        "cinematic grade",
+        "cinematic shadows",
+        "high fps",
+        "realistic motion",
+        "slow zoom",
+        "soft focus"
+      ]
     }
   }
 }
