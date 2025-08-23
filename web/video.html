@@ -2,11 +2,233 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>LocalMediaSuite – Video (SFW)</title>
+  <title>LocalMediaSuite – Video Generator (Functional)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Shared styling and logic -->
   <link rel="stylesheet" href="assets/styles.css">
   <script defer src="assets/app.js"></script>
+  <style>
+    .generation-form {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 30px;
+    }
+    
+    .controls-panel {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 20px;
+      height: fit-content;
+    }
+    
+    .preview-panel {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    
+    .model-option {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      margin: 8px 0;
+      background: #252525;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .model-option.selected {
+      border-color: #8b5cf6;
+      background: rgba(139, 92, 246, 0.1);
+    }
+    
+    .model-option:hover {
+      background: #333;
+    }
+    
+    .param-group {
+      margin-bottom: 20px;
+    }
+    
+    .param-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #e5e5e5;
+    }
+    
+    .param-input {
+      width: 100%;
+      padding: 8px 12px;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 6px;
+      color: #fff;
+    }
+    
+    .param-input:focus {
+      outline: none;
+      border-color: #8b5cf6;
+    }
+    
+    .mode-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .mode-btn {
+      flex: 1;
+      padding: 10px;
+      background: #333;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .mode-btn.active {
+      background: #8b5cf6;
+    }
+    
+    .image-upload {
+      display: none;
+      border: 2px dashed #444;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .image-upload.active {
+      display: block;
+    }
+    
+    .upload-area {
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    
+    .upload-area:hover {
+      border-color: #8b5cf6;
+    }
+    
+    .preview-area {
+      min-height: 400px;
+      border: 2px dashed #444;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      position: relative;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05));
+    }
+    
+    .preview-area.has-content {
+      border-style: solid;
+      border-color: #8b5cf6;
+    }
+    
+    .preview-placeholder {
+      text-align: center;
+      color: #888;
+    }
+    
+    .generate-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(45deg, #8b5cf6, #3b82f6);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .generate-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+    }
+    
+    .generate-btn:disabled {
+      background: #666;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: #333;
+      border-radius: 2px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+    
+    .status-text {
+      text-align: center;
+      color: #888;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    
+    .error-message {
+      background: #dc2626;
+      color: white;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+    
+    .success-message {
+      background: #10b981;
+      color: white;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+    
+    .video-specs {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 12px;
+      color: #ccc;
+    }
+    
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    
+    .spec-row:last-child {
+      margin-bottom: 0;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -22,324 +244,582 @@
       <a href="settings.html">Settings</a>
     </nav>
   </header>
-  <main style="padding:2rem;max-width:1100px;margin:0 auto;">
-    <form id="video-form" action="/api/generate/universal" method="POST" enctype="multipart/form-data" data-endpoint="/api/generate/universal">
-      <input type="hidden" name="type" value="video">
-      <input type="hidden" id="mode_input" name="mode" value="text2video">
-      <h2 class="text-xl font-bold mb-4">Videogenerator (SFW)</h2>
-      <div class="generator-layout">
-        <div class="sidebar flex flex-col gap-4" style="flex:0 0 320px;">
-          <!-- Mode & model -->
-          <div class="card">
-            <div class="mb-4">
-              <label class="label" for="mode">Modus</label>
-              <select id="mode" class="input" name="mode_select">
-                <option value="text2video" selected>Text → Video</option>
-                <option value="img2video">Bild → Video</option>
-              </select>
-              <p class="text-sm text-muted mt-1">Pro Lauf wählbar. Der Model‑Picker passt sich automatisch an.</p>
-            </div>
-            <div id="model-tabs" class=""></div>
-          </div>
-          <!-- Settings -->
-          <div class="card">
-            <h3 class="text-md font-semibold mb-3">Einstellungen</h3>
-            <div class="mb-3">
-              <label class="label" for="vid_resolution">Auflösung</label>
-              <select id="vid_resolution" class="input">
-                <option value="1280x720" selected>1280×720</option>
-                <option value="1920x1080">1920×1080</option>
-                <option value="1024x576">1024×576</option>
-              </select>
-              <input type="hidden" id="width_input" name="width" value="1280">
-              <input type="hidden" id="height_input" name="height" value="720">
-            </div>
-            <div class="mb-3">
-              <label class="label" for="fps">FPS</label>
-              <input id="fps" class="input" type="number" name="fps" min="1" max="60" value="24">
-            </div>
-            <div class="mb-3">
-              <label class="label" for="vid_length">Länge (Sek.)</label>
-              <input id="vid_length" class="input" type="number" min="1" max="60" value="3">
-            </div>
-            <div>
-              <label class="label" for="num_frames">Frames (optional)</label>
-              <input id="num_frames" class="input" type="number" name="num_frames" min="0" max="240" value="0">
-            </div>
-          </div>
-          <!-- Categories & random -->
-          <div class="card">
-            <h3 class="text-md font-semibold mb-3">Ideen & Kategorien</h3>
-            <div class="flex gap-2 mb-2">
-              <button type="button" id="btn-random" class="btn secondary w-full">Zufalls‑Prompt</button>
-            </div>
-            <div id="cat-chips" class="flex flex-wrap gap-2"></div>
+
+  <main class="generation-form">
+    <h2>Funktionaler Video-Generator</h2>
+    
+    <div id="message-container"></div>
+    
+    <div class="form-grid">
+      <!-- Controls Panel -->
+      <div class="controls-panel">
+        <!-- Generation Mode -->
+        <div class="param-group">
+          <label>Video-Modus</label>
+          <div class="mode-selector">
+            <button class="mode-btn active" data-mode="text2video">Text → Video</button>
+            <button class="mode-btn" data-mode="img2video">Bild → Video</button>
           </div>
         </div>
-        <!-- Main area -->
-        <div class="main-area flex flex-col gap-4" style="flex:1;">
-          <!-- Large preview / output area -->
-          <div id="display-container" class="card hidden" style="min-height:360px; display:flex; align-items:center; justify-content:center;"></div>
-          <div class="card flex-1 flex flex-col gap-4">
-            <div>
-              <label class="label" for="prompt">Prompt</label>
-              <textarea id="prompt" name="prompt" class="input" rows="4" placeholder="Beschreibe den Clip… (Startframe wird ggf. automatisch erzeugt)" required></textarea>
-              <div id="prompt-suggestions" class="flex flex-wrap gap-2 mt-2"></div>
+
+        <!-- Model Selection -->
+        <div class="param-group">
+          <label>Video-Modell</label>
+          <div id="video-model-list" class="model-selector">
+            <div class="status-text">Lade Video-Modelle...</div>
+          </div>
+        </div>
+
+        <!-- Image Upload (for img2video) -->
+        <div id="video-image-upload" class="image-upload">
+          <div class="upload-area" onclick="document.getElementById('video-file-input').click()">
+            <input type="file" id="video-file-input" accept="image/*" style="display: none;">
+            <div>🎬 Startbild hochladen</div>
+            <div style="font-size: 12px; color: #888; margin-top: 5px;">
+              PNG, JPG, WEBP bis 10MB<br>
+              Wird zu Video animiert
             </div>
-            <div id="init-block">
-              <div class="mb-4">
-                <label class="label" for="init_image">Upload (Startbild)</label>
-                <input id="init_image" class="input" type="file" name="init_image" accept="image/*">
-                <p class="text-sm text-muted mt-1">Für Bild→Video ist Upload oder Remix erforderlich. Bei Text→Video wird die Startframe automatisch generiert.</p>
-                <div id="preview-container" class="mt-2 hidden">
-                  <img id="preview-img" src="" alt="Vorschau" style="max-width:100%; border-radius:0.5rem;">
-                </div>
-              </div>
-              <div>
-                <label class="label" for="remix">Remix (aus Galerie)</label>
-                <select id="remix" class="input">
-                  <option value="">— wählen —</option>
-                </select>
-                <input type="hidden" id="init_url" name="init_url">
-              </div>
-            </div>
-            <div class="flex gap-3">
-              <button type="submit" class="btn primary">Generieren</button>
-              <button type="button" id="btn-clear" class="btn secondary">Prompt leeren</button>
-            </div>
+          </div>
+          <div id="video-upload-preview" style="margin-top: 15px; display: none;">
+            <img id="video-upload-preview-img" style="max-width: 100%; height: auto; border-radius: 6px;">
+          </div>
+        </div>
+
+        <!-- Video Parameters -->
+        <div class="param-group">
+          <label>Auflösung</label>
+          <select id="video-resolution" class="param-input">
+            <option value="1024x576" selected>1024×576 (SVD optimiert)</option>
+            <option value="1280x720">1280×720 (HD)</option>
+            <option value="1920x1080">1920×1080 (Full HD)</option>
+          </select>
+        </div>
+
+        <div class="param-group">
+          <label>Dauer: <span id="duration-value">3</span> Sekunden</label>
+          <input type="range" id="duration" min="1" max="10" value="3" class="param-input">
+        </div>
+
+        <div class="param-group">
+          <label>FPS</label>
+          <select id="fps" class="param-input">
+            <option value="12">12 fps</option>
+            <option value="24" selected>24 fps</option>
+            <option value="30">30 fps</option>
+            <option value="60">60 fps</option>
+          </select>
+        </div>
+
+        <div class="param-group">
+          <label>Motion Intensity: <span id="motion-value">127</span></label>
+          <input type="range" id="motion-bucket" min="100" max="255" value="127" class="param-input">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #666; margin-top: 2px;">
+            <span>Subtil</span>
+            <span>Dynamisch</span>
+          </div>
+        </div>
+
+        <div class="param-group">
+          <label>Noise Level: <span id="noise-value">0.02</span></label>
+          <input type="range" id="noise-aug" min="0" max="0.1" step="0.01" value="0.02" class="param-input">
+        </div>
+
+        <!-- Video Specs Display -->
+        <div class="video-specs">
+          <div class="spec-row">
+            <span>Frames gesamt:</span>
+            <span id="total-frames">72</span>
+          </div>
+          <div class="spec-row">
+            <span>Geschätzte Größe:</span>
+            <span id="estimated-size">~15MB</span>
+          </div>
+          <div class="spec-row">
+            <span>Generation Zeit:</span>
+            <span id="estimated-time">~2-4min</span>
           </div>
         </div>
       </div>
-    </form>
+
+      <!-- Preview Panel -->
+      <div class="preview-panel">
+        <div id="video-preview-area" class="preview-area">
+          <div class="preview-placeholder">
+            <div style="font-size: 48px; margin-bottom: 10px;">🎬</div>
+            <div>Bereit für Video-Generierung</div>
+            <div style="font-size: 12px; color: #666; margin-top: 5px;">
+              Beschreibe deine Video-Szene oder lade ein Startbild hoch
+            </div>
+          </div>
+        </div>
+
+        <div class="param-group">
+          <label for="video-prompt">Video Prompt</label>
+          <textarea 
+            id="video-prompt" 
+            class="param-input" 
+            rows="4" 
+            placeholder="Beschreibe deine Video-Szene... (z.B. 'Ruhiger Bergsee bei Sonnenuntergang mit sanften Wellen, cineastische Kamerabewegung')"
+            required
+          ></textarea>
+        </div>
+
+        <div id="video-progress-container" style="display: none;">
+          <div class="progress-bar">
+            <div id="video-progress-fill" class="progress-fill"></div>
+          </div>
+          <div id="video-status-text" class="status-text">Vorbereitung...</div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-top: 5px;">
+            <span>ETA: <span id="eta-display">--:--</span></span>
+            <span>Frame: <span id="frame-progress">0/72</span></span>
+          </div>
+        </div>
+
+        <button id="video-generate-btn" class="generate-btn">
+          🎬 Video generieren
+        </button>
+      </div>
+    </div>
   </main>
+
   <script>
-  // Preview logic for start frame upload
-  document.addEventListener('DOMContentLoaded', function(){
-    const fileInput = document.getElementById('init_image');
-    const previewContainer = document.getElementById('preview-container');
-    const previewImg = document.getElementById('preview-img');
-    fileInput.addEventListener('change', function(){
-      const file = this.files && this.files[0];
-      const display = document.getElementById('display-container');
-      if(file){
-        const reader = new FileReader();
-        reader.onload = function(e){
-          previewImg.src = e.target.result;
-          previewContainer.classList.remove('hidden');
-          // show large preview
-          if(display){
-            display.innerHTML = '';
-            const imgEl = document.createElement('img');
-            imgEl.src = e.target.result;
-            imgEl.style.maxWidth = '100%';
-            imgEl.style.borderRadius = '0.5rem';
-            display.appendChild(imgEl);
-            display.classList.remove('hidden');
-          }
+    class FunctionalVideoGenerator {
+      constructor() {
+        this.selectedModel = null;
+        this.currentMode = 'text2video';
+        this.isGenerating = false;
+        this.uploadedImage = null;
+        this.videoSpecs = {
+          width: 1024,
+          height: 576,
+          fps: 24,
+          duration: 3,
+          frames: 72
         };
-        reader.readAsDataURL(file);
-      } else {
-        previewContainer.classList.add('hidden');
-        previewImg.src = '';
-        // hide display container when no file selected
-        if(display){
-          display.classList.add('hidden');
-          display.innerHTML = '';
-        }
+        
+        this.init();
       }
-    });
 
-    // Resolution handling: update hidden width/height fields when user selects a resolution
-    const resSelect = document.getElementById('vid_resolution');
-    const widthField = document.getElementById('width_input');
-    const heightField = document.getElementById('height_input');
-    function updateResolution(){
-      const parts = (resSelect.value || '').split('x');
-      if(parts.length === 2){
-        widthField.value = parseInt(parts[0]);
-        heightField.value = parseInt(parts[1]);
+      init() {
+        this.setupEventListeners();
+        this.loadVideoModels();
+        this.updateSliderValues();
+        this.calculateVideoSpecs();
       }
-    }
-    if(resSelect){
-      resSelect.addEventListener('change', updateResolution);
-      updateResolution();
-    }
 
-    // Frames calculation: derive number of frames based on FPS and length (seconds)
-    const fpsInput = document.getElementById('fps');
-    const lengthInput = document.getElementById('vid_length');
-    const framesInput = document.getElementById('num_frames');
-    function updateFrames(){
-      const fpsVal = parseInt(fpsInput.value || '0');
-      const secVal = parseInt(lengthInput.value || '0');
-      if (!framesInput.hasAttribute('data-manual')){
-        if(fpsVal > 0 && secVal > 0){ framesInput.value = fpsVal * secVal; }
-      }
-    }
-    if(fpsInput && lengthInput && framesInput){
-      fpsInput.addEventListener('change', updateFrames);
-      lengthInput.addEventListener('change', updateFrames);
-      // When user manually edits frames input, mark as manual override
-      framesInput.addEventListener('input', ()=>{ framesInput.setAttribute('data-manual','true'); });
-      updateFrames();
-    }
-  });
-  </script>
-  <script>
-  /*
-    Hauptinitialisierung für die Videoseite.
-    Lädt Modelle und Promptvorschläge basierend auf SFW/NSFW und dem gewählten Modus.
-    Bindet den Model‑Picker an das Formular und setzt Erfolgsmeldungen.
-  */
-  async function fetchSuggestions(domain, nsfw, purpose){
-    const urls = [
-      `/api/suggestions?domain=${domain}&nsfw=${nsfw}&purpose=${purpose}`,
-      `/api/suggestions?type=${domain}&nsfw=${nsfw}&purpose=${purpose}`,
-      `/api/suggestions?type=${domain}&nsfw=${nsfw}`
-    ];
-    for (const u of urls){ try{ const r = await fetch(u); if(r.ok) return await r.json(); }catch{} }
-    // Fallbacks – Beispielideen für Video
-    if (purpose === 'img2video'){
-      return {
-        categories: [
-          { id:'motion', label:'Bewegung', ideas:[
-            'gentle camera drift, subtle parallax, natural motion blur',
-            'slow pan with subject movement, cinematic grading'
-          ]},
-          { id:'detail', label:'Detail', ideas:[
-            'macro motion of textures, shallow depth of field',
-            'close‑up highlights, specular motion, HDR look'
-          ]}
-        ],
-        modifiers: ['cinematic motion grade, filmic grain', 'HDR range, natural blur trails']
-      };
-    } else {
-      return {
-        categories: [
-          { id:'cinematic', label:'Cinematic', ideas:[
-            'cinematic car driving at sunset, aerial parallax, lens flares',
-            'forest canopy wind movement, volumetric light rays'
-          ]},
-          { id:'nature', label:'Nature', ideas:[
-            'ocean waves close‑up, foam details, stabilized handheld look',
-            'waterfall slow motion, mist particles'
-          ]}
-        ],
-        modifiers: ['cinematic color grade, motion blur natural', 'subtle film grain, high dynamic range']
-      };
-    }
-  }
-  async function fetchGalleryImages(){
-    const urls = ['/api/files?type=image','/api/gallery?type=image','/api/files/images'];
-    for (const u of urls){ try{ const r = await fetch(u); if(r.ok) return await r.json(); }catch{} }
-    return [];
-  }
-  function pushPrompt(textarea, addition){
-    const cur = textarea.value.trim();
-    if (!cur) { textarea.value = addition; return; }
-    if (!cur.toLowerCase().includes(addition.toLowerCase())){ textarea.value = cur + ', ' + addition; }
-  }
-  (async function(){
-    const NSFW = false;
-    let PURPOSE = 'text2video';
-    const PAGE_KEY = () => `video:${PURPOSE}:${NSFW?'nsfw':'sfw'}`;
-    async function loadAndRenderModels(){
-      const models = await LMS.loadModels('video', NSFW, PURPOSE);
-      const sel = LMS.getSelectedModel(PAGE_KEY());
-      if(!sel && models.length) LMS.setSelectedModel(PAGE_KEY(), models[0].id);
-      LMS.renderModelTabs({
-        container: document.getElementById('model-tabs'),
-        models,
-        onSelect: (id)=> LMS.setSelectedModel(PAGE_KEY(), id),
-        activeId: LMS.getSelectedModel(PAGE_KEY()),
-        title: NSFW ? 'Kompatible Video‑Modelle (NSFW‑geeignet)' : 'Kompatible Video‑Modelle (SVD)'
-      });
-    }
-    async function loadAndRenderSuggestions(){
-      const sug = await fetchSuggestions('video', NSFW, PURPOSE);
-      const catWrap = document.getElementById('cat-chips');
-      const ideasWrap = document.getElementById('prompt-suggestions');
-      const txt = document.getElementById('prompt');
-      catWrap.innerHTML = ''; ideasWrap.innerHTML = '';
-      (sug.categories||[]).forEach(c=>{
-        const b = document.createElement('button');
-        b.type='button'; b.className='chip'; b.textContent=c.label;
-        b.addEventListener('click', ()=>{
-          ideasWrap.innerHTML='';
-          (c.ideas||[]).forEach(p=>{
-            const a=document.createElement('button');
-            a.type='button'; a.className='btn ghost'; a.textContent=p;
-            a.addEventListener('click', ()=> pushPrompt(txt, p));
-            ideasWrap.appendChild(a);
+      setupEventListeners() {
+        // Mode buttons
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            this.setMode(e.target.dataset.mode);
           });
         });
-        catWrap.appendChild(b);
-      });
-      document.getElementById('btn-random').onclick = ()=>{
-        const cats = sug.categories||[]; if(!cats.length) return;
-        const c = cats[Math.floor(Math.random()*cats.length)];
-        const idea = (c.ideas||[])[Math.floor(Math.random()*(c.ideas||[]).length)] || '';
-        const mod = (sug.modifiers||[])[Math.floor(Math.random()*(sug.modifiers||[]).length)] || '';
-        const rp = [idea, mod].filter(Boolean).join(', ');
-        if (rp) document.getElementById('prompt').value = rp;
-      };
 
-      // Auto-select the first category to immediately display its suggestions
-      const firstCatBtn = catWrap.querySelector('button');
-      if(firstCatBtn){ firstCatBtn.click(); }
-    }
-    async function applyMode(){
-      PURPOSE = modeSel.value;
-      modeHidden.value = PURPOSE;
-      // Show/hide start frame upload when switching between text and image mode
-      initBlock.classList.toggle('hidden', PURPOSE !== 'img2video');
-      await loadAndRenderModels();
-      await loadAndRenderSuggestions();
-    }
-    // Hook up elements
-    const modeSel = document.getElementById('mode');
-    const modeHidden = document.getElementById('mode_input');
-    const initBlock = document.getElementById('init-block');
-    modeSel.addEventListener('change', applyMode);
-    await applyMode();
-    // Populate remix select with gallery images
-    (async ()=>{
-      const remixSel = document.getElementById('remix');
-      const initUrl = document.getElementById('init_url');
-      if (remixSel){
-        try{ const files = await fetchGalleryImages();
-          (files.items||[]).forEach(f=>{
-            const o = document.createElement('option');
-            o.value = f.url || f.file || f.path || '';
-            o.textContent = f.name || o.value.split('/').pop();
-            remixSel.appendChild(o);
+        // File upload
+        document.getElementById('video-file-input').addEventListener('change', (e) => {
+          this.handleVideoFileUpload(e.target.files[0]);
+        });
+
+        // Parameter controls
+        document.getElementById('duration').addEventListener('input', (e) => {
+          document.getElementById('duration-value').textContent = e.target.value;
+          this.calculateVideoSpecs();
+        });
+
+        document.getElementById('fps').addEventListener('change', () => {
+          this.calculateVideoSpecs();
+        });
+
+        document.getElementById('video-resolution').addEventListener('change', () => {
+          this.calculateVideoSpecs();
+        });
+
+        document.getElementById('motion-bucket').addEventListener('input', (e) => {
+          document.getElementById('motion-value').textContent = e.target.value;
+        });
+
+        document.getElementById('noise-aug').addEventListener('input', (e) => {
+          document.getElementById('noise-value').textContent = parseFloat(e.target.value).toFixed(2);
+        });
+
+        // Generate button
+        document.getElementById('video-generate-btn').addEventListener('click', () => {
+          this.generateVideo();
+        });
+      }
+
+      setMode(mode) {
+        this.currentMode = mode;
+        
+        // Update buttons
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.mode === mode);
+        });
+
+        // Show/hide upload section
+        const uploadSection = document.getElementById('video-image-upload');
+        
+        if (mode === 'img2video') {
+          uploadSection.classList.add('active');
+        } else {
+          uploadSection.classList.remove('active');
+        }
+
+        this.showMessage(`Video-Modus: ${mode === 'text2video' ? 'Text zu Video' : 'Bild zu Video'}`, 'info');
+        this.loadVideoModels(); // Reload compatible models
+      }
+
+      async loadVideoModels() {
+        try {
+          const response = await fetch(`/api/models/compatible?mode=${this.currentMode}`);
+          const data = await response.json();
+
+          if (!data.ok) {
+            throw new Error('Konnte Video-Modelle nicht laden');
+          }
+
+          this.renderVideoModels(data.compatible_models || []);
+        } catch (error) {
+          console.error('Failed to load video models:', error);
+          this.showMessage('Fehler beim Laden der Video-Modelle: ' + error.message, 'error');
+          
+          // Fallback für Testing
+          this.renderVideoModels([
+            {
+              id: 'svd-img2vid-xt',
+              name: 'Stable Video Diffusion XT',
+              architecture: 'svd',
+              description: 'Hochqualitative Bild-zu-Video Generation'
+            }
+          ]);
+        }
+      }
+
+      renderVideoModels(models) {
+        const container = document.getElementById('video-model-list');
+        
+        if (models.length === 0) {
+          container.innerHTML = `
+            <div class="status-text" style="color: #dc2626;">
+              Keine kompatiblen Video-Modelle gefunden<br>
+              <small>Installiere SVD über den Katalog</small>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = models.map(model => `
+          <div class="model-option" data-model-id="${model.id}">
+            <div style="flex: 1;">
+              <div style="font-weight: 500; margin-bottom: 2px;">${model.name}</div>
+              <div style="font-size: 12px; color: #888;">
+                ${model.architecture} • ${model.description || 'Video-Generation'}
+              </div>
+            </div>
+            <div style="width: 12px; height: 12px; border: 2px solid #8b5cf6; border-radius: 50%;"></div>
+          </div>
+        `).join('');
+
+        // Add click handlers
+        container.querySelectorAll('.model-option').forEach(option => {
+          option.addEventListener('click', () => {
+            this.selectVideoModel(option.dataset.modelId, option);
           });
-          remixSel.addEventListener('change', ()=>{ initUrl.value = remixSel.value || ''; });
-        }catch(e){ console.warn('remix list failed', e); }
+        });
+
+        // Auto-select first model
+        if (models.length > 0) {
+          const firstOption = container.querySelector('.model-option');
+          this.selectVideoModel(models[0].id, firstOption);
+        }
       }
-    })();
-    // Attach model selection to form
-    LMS.attachModelToForm(document.getElementById('video-form'), PAGE_KEY());
-    document.getElementById('btn-clear').addEventListener('click', ()=>{ document.getElementById('prompt').value=''; });
-    window.LMS.onGenerated = (url)=>{
-      // Display generated video in the large preview container
-      const display = document.getElementById('display-container');
-      if(display){
-        display.innerHTML = '';
-        const vidEl = document.createElement('video');
-        vidEl.src = url;
-        vidEl.controls = true;
-        vidEl.style.width = '100%';
-        vidEl.style.borderRadius = '0.5rem';
-        display.appendChild(vidEl);
-        display.classList.remove('hidden');
+
+      selectVideoModel(modelId, element) {
+        // Remove previous selection
+        document.querySelectorAll('.model-option').forEach(opt => {
+          opt.classList.remove('selected');
+        });
+
+        // Select new model
+        element.classList.add('selected');
+        this.selectedModel = modelId;
+        
+        const modelName = element.querySelector('div').textContent;
+        this.showMessage(`Video-Modell ausgewählt: ${modelName}`, 'info');
       }
-      // Hide deprecated last-output section if present (legacy)
-      const deprecatedBox = document.getElementById('last-output');
-      if(deprecatedBox) deprecatedBox.classList.add('hidden');
-      LMS.toast('Dein Video wurde generiert und ist in der Galerie verfügbar.', 'success');
-    };
-  })();
+
+      handleVideoFileUpload(file) {
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+          this.showMessage('Bitte wähle eine gültige Bilddatei für das Startbild', 'error');
+          return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+          this.showMessage('Bildgröße sollte unter 10MB sein', 'error');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.uploadedImage = file;
+          
+          // Show preview
+          const preview = document.getElementById('video-upload-preview');
+          const previewImg = document.getElementById('video-upload-preview-img');
+          previewImg.src = e.target.result;
+          preview.style.display = 'block';
+
+          // Update main preview
+          this.updateVideoPreview(`
+            <div style="position: relative;">
+              <img src="${e.target.result}" style="max-width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px;">
+              <div style="position: absolute; top: 10px; right: 10px; background: rgba(139,92,246,0.9); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                📷 Startbild geladen
+              </div>
+              <div style="position: absolute; bottom: 10px; left: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 6px; border-radius: 4px; font-size: 11px; text-align: center;">
+                🎬 Bereit für Animation zu Video
+              </div>
+            </div>
+          `);
+
+          this.showMessage('Startbild für Video erfolgreich hochgeladen', 'success');
+        };
+        reader.readAsDataURL(file);
+      }
+
+      calculateVideoSpecs() {
+        const resolution = document.getElementById('video-resolution').value.split('x');
+        const fps = parseInt(document.getElementById('fps').value);
+        const duration = parseInt(document.getElementById('duration').value);
+        
+        this.videoSpecs = {
+          width: parseInt(resolution[0]),
+          height: parseInt(resolution[1]),
+          fps: fps,
+          duration: duration,
+          frames: fps * duration
+        };
+
+        // Update display
+        document.getElementById('total-frames').textContent = this.videoSpecs.frames;
+        
+        // Estimate file size (rough calculation)
+        const pixelsPerFrame = this.videoSpecs.width * this.videoSpecs.height;
+        const estimatedSize = Math.round((pixelsPerFrame * this.videoSpecs.frames * 3) / (1024 * 1024 * 10)); // Very rough estimate
+        document.getElementById('estimated-size').textContent = `~${estimatedSize}MB`;
+        
+        // Estimate generation time (very rough)
+        const timePerFrame = 3; // seconds per frame (very rough estimate)
+        const totalTime = Math.round((this.videoSpecs.frames * timePerFrame) / 60);
+        document.getElementById('estimated-time').textContent = `~${Math.max(1, totalTime)}min`;
+
+        document.getElementById('frame-progress').textContent = `0/${this.videoSpecs.frames}`;
+      }
+
+      updateSliderValues() {
+        // Initialize slider displays
+        document.getElementById('duration-value').textContent = document.getElementById('duration').value;
+        document.getElementById('motion-value').textContent = document.getElementById('motion-bucket').value;
+        document.getElementById('noise-value').textContent = parseFloat(document.getElementById('noise-aug').value).toFixed(2);
+      }
+
+      async generateVideo() {
+        // Validation
+        const prompt = document.getElementById('video-prompt').value.trim();
+        if (!prompt) {
+          this.showMessage('Bitte gib einen Video-Prompt ein', 'error');
+          document.getElementById('video-prompt').focus();
+          return;
+        }
+
+        if (!this.selectedModel) {
+          this.showMessage('Bitte wähle ein Video-Modell aus', 'error');
+          return;
+        }
+
+        if (this.currentMode === 'img2video' && !this.uploadedImage) {
+          this.showMessage('Für Bild-zu-Video benötigst du ein hochgeladenes Startbild', 'error');
+          return;
+        }
+
+        this.isGenerating = true;
+        this.updateVideoGenerateButton(true);
+        this.showVideoProgress();
+
+        try {
+          // Prepare form data
+          const formData = new FormData();
+          formData.append('prompt', prompt);
+          formData.append('model_id', this.selectedModel);
+          formData.append('mode', this.currentMode);
+          formData.append('nsfw', 'false');
+
+          // Video resolution
+          formData.append('width', this.videoSpecs.width.toString());
+          formData.append('height', this.videoSpecs.height.toString());
+
+          // Video parameters
+          formData.append('fps', this.videoSpecs.fps.toString());
+          formData.append('num_frames', this.videoSpecs.frames.toString());
+          formData.append('motion_bucket_id', document.getElementById('motion-bucket').value);
+          formData.append('noise_aug_strength', document.getElementById('noise-aug').value);
+
+          // Image for img2video
+          if (this.currentMode === 'img2video' && this.uploadedImage) {
+            formData.append('init_image', this.uploadedImage);
+          }
+
+          // Start progress simulation
+          this.simulateVideoProgress();
+
+          // Make API call
+          const response = await fetch('/api/generate/universal', {
+            method: 'POST',
+            body: formData
+          });
+
+          const data = await response.json();
+
+          if (!data.ok) {
+            throw new Error(data.error?.message || 'Video-Generation fehlgeschlagen');
+          }
+
+          // Show result
+          this.showVideoResult(data);
+          this.showMessage('Video erfolgreich generiert!', 'success');
+
+        } catch (error) {
+          console.error('Video generation failed:', error);
+          this.showMessage('Video-Generation fehlgeschlagen: ' + error.message, 'error');
+        } finally {
+          this.isGenerating = false;
+          this.updateVideoGenerateButton(false);
+          this.hideVideoProgress();
+        }
+      }
+
+      simulateVideoProgress() {
+        const steps = [
+          { progress: 5, text: 'Video-Modell laden...', eta: this.videoSpecs.frames * 3 },
+          { progress: 15, text: 'Startbild vorbereiten...', eta: this.videoSpecs.frames * 2.8 },
+          { progress: 25, text: 'Frames initialisieren...', eta: this.videoSpecs.frames * 2.5 },
+          { progress: 40, text: 'Video generieren...', eta: this.videoSpecs.frames * 2 },
+          { progress: 65, text: 'Bewegung berechnen...', eta: this.videoSpecs.frames * 1.5 },
+          { progress: 80, text: 'Frames rendern...', eta: this.videoSpecs.frames * 1 },
+          { progress: 95, text: 'Video komprimieren...', eta: 30 },
+        ];
+
+        let currentStep = 0;
+        let simulatedFrames = 0;
+        
+        const interval = setInterval(() => {
+          if (currentStep < steps.length && this.isGenerating) {
+            const step = steps[currentStep];
+            this.updateVideoProgress(step.progress, step.text);
+            
+            // Simulate frame progress
+            const expectedFrames = Math.floor((step.progress / 100) * this.videoSpecs.frames);
+            simulatedFrames = Math.min(expectedFrames, this.videoSpecs.frames);
+            document.getElementById('frame-progress').textContent = `${simulatedFrames}/${this.videoSpecs.frames}`;
+            
+            // Update ETA
+            const etaMinutes = Math.floor(step.eta / 60);
+            const etaSeconds = step.eta % 60;
+            document.getElementById('eta-display').textContent = `${etaMinutes}:${etaSeconds.toString().padStart(2, '0')}`;
+            
+            currentStep++;
+          } else if (!this.isGenerating) {
+            clearInterval(interval);
+          }
+        }, 2000);
+      }
+
+      showVideoProgress() {
+        document.getElementById('video-progress-container').style.display = 'block';
+        this.updateVideoProgress(0, 'Starte Video-Generation...');
+      }
+
+      hideVideoProgress() {
+        setTimeout(() => {
+          document.getElementById('video-progress-container').style.display = 'none';
+        }, 2000);
+      }
+
+      updateVideoProgress(percentage, text) {
+        document.getElementById('video-progress-fill').style.width = `${percentage}%`;
+        document.getElementById('video-status-text').textContent = text;
+      }
+
+      updateVideoGenerateButton(isGenerating) {
+        const button = document.getElementById('video-generate-btn');
+        
+        if (isGenerating) {
+          button.disabled = true;
+          button.innerHTML = '⏳ Generiere Video...';
+        } else {
+          button.disabled = false;
+          button.innerHTML = '🎬 Video generieren';
+        }
+      }
+
+      showVideoResult(data) {
+        const resultHtml = `
+          <div style="position: relative;">
+            <video controls style="max-width: 100%; max-height: 400px; border-radius: 8px;" autoplay muted loop>
+              <source src="${data.file}" type="video/mp4">
+              Dein Browser unterstützt das Video-Element nicht.
+            </video>
+            <div style="position: absolute; bottom: 10px; left: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 8px; border-radius: 4px; font-size: 12px;">
+              <div style="font-weight: 500; margin-bottom: 4px;">✅ Video generiert!</div>
+              <div>${data.metadata?.resolution || ''} • ${data.metadata?.frames || '?'} frames • ${data.metadata?.duration_sec?.toFixed(1) || '?'}s • ${data.model}</div>
+            </div>
+            <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 5px;">
+              <a href="${data.file}" download style="background: #8b5cf6; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px;">📥 Download</a>
+              <a href="/gallery.html" style="background: #10b981; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px;">🎬 Galerie</a>
+            </div>
+          </div>
+        `;
+        
+        this.updateVideoPreview(resultHtml);
+      }
+
+      updateVideoPreview(html) {
+        const previewArea = document.getElementById('video-preview-area');
+        previewArea.innerHTML = html;
+        previewArea.classList.add('has-content');
+      }
+
+      showMessage(message, type = 'info') {
+        const container = document.getElementById('message-container');
+        
+        const colors = {
+          success: '#10b981',
+          error: '#dc2626',
+          info: '#8b5cf6'
+        };
+
+        const messageElement = document.createElement('div');
+        messageElement.className = type === 'success' ? 'success-message' : 
+                                 type === 'error' ? 'error-message' : 
+                                 'success-message';
+        messageElement.style.background = colors[type];
+        messageElement.textContent = message;
+
+        container.appendChild(messageElement);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+          messageElement.remove();
+        }, 5000);
+      }
+    }
+
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      new FunctionalVideoGenerator();
+    });
   </script>
 </body>
 </html>

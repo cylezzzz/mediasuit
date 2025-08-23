@@ -1,30 +1,29 @@
-# server/routes/universal_generate.py - Universeller Generator für alle Modellarten
+# server/routes/universal_generate_fixed.py - Korrigierte universelle Generierung
 from __future__ import annotations
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from pathlib import Path
-from typing import Optional, Dict, Any, Union, List
-import time, io, uuid, logging
+from typing import Optional, Dict, Any, Union
+import time, io, uuid, logging, json
 from PIL import Image
 from PIL.Image import Image as PILImage
+import asyncio
 
-# Import aller möglichen Backends
+# Import aller verfügbaren Backends
 from ..settings import load_settings
-from ..models_registry import list_all_models, ModelInfo
+from ..models_registry import list_all_models
 from ..state import OPS
 
 logger = logging.getLogger(__name__)
 
-# Versuche alle möglichen ML-Bibliotheken zu importieren
+# Backend-Verfügbarkeit prüfen
 BACKENDS = {}
 
-# Diffusers (Hauptbibliothek)
 try:
     import torch
     from diffusers import (
         AutoPipelineForText2Image, AutoPipelineForImage2Image,
         StableDiffusionPipeline, StableDiffusionImg2ImgPipeline,
-        StableVideoDiffusionPipeline, DiffusionPipeline,
-        StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline
+        StableVideoDiffusionPipeline, DiffusionPipeline
     )
     BACKENDS['diffusers'] = True
     logger.info("✅ Diffusers backend available")
@@ -32,73 +31,116 @@ except ImportError as e:
     BACKENDS['diffusers'] = False
     logger.warning(f"❌ Diffusers not available: {e}")
 
-# ONNX Runtime
-try:
-    import onnxruntime as ort
-    from diffusers import OnnxStableDiffusionPipeline
-    BACKENDS['onnxruntime'] = True
-    logger.info("✅ ONNX Runtime backend available")
-except ImportError:
-    BACKENDS['onnxruntime'] = False
-    logger.warning("❌ ONNX Runtime not available")
-
-# llama.cpp (für GGUF-Modelle)
-try:
-    from llama_cpp import Llama
-    BACKENDS['llama_cpp'] = True
-    logger.info("✅ llama.cpp backend available")
-except ImportError:
-    BACKENDS['llama_cpp'] = False
-    logger.warning("❌ llama.cpp not available")
-
-# Transformers (für LLMs)
 try:
     from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
     BACKENDS['transformers'] = True
     logger.info("✅ Transformers backend available")
 except ImportError:
     BACKENDS['transformers'] = False
-    logger.warning("❌ Transformers not available")
 
-# SafeTensors
 try:
-    from safetensors.torch import load_file as load_safetensors
-    BACKENDS['safetensors'] = True
+    from llama_cpp import Llama
+    BACKENDS['llama_cpp'] = True
+    logger.info("✅ llama.cpp backend available")
 except ImportError:
-    BACKENDS['safetensors'] = False
+    BACKENDS['llama_cpp'] = False
 
 router = APIRouter()
 
+def get_device():
+    """Bestimme bestes verfügbares Device"""
+    if BACKENDS.get('diffusers') and torch.cuda.is_available():
+        return "cuda"
+    elif BACKENDS.get('diffusers') and hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+        return "mps"
+    else:
+        return "cpu"
+
+def get_dtype():
+    """Bestimme optimalen Datentyp"""
+    if not BACKENDS.get('diffusers'):
+        return None
+    device = get_device()
+    if device == 'cpu':
+        return torch.float32
+    else:
+        return torch.float16
+
+def find_model_by_id(model_id: str) -> Optional[Dict[str, Any]]:
+    """Finde Modell nach ID in allen Kategorien"""
+    s = load_settings()
+    img_dir = Path(s.paths.image)
+    vid_dir = Path(s.paths.video)
+    llm_dir = Path(s.paths.get('llm', 'models/llm'))
+    
+    all_models = list_all_models(img_dir, vid_dir, llm_dir)
+    
+    for model_type, models in all_models.items():
+        for model in models:
+            if model.get('id') == model_id or model.get('name') == model_id:
+                return model
+    return None
+
+def validate_model_compatibility(model_info: Dict[str, Any], mode: str) -> bool:
+    """Prüfe ob Modell den gewünschten Modus unterstützt"""
+    modalities = model_info.get('modalities', [])
+    
+    if mode in ['text2img', 'img2img']:
+        return any(m in modalities for m in ['text2img', 'img2img'])
+    elif mode in ['text2video', 'img2video']:
+        return any(m in modalities for m in ['text2video', 'img2video'])
+    elif mode == 'text':
+        return any(m in modalities for m in ['text', 'chat', 'instruct'])
+    
+    return False
+
+def load_image_from_upload(upload_file: UploadFile) -> PILImage:
+    """Lade und konvertiere Upload-Bild"""
+    try:
+        content = upload_file.file.read()
+        img = Image.open(io.BytesIO(content))
+        
+        # Konvertiere zu RGB
+        if img.mode != 'RGB':
+            rgb_img = Image.new('RGB', img.size, (255, 255, 255))
+            if img.mode == 'RGBA':
+                rgb_img.paste(img, mask=img.split()[-1] if len(img.split()) > 3 else None)
+            else:
+                rgb_img.paste(img)
+            return rgb_img
+        return img
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid image format: {e}")
+
+def load_image_from_url(init_url: str) -> Optional[PILImage]:
+    """Lade Bild aus lokaler URL"""
+    if not init_url or not init_url.startswith("/outputs/"):
+        return None
+    
+    try:
+        # Entferne führenden Slash und baue Pfad
+        local_path = Path(".") / init_url.lstrip("/")
+        
+        if not local_path.exists():
+            logger.warning(f"Local image not found: {local_path}")
+            return None
+            
+        img = Image.open(local_path)
+        return img.convert("RGB")
+    except Exception as e:
+        logger.warning(f"Could not load local image {init_url}: {e}")
+        return None
+
 class UniversalPipeline:
-    """Universelle Pipeline die alle Modelltypen handhaben kann"""
+    """Universelle Pipeline für alle Modelltypen"""
     
     def __init__(self, model_path: Path, model_info: Dict[str, Any]):
         self.model_path = model_path
         self.model_info = model_info
         self.pipeline = None
-        self.device = self._get_device()
-        self.dtype = self._get_dtype()
+        self.device = get_device()
+        self.dtype = get_dtype()
         
-    def _get_device(self) -> str:
-        """Bestimme bestes verfügbares Device"""
-        if BACKENDS.get('diffusers') and torch.cuda.is_available():
-            return "cuda"
-        elif BACKENDS.get('diffusers') and hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
-            return "mps"  # Apple Silicon
-        else:
-            return "cpu"
-    
-    def _get_dtype(self):
-        """Bestimme optimalen Datentyp"""
-        if not BACKENDS.get('diffusers'):
-            return None
-        
-        precision = self.model_info.get('precision', 'fp16')
-        if precision == 'fp32' or self.device == 'cpu':
-            return torch.float32
-        else:
-            return torch.float16
-    
     def load(self) -> bool:
         """Lade Pipeline basierend auf Modellformat"""
         try:
@@ -108,32 +150,23 @@ class UniversalPipeline:
             
             logger.info(f"Loading {format_type} model with {backend} backend: {self.model_path}")
             
-            # Diffusers Directory (Hauptfall)
-            if format_type == 'diffusers_dir' and BACKENDS['diffusers']:
+            if not BACKENDS.get('diffusers'):
+                raise ValueError("Diffusers backend not available")
+            
+            # Diffusers Directory
+            if format_type == 'diffusers_dir':
                 self.pipeline = self._load_diffusers_directory(architecture)
             
-            # SafeTensors/Checkpoint Single Files
-            elif format_type in ['safetensors', 'checkpoint'] and BACKENDS['diffusers']:
+            # Single Files
+            elif format_type in ['safetensors', 'checkpoint']:
                 self.pipeline = self._load_single_file(architecture)
-            
-            # ONNX Models
-            elif format_type == 'onnx' and BACKENDS['onnxruntime']:
-                self.pipeline = self._load_onnx_model()
-            
-            # GGUF Models (LLM)
-            elif format_type == 'gguf' and BACKENDS['llama_cpp']:
-                self.pipeline = self._load_gguf_model()
-            
-            # Transformers Models (LLM)
-            elif format_type == 'transformers_dir' and BACKENDS['transformers']:
-                self.pipeline = self._load_transformers_model()
             
             # Ollama (external)
             elif backend == 'ollama':
                 self.pipeline = self._create_ollama_interface()
             
             else:
-                raise ValueError(f"Unsupported model format: {format_type} with backend {backend}")
+                raise ValueError(f"Unsupported model format: {format_type}")
             
             return self.pipeline is not None
             
@@ -142,109 +175,41 @@ class UniversalPipeline:
             return False
     
     def _load_diffusers_directory(self, architecture: str):
-        """Lade Diffusers-Verzeichnis basierend auf Architektur"""
-        
-        # SDXL Modelle
-        if architecture == 'sdxl':
-            return StableDiffusionXLPipeline.from_pretrained(
-                str(self.model_path),
-                torch_dtype=self.dtype,
-                safety_checker=None,
-                requires_safety_checker=False
-            ).to(self.device)
-        
-        # Standard SD Modelle  
-        elif architecture in ['sd15', 'sd20', 'sd21']:
-            return StableDiffusionPipeline.from_pretrained(
-                str(self.model_path),
-                torch_dtype=self.dtype,
-                safety_checker=None,
-                requires_safety_checker=False
-            ).to(self.device)
-        
-        # Video Modelle (SVD)
-        elif architecture == 'svd':
-            return StableVideoDiffusionPipeline.from_pretrained(
-                str(self.model_path),
-                torch_dtype=self.dtype
-            ).to(self.device)
-        
-        # Auto-Pipeline als Fallback
-        else:
-            return AutoPipelineForText2Image.from_pretrained(
-                str(self.model_path),
-                torch_dtype=self.dtype,
-                safety_checker=None,
-                requires_safety_checker=False
-            ).to(self.device)
+        """Lade Diffusers-Verzeichnis"""
+        try:
+            # Video Modelle (SVD)
+            if architecture == 'svd':
+                return StableVideoDiffusionPipeline.from_pretrained(
+                    str(self.model_path),
+                    torch_dtype=self.dtype,
+                    variant="fp16" if self.dtype == torch.float16 else None
+                ).to(self.device)
+            
+            # Standard SD Modelle  
+            else:
+                return AutoPipelineForText2Image.from_pretrained(
+                    str(self.model_path),
+                    torch_dtype=self.dtype,
+                    safety_checker=None,
+                    requires_safety_checker=False
+                ).to(self.device)
+                
+        except Exception as e:
+            logger.error(f"Error loading diffusers directory: {e}")
+            raise
     
     def _load_single_file(self, architecture: str):
-        """Lade Single-File Modell (.safetensors/.ckpt)"""
-        
-        # SDXL Single Files
-        if architecture == 'sdxl':
-            return StableDiffusionXLPipeline.from_single_file(
-                str(self.model_path),
-                torch_dtype=self.dtype,
-                safety_checker=None,
-                requires_safety_checker=False
-            ).to(self.device)
-        
-        # Standard SD Single Files
-        else:
+        """Lade Single-File Modell"""
+        try:
             return StableDiffusionPipeline.from_single_file(
                 str(self.model_path),
                 torch_dtype=self.dtype,
                 safety_checker=None,
                 requires_safety_checker=False
             ).to(self.device)
-    
-    def _load_onnx_model(self):
-        """Lade ONNX-Modell"""
-        providers = ['CPUExecutionProvider']
-        if self.device == 'cuda':
-            providers.insert(0, 'CUDAExecutionProvider')
-        
-        return OnnxStableDiffusionPipeline.from_pretrained(
-            str(self.model_path),
-            provider=providers
-        )
-    
-    def _load_gguf_model(self):
-        """Lade GGUF-Modell mit llama.cpp"""
-        # Finde .gguf Datei im Verzeichnis
-        gguf_files = list(self.model_path.glob("*.gguf"))
-        if not gguf_files:
-            raise FileNotFoundError("No .gguf file found in model directory")
-        
-        gguf_file = gguf_files[0]  # Nimm erste .gguf Datei
-        
-        return Llama(
-            model_path=str(gguf_file),
-            n_ctx=4096,
-            n_gpu_layers=-1 if self.device == 'cuda' else 0,
-            verbose=False
-        )
-    
-    def _load_transformers_model(self):
-        """Lade Transformers-Modell"""
-        device_map = "auto" if self.device == "cuda" else None
-        
-        model = AutoModelForCausalLM.from_pretrained(
-            str(self.model_path),
-            torch_dtype=self.dtype,
-            device_map=device_map,
-            trust_remote_code=True
-        )
-        
-        tokenizer = AutoTokenizer.from_pretrained(str(self.model_path))
-        
-        return pipeline(
-            "text-generation",
-            model=model,
-            tokenizer=tokenizer,
-            device_map=device_map
-        )
+        except Exception as e:
+            logger.error(f"Error loading single file: {e}")
+            raise
     
     def _create_ollama_interface(self):
         """Erstelle Ollama-Interface"""
@@ -255,18 +220,46 @@ class UniversalPipeline:
         if not self.pipeline:
             raise RuntimeError("Pipeline not loaded")
         
-        model_type = self.model_info.get('type')
-        architecture = self.model_info.get('architecture')
-        
-        # Parameter-Mapping basierend auf Modelltyp
-        generation_kwargs = self._map_image_parameters(architecture, kwargs)
-        
         try:
-            if hasattr(self.pipeline, '__call__'):
-                result = self.pipeline(prompt=prompt, **generation_kwargs)
-                return result.images[0] if hasattr(result, 'images') else result
+            # Memory optimization
+            if torch.cuda.is_available() and hasattr(self.pipeline, 'enable_model_cpu_offload'):
+                self.pipeline.enable_model_cpu_offload()
+                self.pipeline.enable_attention_slicing()
+            
+            # Parameter-Mapping
+            generation_kwargs = {}
+            
+            if kwargs.get('width'):
+                generation_kwargs['width'] = int(kwargs['width'])
+            if kwargs.get('height'):
+                generation_kwargs['height'] = int(kwargs['height'])
+            if kwargs.get('num_inference_steps'):
+                generation_kwargs['num_inference_steps'] = int(kwargs['num_inference_steps'])
+            if kwargs.get('guidance_scale'):
+                generation_kwargs['guidance_scale'] = float(kwargs['guidance_scale'])
+            if kwargs.get('negative_prompt'):
+                generation_kwargs['negative_prompt'] = kwargs['negative_prompt']
+            
+            # Img2Img Parameter
+            if kwargs.get('image'):
+                generation_kwargs['image'] = kwargs['image']
+            if kwargs.get('strength'):
+                generation_kwargs['strength'] = float(kwargs['strength'])
+            
+            # Generierung
+            if kwargs.get('image') and hasattr(self.pipeline, 'from_single_file'):
+                # Für img2img müssen wir eine andere Pipeline laden
+                img2img_pipeline = AutoPipelineForImage2Image.from_pretrained(
+                    str(self.model_path),
+                    torch_dtype=self.dtype,
+                    safety_checker=None,
+                    requires_safety_checker=False
+                ).to(self.device)
+                result = img2img_pipeline(prompt=prompt, **generation_kwargs)
             else:
-                raise ValueError(f"Pipeline doesn't support image generation: {type(self.pipeline)}")
+                result = self.pipeline(prompt=prompt, **generation_kwargs)
+            
+            return result.images[0]
                 
         except Exception as e:
             logger.error(f"Image generation failed: {e}")
@@ -279,90 +272,31 @@ class UniversalPipeline:
         
         architecture = self.model_info.get('architecture')
         
-        if architecture == 'svd':
-            # SVD benötigt Eingangsbild
-            if image is None:
-                raise ValueError("SVD requires input image for video generation")
+        if architecture != 'svd':
+            raise ValueError(f"Video generation not supported for architecture: {architecture}")
+        
+        if image is None:
+            raise ValueError("SVD requires input image for video generation")
+        
+        try:
+            # Memory optimization
+            if torch.cuda.is_available() and hasattr(self.pipeline, 'enable_model_cpu_offload'):
+                self.pipeline.enable_model_cpu_offload()
+            
+            num_frames = kwargs.get('num_frames', 14)
             
             result = self.pipeline(
                 image=image,
-                num_frames=kwargs.get('num_frames', 14),
+                num_frames=num_frames,
                 decode_chunk_size=8,
                 motion_bucket_id=kwargs.get('motion_bucket_id', 127),
                 noise_aug_strength=kwargs.get('noise_aug_strength', 0.02)
             )
             return result.frames[0]
-        else:
-            raise ValueError(f"Video generation not supported for architecture: {architecture}")
-    
-    def generate_text(self, prompt: str, **kwargs) -> str:
-        """Universelle Textgeneration"""
-        if not self.pipeline:
-            raise RuntimeError("Pipeline not loaded")
-        
-        backend = self.model_info.get('backend')
-        
-        if backend == 'llama_cpp':
-            # GGUF mit llama.cpp
-            result = self.pipeline(
-                prompt,
-                max_tokens=kwargs.get('max_tokens', 512),
-                temperature=kwargs.get('temperature', 0.8),
-                top_p=kwargs.get('top_p', 0.95),
-                echo=False
-            )
-            return result['choices'][0]['text']
-        
-        elif backend == 'transformers':
-            # Transformers Pipeline
-            result = self.pipeline(
-                prompt,
-                max_new_tokens=kwargs.get('max_tokens', 512),
-                temperature=kwargs.get('temperature', 0.8),
-                top_p=kwargs.get('top_p', 0.95),
-                do_sample=True
-            )
-            return result[0]['generated_text'][len(prompt):]
-        
-        elif backend == 'ollama':
-            # Ollama Interface
-            return self.pipeline.generate(prompt, **kwargs)
-        
-        else:
-            raise ValueError(f"Text generation not supported for backend: {backend}")
-    
-    def _map_image_parameters(self, architecture: str, kwargs: Dict) -> Dict:
-        """Mappe Parameter auf modellspezifische Namen"""
-        mapped = {}
-        
-        # Basis-Parameter für alle SD-Modelle
-        if kwargs.get('width'):
-            mapped['width'] = int(kwargs['width'])
-        if kwargs.get('height'):
-            mapped['height'] = int(kwargs['height'])
-        if kwargs.get('num_inference_steps'):
-            mapped['num_inference_steps'] = int(kwargs['num_inference_steps'])
-        if kwargs.get('guidance_scale'):
-            mapped['guidance_scale'] = float(kwargs['guidance_scale'])
-        if kwargs.get('negative_prompt'):
-            mapped['negative_prompt'] = kwargs['negative_prompt']
-        
-        # SDXL-spezifische Parameter
-        if architecture == 'sdxl':
-            if kwargs.get('original_size'):
-                mapped['original_size'] = kwargs['original_size']
-            if kwargs.get('crops_coords_top_left'):
-                mapped['crops_coords_top_left'] = kwargs['crops_coords_top_left']
-            if kwargs.get('target_size'):
-                mapped['target_size'] = kwargs['target_size']
-        
-        # Img2Img spezifische Parameter
-        if kwargs.get('image'):
-            mapped['image'] = kwargs['image']
-        if kwargs.get('strength'):
-            mapped['strength'] = float(kwargs['strength'])
-        
-        return mapped
+            
+        except Exception as e:
+            logger.error(f"Video generation failed: {e}")
+            raise
     
     def cleanup(self):
         """Räume Pipeline-Ressourcen auf"""
@@ -387,25 +321,23 @@ class OllamaInterface:
             import subprocess
             import json
             
-            # Bereite Ollama-Aufruf vor
             request_data = {
                 "model": self.model_name,
                 "prompt": prompt,
                 "options": {
                     "temperature": kwargs.get('temperature', 0.8),
                     "top_p": kwargs.get('top_p', 0.95),
-                    "max_tokens": kwargs.get('max_tokens', 512)
+                    "num_predict": kwargs.get('max_tokens', 512)
                 },
                 "stream": False
             }
             
-            # Rufe Ollama auf
             result = subprocess.run(
                 ["ollama", "generate"],
                 input=json.dumps(request_data),
                 capture_output=True,
                 text=True,
-                timeout=60
+                timeout=120
             )
             
             if result.returncode == 0:
@@ -418,33 +350,11 @@ class OllamaInterface:
             logger.error(f"Ollama generation failed: {e}")
             raise
 
-# Utility Functions
-def find_model_by_id(model_id: str) -> Optional[Dict[str, Any]]:
-    """Finde Modell nach ID"""
-    s = load_settings()
-    img_dir = Path(s.paths.image)
-    vid_dir = Path(s.paths.video)
-    llm_dir = Path(s.paths.get('llm', 'models/llm'))
-    
-    all_models = list_all_models(img_dir, vid_dir, llm_dir)
-    
-    for model_type, models in all_models.items():
-        for model in models:
-            if model.get('id') == model_id:
-                return model
-    return None
-
-def get_compatible_modalities(model_info: Dict[str, Any], mode: str) -> bool:
-    """Prüfe ob Modell den gewünschten Modus unterstützt"""
-    modalities = model_info.get('modalities', [])
-    return mode in modalities
-
-# Main Generation Routes
 @router.post("/generate/universal")
 async def universal_generate(
     prompt: str = Form(...),
     model_id: str = Form(...),
-    mode: str = Form("text2img"),  # text2img, img2img, text2video, img2video, text
+    mode: str = Form("text2img"),
     nsfw: bool = Form(False),
     
     # Image Parameters
@@ -463,24 +373,11 @@ async def universal_generate(
     motion_bucket_id: int = Form(127),
     noise_aug_strength: float = Form(0.02),
     
-    # Text Parameters
-    max_tokens: int = Form(512),
-    temperature: float = Form(0.8),
-    top_p: float = Form(0.95),
-    
     # Output Parameters
-    output_format: str = Form("png"),  # png, jpg, mp4
+    output_format: str = Form("png"),
     jpg_quality: int = Form(92)
 ):
-    """
-    Universeller Generator der alle Modelltypen und -formate unterstützt:
-    - Diffusers (SD 1.5, SD 2.x, SDXL, SVD)
-    - Single Files (.safetensors, .ckpt)
-    - ONNX Modelle
-    - GGUF LLMs (llama.cpp)
-    - Transformers LLMs
-    - Ollama LLMs
-    """
+    """Universeller Generator für alle Modelltypen"""
     
     # Validierung
     if not prompt.strip():
@@ -492,28 +389,27 @@ async def universal_generate(
         raise HTTPException(status_code=404, detail=f"Modell nicht gefunden: {model_id}")
     
     # Modalitäts-Kompatibilität prüfen
-    if not get_compatible_modalities(model_info, mode):
+    if not validate_model_compatibility(model_info, mode):
+        available_modes = model_info.get('modalities', [])
         raise HTTPException(
             status_code=400, 
-            detail=f"Modell {model_info['name']} unterstützt nicht den Modus '{mode}'. Verfügbar: {model_info.get('modalities', [])}"
+            detail=f"Modell {model_info['name']} unterstützt nicht den Modus '{mode}'. Verfügbar: {available_modes}"
         )
     
-    # Settings und Ausgabe-Setup
+    # Output-Setup
     s = load_settings()
     model_type = model_info.get('type')
     
-    if model_type in ['image'] or mode.endswith('2img'):
+    if model_type == 'image' or mode.endswith('2img'):
         out_dir = Path(s.paths.images)
         file_ext = f".{output_format.lower()}"
         url_prefix = "/outputs/images/"
-    elif model_type in ['video'] or mode.endswith('2video'):
-        out_dir = Path(s.paths.videos) 
+    elif model_type == 'video' or mode.endswith('2video'):
+        out_dir = Path(s.paths.videos)
         file_ext = ".mp4"
         url_prefix = "/outputs/videos/"
-    else:  # text/llm
-        out_dir = Path(s.paths.get('text_outputs', 'outputs/text'))
-        file_ext = ".txt"
-        url_prefix = "/outputs/text/"
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported model type: {model_type}")
     
     out_dir.mkdir(parents=True, exist_ok=True)
     
@@ -551,14 +447,9 @@ async def universal_generate(
         if mode in ['img2img', 'img2video'] or init_image or init_url:
             try:
                 if init_image:
-                    # Upload verarbeiten
-                    image_data = await init_image.read()
-                    input_image = Image.open(io.BytesIO(image_data)).convert('RGB')
-                elif init_url and init_url.startswith('/outputs/'):
-                    # Lokales Bild laden
-                    local_path = Path(f".{init_url}")
-                    if local_path.exists():
-                        input_image = Image.open(local_path).convert('RGB')
+                    input_image = load_image_from_upload(init_image)
+                elif init_url:
+                    input_image = load_image_from_url(init_url)
                 
                 if input_image and mode.endswith('2img'):
                     input_image = input_image.resize((width, height), Image.Resampling.LANCZOS)
@@ -569,24 +460,22 @@ async def universal_generate(
         # Generierung basierend auf Modus
         OPS.update(op_id, progress=0.5)
         
-        generation_kwargs = {
-            'width': width,
-            'height': height,
-            'num_inference_steps': num_inference_steps,
-            'guidance_scale': guidance_scale,
-            'negative_prompt': negative_prompt,
-            'strength': strength,
-            'image': input_image,
-            'num_frames': num_frames,
-            'motion_bucket_id': motion_bucket_id,
-            'noise_aug_strength': noise_aug_strength,
-            'max_tokens': max_tokens,
-            'temperature': temperature,
-            'top_p': top_p
-        }
-        
         if mode in ['text2img', 'img2img']:
             # Bildgeneration
+            generation_kwargs = {
+                'width': width,
+                'height': height,
+                'num_inference_steps': num_inference_steps,
+                'guidance_scale': guidance_scale,
+                'negative_prompt': negative_prompt,
+            }
+            
+            if mode == 'img2img':
+                if input_image is None:
+                    raise HTTPException(status_code=400, detail="img2img benötigt ein Eingangsbild")
+                generation_kwargs['image'] = input_image
+                generation_kwargs['strength'] = strength
+            
             result_image = pipeline.generate_image(prompt, **generation_kwargs)
             
             # Speichern
@@ -599,12 +488,22 @@ async def universal_generate(
             # Videogeneration
             if mode == 'text2video' and input_image is None:
                 # Erst Bild generieren für text2video
-                input_image = pipeline.generate_image(prompt, width=width, height=height)
+                OPS.update(op_id, progress=0.4)
+                temp_image = pipeline.generate_image(prompt, width=width, height=height)
+                input_image = temp_image
             
             if input_image is None:
                 raise HTTPException(status_code=400, detail=f"{mode} benötigt ein Eingangsbild")
             
-            frames = pipeline.generate_video(prompt, image=input_image, **generation_kwargs)
+            OPS.update(op_id, progress=0.6)
+            
+            frames = pipeline.generate_video(
+                prompt=prompt, 
+                image=input_image, 
+                num_frames=num_frames,
+                motion_bucket_id=motion_bucket_id,
+                noise_aug_strength=noise_aug_strength
+            )
             
             # Als Video speichern
             import imageio
@@ -616,29 +515,6 @@ async def universal_generate(
                 codec='libx264',
                 output_params=['-pix_fmt', 'yuv420p']
             )
-        
-        elif mode == 'text':
-            # Textgeneration
-            generated_text = pipeline.generate_text(prompt, **generation_kwargs)
-            
-            # Als Textdatei speichern
-            output_path.write_text(generated_text, encoding='utf-8')
-            
-            # Zusätzlich in Response zurückgeben
-            OPS.finish(op_id)
-            return {
-                "ok": True,
-                "mode": mode,
-                "model": model_info['name'],
-                "file": f"{url_prefix}{filename}",
-                "text": generated_text,
-                "metadata": {
-                    "prompt": prompt,
-                    "model_id": model_id,
-                    "max_tokens": max_tokens,
-                    "temperature": temperature
-                }
-            }
         
         else:
             raise HTTPException(status_code=400, detail=f"Unbekannter Modus: {mode}")
@@ -660,7 +536,8 @@ async def universal_generate(
                 "format": model_info.get('format'),
                 "resolution": f"{width}x{height}" if mode.endswith('2img') else None,
                 "frames": num_frames if mode.endswith('2video') else None,
-                "duration_sec": num_frames / fps if mode.endswith('2video') else None
+                "duration_sec": num_frames / fps if mode.endswith('2video') else None,
+                "generation_time": time.time() - timestamp
             }
         }
         
@@ -676,124 +553,45 @@ async def universal_generate(
         if pipeline:
             pipeline.cleanup()
 
-@router.get("/models/supported-modes")
-async def get_supported_modes():
-    """Liste alle unterstützten Modi und ihre Anforderungen"""
+@router.get("/models/compatible")
+async def get_compatible_models(mode: str):
+    """Liste kompatible Modelle für einen Modus"""
+    s = load_settings()
+    img_dir = Path(s.paths.image)
+    vid_dir = Path(s.paths.video)
+    llm_dir = Path(s.paths.get('llm', 'models/llm'))
+    
+    all_models = list_all_models(img_dir, vid_dir, llm_dir)
+    compatible = []
+    
+    for model_type, models in all_models.items():
+        for model in models:
+            if validate_model_compatibility(model, mode):
+                compatible.append(model)
+    
     return {
         "ok": True,
-        "modes": {
-            "text2img": {
-                "name": "Text zu Bild",
-                "description": "Generiere Bilder aus Textbeschreibungen",
-                "required_model_types": ["image"],
-                "required_modalities": ["text2img"],
-                "parameters": ["prompt", "width", "height", "steps", "guidance", "negative_prompt"]
-            },
-            "img2img": {
-                "name": "Bild zu Bild", 
-                "description": "Verändere/Remixe vorhandene Bilder",
-                "required_model_types": ["image"],
-                "required_modalities": ["img2img"],
-                "parameters": ["prompt", "init_image", "strength", "guidance", "negative_prompt"]
-            },
-            "text2video": {
-                "name": "Text zu Video",
-                "description": "Generiere Videos aus Text (erstellt automatisch Startbild)",
-                "required_model_types": ["video", "image"],
-                "required_modalities": ["text2video", "img2video"],
-                "parameters": ["prompt", "num_frames", "fps", "motion_bucket_id"]
-            },
-            "img2video": {
-                "name": "Bild zu Video", 
-                "description": "Animiere Standbilder zu Videos",
-                "required_model_types": ["video"],
-                "required_modalities": ["img2video"],
-                "parameters": ["init_image", "num_frames", "fps", "motion_bucket_id", "noise_aug_strength"]
-            },
-            "text": {
-                "name": "Textgeneration",
-                "description": "Generiere und vervollständige Texte",
-                "required_model_types": ["llm"],
-                "required_modalities": ["text", "chat"],
-                "parameters": ["prompt", "max_tokens", "temperature", "top_p"]
-            }
-        },
-        "backends": BACKENDS,
-        "recommendations": {
-            "best_image": "Verwende SDXL-Modelle für beste Bildqualität",
-            "best_video": "SVD (Stable Video Diffusion) für professionelle Videos", 
-            "best_text": "Llama 3 oder Mixtral für intelligente Gespräche",
-            "hardware": "GPU mit 8GB+ VRAM für beste Performance"
-        }
+        "mode": mode,
+        "compatible_models": compatible,
+        "count": len(compatible)
     }
 
-@router.get("/models/compatibility-check")
-async def check_system_compatibility():
-    """Prüfe Systemkompatibilität für verschiedene Modelltypen"""
-    
-    compatibility = {
-        "system": {},
-        "backends": BACKENDS,
-        "recommendations": []
-    }
-    
-    # System-Info sammeln
-    try:
-        import psutil
-        compatibility["system"]["ram_gb"] = psutil.virtual_memory().total / (1024**3)
-        compatibility["system"]["cpu_count"] = psutil.cpu_count()
-    except:
-        compatibility["system"]["ram_gb"] = 0
-        compatibility["system"]["cpu_count"] = 0
-    
-    # GPU-Info
-    if BACKENDS.get('diffusers'):
-        try:
-            import torch
-            compatibility["system"]["cuda_available"] = torch.cuda.is_available()
-            if torch.cuda.is_available():
-                compatibility["system"]["gpu_name"] = torch.cuda.get_device_name(0)
-                compatibility["system"]["gpu_memory_gb"] = torch.cuda.get_device_properties(0).total_memory / (1024**3)
-            else:
-                compatibility["system"]["gpu_memory_gb"] = 0
-        except:
-            compatibility["system"]["cuda_available"] = False
-            compatibility["system"]["gpu_memory_gb"] = 0
-    
-    # Empfehlungen basierend auf Hardware
-    gpu_mem = compatibility["system"].get("gpu_memory_gb", 0)
-    ram_gb = compatibility["system"].get("ram_gb", 0)
-    
-    if gpu_mem >= 12:
-        compatibility["recommendations"].extend([
-            "✅ Kann alle Modelltypen (SD15, SDXL, SVD) ausführen",
-            "🚀 Empfohlen: SDXL + SVD für beste Qualität"
-        ])
-    elif gpu_mem >= 8:
-        compatibility["recommendations"].extend([
-            "✅ Kann SDXL und die meisten Modelle ausführen", 
-            "⚠️ SVD könnte knapp werden - Model CPU Offloading aktivieren"
-        ])
-    elif gpu_mem >= 4:
-        compatibility["recommendations"].extend([
-            "✅ Kann SD 1.5 Modelle gut ausführen",
-            "⚠️ SDXL mit CPU Offloading möglich",
-            "❌ SVD zu ressourcenhungrig"
-        ])
-    else:
-        compatibility["recommendations"].extend([
-            "❌ GPU zu schwach für moderne Modelle",
-            "💡 Verwende ONNX/Quantisierte Modelle oder CPU-Mode"
-        ])
-    
-    if ram_gb >= 32:
-        compatibility["recommendations"].append("✅ Kann große LLMs (Mixtral 8x7B) laden")
-    elif ram_gb >= 16:
-        compatibility["recommendations"].append("✅ Kann mittlere LLMs (Llama 3 8B) laden")
-    else:
-        compatibility["recommendations"].append("⚠️ Nur kleine LLMs oder quantisierte Versionen empfohlen")
+@router.get("/generation/status/{op_id}")
+async def get_generation_status(op_id: str):
+    """Prüfe Status einer laufenden Generierung"""
+    ops = OPS.list()
+    for op in ops:
+        if op.get('id') == op_id:
+            return {
+                "ok": True,
+                "status": op.get('status'),
+                "progress": op.get('progress', 0),
+                "error": op.get('error'),
+                "params": op.get('params', {}),
+                "duration": time.time() - op.get('ts_start', time.time())
+            }
     
     return {
-        "ok": True,
-        **compatibility
+        "ok": False,
+        "error": "Operation not found"
     }

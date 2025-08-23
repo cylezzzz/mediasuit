@@ -2,10 +2,234 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>LocalMediaSuite – Image (NSFW)</title>
+  <title>LocalMediaSuite – Image Generator (NSFW)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="assets/styles.css">
   <script defer src="assets/app.js"></script>
+  <style>
+    .generation-form {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 30px;
+    }
+    
+    .controls-panel {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 20px;
+      height: fit-content;
+    }
+    
+    .preview-panel {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    
+    .model-option {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      margin: 8px 0;
+      background: #252525;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .model-option.selected {
+      border-color: #e91e63;
+      background: rgba(233, 30, 99, 0.1);
+    }
+    
+    .model-option:hover {
+      background: #333;
+    }
+    
+    .param-group {
+      margin-bottom: 20px;
+    }
+    
+    .param-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #e5e5e5;
+    }
+    
+    .param-input {
+      width: 100%;
+      padding: 8px 12px;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 6px;
+      color: #fff;
+    }
+    
+    .param-input:focus {
+      outline: none;
+      border-color: #e91e63;
+    }
+    
+    .mode-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .mode-btn {
+      flex: 1;
+      padding: 10px;
+      background: #333;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .mode-btn.active {
+      background: #e91e63;
+    }
+    
+    .image-upload {
+      display: none;
+      border: 2px dashed #444;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .image-upload.active {
+      display: block;
+    }
+    
+    .upload-area {
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    
+    .upload-area:hover {
+      border-color: #e91e63;
+    }
+    
+    .preview-area {
+      min-height: 400px;
+      border: 2px dashed #444;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      position: relative;
+      background: linear-gradient(135deg, rgba(233, 30, 99, 0.05), rgba(255, 20, 147, 0.05));
+    }
+    
+    .preview-area.has-content {
+      border-style: solid;
+      border-color: #e91e63;
+    }
+    
+    .preview-placeholder {
+      text-align: center;
+      color: #888;
+    }
+    
+    .generate-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(45deg, #e91e63, #ff1493);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .generate-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(233, 30, 99, 0.4);
+    }
+    
+    .generate-btn:disabled {
+      background: #666;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: #333;
+      border-radius: 2px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #e91e63, #ff1493);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+    
+    .status-text {
+      text-align: center;
+      color: #888;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    
+    .error-message {
+      background: #dc2626;
+      color: white;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+    
+    .success-message {
+      background: #10b981;
+      color: white;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+    
+    .nsfw-warning {
+      background: linear-gradient(45deg, #ff4444, #ff6666);
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: 500;
+    }
+    
+    .nsfw-badge {
+      display: inline-block;
+      background: #e91e63;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: bold;
+      margin-left: 5px;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -21,312 +245,524 @@
       <a href="settings.html">Settings</a>
     </nav>
   </header>
-  <main style="padding:2rem;max-width:1100px;margin:0 auto;">
-    <form id="image-form" action="/api/generate/universal" method="POST" enctype="multipart/form-data" data-endpoint="/api/generate/universal">
-      <input type="hidden" id="mode_input" name="mode" value="text2img">
-      <input type="hidden" name="type" value="image">
-      <h2 class="text-xl font-bold mb-4">Bildgenerator (NSFW)</h2>
-      <div class="generator-layout">
-        <div class="sidebar flex flex-col gap-4" style="flex:0 0 320px;">
-          <div class="card">
-            <div class="mb-4">
-              <label class="label" for="mode">Modus</label>
-              <select id="mode" class="input" name="mode_select">
-                <option value="text2img" selected>Text → Bild</option>
-                <option value="img2img">Bild → Bild (Remix)</option>
-              </select>
-              <p class="text-sm text-muted mt-1">Wähle pro Lauf das gewünschte Verfahren. Der Model‑Picker passt sich automatisch an.</p>
-            </div>
-            <div id="model-tabs" class=""></div>
-          </div>
-          <div class="card">
-            <h3 class="text-md font-semibold mb-3">Einstellungen</h3>
-            <div class="mb-3">
-              <label class="label" for="resolution">Auflösung</label>
-              <select id="resolution" class="input">
-                <option value="768x768">768×768</option>
-                <option value="1024x768" selected>1024×768</option>
-                <option value="1536x1024">1536×1024</option>
-                <option value="1024x1024">1024×1024</option>
-                <option value="1920x1080">1920×1080</option>
-              </select>
-              <input type="hidden" id="width_input" name="width" value="1024">
-              <input type="hidden" id="height_input" name="height" value="768">
-            </div>
-            <div class="mb-3">
-              <label class="label" for="format">Format</label>
-              <select id="format" name="output_format" class="input">
-                <option value="png">PNG</option>
-                <option value="jpg" selected>JPG</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label class="label" for="jpg_quality">JPG‑Qualität</label>
-              <input id="jpg_quality" class="input" type="number" name="jpg_quality" min="1" max="100" value="92">
-            </div>
-            <div class="mb-3">
-              <label class="label" for="num_steps">Steps</label>
-              <input id="num_steps" class="input" type="number" name="num_inference_steps" min="1" max="100" value="28">
-            </div>
-            <div class="mb-3">
-              <label class="label" for="guidance">Guidance</label>
-              <input id="guidance" class="input" type="number" step="0.1" name="guidance_scale" value="7.0">
-            </div>
-            <div>
-              <label class="label" for="strength">Strength (nur Bild→Bild)</label>
-              <input id="strength" class="input" type="number" step="0.01" min="0" max="1" name="strength" value="0.65">
-            </div>
-          </div>
-          <div class="card">
-            <h3 class="text-md font-semibold mb-3">Ideen & Kategorien</h3>
-            <div class="flex gap-2 mb-2">
-              <button type="button" id="btn-random" class="btn secondary w-full">Zufalls‑Prompt</button>
-            </div>
-            <div id="cat-chips" class="flex flex-wrap gap-2"></div>
+
+  <main class="generation-form">
+    <h2>Adult Content Generator <span class="nsfw-badge">18+</span></h2>
+    
+    <div class="nsfw-warning">
+      🔞 Diese Seite ist nur für Erwachsene (18+) bestimmt. Inhalte können explizit sein.
+    </div>
+    
+    <div id="message-container"></div>
+    
+    <div class="form-grid">
+      <!-- Controls Panel -->
+      <div class="controls-panel">
+        <!-- Generation Mode -->
+        <div class="param-group">
+          <label>Generierungs-Modus</label>
+          <div class="mode-selector">
+            <button class="mode-btn active" data-mode="text2img">Text → Bild</button>
+            <button class="mode-btn" data-mode="img2img">Bild → Bild</button>
           </div>
         </div>
-        <div class="main-area flex flex-col gap-4" style="flex:1;">
-          <!-- Large preview area -->
-          <div id="display-container" class="card hidden" style="min-height:360px; display:flex; align-items:center; justify-content:center;"></div>
-          <div class="card flex flex-col gap-4">
-            <div>
-              <label class="label" for="prompt">Prompt</label>
-              <textarea id="prompt" name="prompt" class="input" rows="4" placeholder="Beschreibe das Bild..." required></textarea>
-              <div id="prompt-suggestions" class="flex flex-wrap gap-2 mt-2"></div>
-            </div>
-            <div id="init-block">
-              <div class="mb-4">
-                <label class="label" for="init_image">Upload (Eingangsbild)</label>
-                <input id="init_image" class="input" type="file" name="init_image" accept="image/*">
-                <p class="text-sm text-muted mt-1">Upload überschreibt Remix. Für Bild→Bild ist eines von beidem erforderlich.</p>
-                <div id="preview-container" class="mt-2 hidden">
-                  <img id="preview-img" src="" alt="Vorschau" style="max-width:100%; border-radius:0.5rem;">
-                </div>
-              </div>
-              <div>
-                <label class="label" for="remix">Remix (aus Galerie)</label>
-                <select id="remix" class="input">
-                  <option value="">— wählen —</option>
-                </select>
-                <input type="hidden" id="init_url" name="init_url">
-              </div>
-            </div>
-            <div class="flex gap-3">
-              <button type="submit" class="btn primary">Generieren</button>
-              <button type="button" id="btn-clear" class="btn secondary">Prompt leeren</button>
+
+        <!-- Model Selection -->
+        <div class="param-group">
+          <label>KI-Modell (NSFW-fähig)</label>
+          <div id="nsfw-model-list" class="model-selector">
+            <div class="status-text">Lade NSFW-fähige Modelle...</div>
+          </div>
+        </div>
+
+        <!-- Image Upload (for img2img) -->
+        <div id="nsfw-image-upload" class="image-upload">
+          <div class="upload-area" onclick="document.getElementById('nsfw-file-input').click()">
+            <input type="file" id="nsfw-file-input" accept="image/*" style="display: none;">
+            <div>📁 Bild hochladen</div>
+            <div style="font-size: 12px; color: #888; margin-top: 5px;">
+              PNG, JPG, WEBP bis 10MB
             </div>
           </div>
+          <div id="nsfw-upload-preview" style="margin-top: 15px; display: none;">
+            <img id="nsfw-upload-preview-img" style="max-width: 100%; height: auto; border-radius: 6px;">
+          </div>
+        </div>
+
+        <!-- Generation Parameters -->
+        <div class="param-group">
+          <label>Auflösung</label>
+          <select id="nsfw-resolution" class="param-input">
+            <option value="512x512">512×512 (schnell)</option>
+            <option value="768x768">768×768 (ausgewogen)</option>
+            <option value="1024x768" selected>1024×768 (HD)</option>
+            <option value="1024x1024">1024×1024 (quadratisch)</option>
+            <option value="1536x1024">1536×1024 (breit)</option>
+          </select>
+        </div>
+
+        <div class="param-group">
+          <label>Steps: <span id="nsfw-steps-value">28</span></label>
+          <input type="range" id="nsfw-steps" min="10" max="50" value="28" class="param-input">
+        </div>
+
+        <div class="param-group">
+          <label>Guidance Scale: <span id="nsfw-guidance-value">7.0</span></label>
+          <input type="range" id="nsfw-guidance" min="1" max="20" step="0.1" value="7.0" class="param-input">
+        </div>
+
+        <div id="nsfw-strength-group" class="param-group" style="display: none;">
+          <label>Strength: <span id="nsfw-strength-value">0.65</span></label>
+          <input type="range" id="nsfw-strength" min="0.1" max="1" step="0.01" value="0.65" class="param-input">
+        </div>
+
+        <div class="param-group">
+          <label>Output Format</label>
+          <select id="nsfw-format" class="param-input">
+            <option value="png">PNG</option>
+            <option value="jpg" selected>JPG</option>
+          </select>
         </div>
       </div>
-    </form>
+
+      <!-- Preview Panel -->
+      <div class="preview-panel">
+        <div id="nsfw-preview-area" class="preview-area">
+          <div class="preview-placeholder">
+            <div style="font-size: 48px; margin-bottom: 10px;">🔞</div>
+            <div>Adult Content Generator</div>
+            <div style="font-size: 12px; color: #666; margin-top: 5px;">
+              Nur für Erwachsene - Inhalte können explizit sein
+            </div>
+          </div>
+        </div>
+
+        <div class="param-group">
+          <label for="nsfw-prompt">Prompt</label>
+          <textarea 
+            id="nsfw-prompt" 
+            class="param-input" 
+            rows="4" 
+            placeholder="Beschreibe dein Bild detailliert... Beachte, dass explizite Inhalte generiert werden können."
+            required
+          ></textarea>
+        </div>
+
+        <div class="param-group">
+          <label for="nsfw-negative-prompt">Negative Prompt (optional)</label>
+          <textarea 
+            id="nsfw-negative-prompt" 
+            class="param-input" 
+            rows="2" 
+            placeholder="Was du NICHT im Bild haben möchtest..."
+          ></textarea>
+        </div>
+
+        <div id="nsfw-progress-container" style="display: none;">
+          <div class="progress-bar">
+            <div id="nsfw-progress-fill" class="progress-fill"></div>
+          </div>
+          <div id="nsfw-status-text" class="status-text">Vorbereitung...</div>
+        </div>
+
+        <button id="nsfw-generate-btn" class="generate-btn">
+          🔞 Adult Content generieren
+        </button>
+      </div>
+    </div>
   </main>
+
   <script>
-  document.addEventListener('DOMContentLoaded', function(){
-    const fileInput = document.getElementById('init_image');
-    const previewContainer = document.getElementById('preview-container');
-    const previewImg = document.getElementById('preview-img');
-    fileInput.addEventListener('change', function(){
-      const file = this.files && this.files[0];
-      const display = document.getElementById('display-container');
-      if(file){
-        const reader = new FileReader();
-        reader.onload = function(e){
-          previewImg.src = e.target.result;
-          previewContainer.classList.remove('hidden');
-          if(display){
-            display.innerHTML = '';
-            const imgEl = document.createElement('img');
-            imgEl.src = e.target.result;
-            imgEl.style.maxWidth = '100%';
-            imgEl.style.borderRadius = '0.5rem';
-            display.appendChild(imgEl);
-            display.classList.remove('hidden');
-          }
-        };
-        reader.readAsDataURL(file);
-      } else {
-        previewContainer.classList.add('hidden');
-        previewImg.src = '';
-        if(display){
-          display.classList.add('hidden');
-          display.innerHTML = '';
-        }
+    class NSFWImageGenerator {
+      constructor() {
+        this.selectedModel = null;
+        this.currentMode = 'text2img';
+        this.isGenerating = false;
+        this.uploadedImage = null;
+        
+        this.init();
       }
-    });
 
-    // Resolution handling: update hidden width/height fields when user selects a resolution
-    const resSelect = document.getElementById('resolution');
-    const widthField = document.getElementById('width_input');
-    const heightField = document.getElementById('height_input');
-    function updateResolution(){
-      const parts = (resSelect.value || '').split('x');
-      if(parts.length === 2){
-        widthField.value = parseInt(parts[0]);
-        heightField.value = parseInt(parts[1]);
+      init() {
+        this.setupEventListeners();
+        this.loadNSFWModels();
+        this.updateSliderValues();
       }
-    }
-    if(resSelect){
-      resSelect.addEventListener('change', updateResolution);
-      updateResolution();
-    }
-  });
-  </script>
-  <script>
-  async function fetchSuggestions(domain, nsfw, purpose){
-    const urls = [
-      `/api/suggestions?domain=${domain}&nsfw=${nsfw}&purpose=${purpose}`,
-      `/api/suggestions?type=${domain}&nsfw=${nsfw}&purpose=${purpose}`,
-      `/api/suggestions?type=${domain}&nsfw=${nsfw}`
-    ];
-    for (const u of urls){ try{ const r = await fetch(u); if(r.ok) return await r.json(); }catch{} }
-    if (purpose === 'img2img'){
-      return {
-        categories: [
-          { id:'pose', label:'Posen', ideas:[
-            'dynamische Pose, dramatische Beleuchtung',
-            'sinnliche Körperhaltung, kontrastreiche Farben'
-          ]},
-          { id:'style', label:'Stil', ideas:[
-            'fantasy lighting, glowing skin, dreamy atmosphere',
-            'dark neon cyberpunk ambience, rain soaked streets'
-          ]}
-        ],
-        modifiers: ['dramatic highlights, soft skin', 'neon hues, dark shadows']
-      };
-    } else {
-      return {
-        categories: [
-          { id:'character', label:'Charakter', ideas:[
-            'mysteriöse Figur im Schatten, leicht bekleidet',
-            'verführerischer Blick, erotische Spannung'
-          ]},
-          { id:'scene', label:'Szene', ideas:[
-            'dunkles Schlafzimmer, Kerzenlicht, intime Atmosphäre',
-            'verregnete Straße bei Nacht, reflektierende Pfützen'
-          ]}
-        ],
-        modifiers: ['dramatic lighting, moody', 'soft focus, warm tones']
-      };
-    }
-  }
-  
-  async function fetchGalleryImages(){
-    const urls = ['/api/files?type=image','/api/gallery?type=image','/api/files/images'];
-    for (const u of urls){ try{ const r = await fetch(u); if(r.ok) return await r.json(); }catch{} }
-    return [];
-  }
-  
-  function pushPrompt(textarea, addition){
-    const cur = textarea.value.trim();
-    if (!cur) { textarea.value = addition; return; }
-    if (!cur.toLowerCase().includes(addition.toLowerCase())){ textarea.value = cur + ', ' + addition; }
-  }
-  
-  (async function(){
-    const NSFW = true;
-    let PURPOSE = 'text2img';
-    const PAGE_KEY = () => `image:${PURPOSE}:${NSFW?'nsfw':'sfw'}`;
 
-    async function loadAndRenderModels(){
-      const models = await LMS.loadModels('image', NSFW, PURPOSE);
-      const sel = LMS.getSelectedModel(PAGE_KEY());
-      if(!sel && models.length) LMS.setSelectedModel(PAGE_KEY(), models[0].id);
-      LMS.renderModelTabs({
-        container: document.getElementById('model-tabs'),
-        models,
-        onSelect: (id)=> LMS.setSelectedModel(PAGE_KEY(), id),
-        activeId: LMS.getSelectedModel(PAGE_KEY()),
-        title: NSFW ? 'Kompatible Bild‑Modelle (NSFW‑geeignet)' : 'Kompatible Bild‑Modelle'
-      });
-    }
-
-    async function loadAndRenderSuggestions(){
-      const sug = await fetchSuggestions('image', NSFW, PURPOSE);
-      const catWrap = document.getElementById('cat-chips');
-      const ideasWrap = document.getElementById('prompt-suggestions');
-      const txt = document.getElementById('prompt');
-      catWrap.innerHTML=''; ideasWrap.innerHTML='';
-      (sug.categories||[]).forEach(c=>{
-        const b=document.createElement('button');
-        b.type='button'; b.className='chip'; b.textContent=c.label;
-        b.addEventListener('click', ()=>{
-          ideasWrap.innerHTML='';
-          (c.ideas||[]).forEach(p=>{
-            const a=document.createElement('button');
-            a.type='button'; a.className='btn ghost'; a.textContent=p;
-            a.addEventListener('click', ()=> pushPrompt(txt, p));
-            ideasWrap.appendChild(a);
+      setupEventListeners() {
+        // Mode buttons
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            this.setMode(e.target.dataset.mode);
           });
         });
-        catWrap.appendChild(b);
-      });
-      document.getElementById('btn-random').onclick = ()=>{
-        const cats = sug.categories||[]; if(!cats.length) return;
-        const c = cats[Math.floor(Math.random()*cats.length)];
-        const idea = (c.ideas||[])[Math.floor(Math.random()*(c.ideas||[]).length)] || '';
-        const mod = (sug.modifiers||[])[Math.floor(Math.random()*(sug.modifiers||[]).length)] || '';
-        const rp = [idea, mod].filter(Boolean).join(', ');
-        if (rp) document.getElementById('prompt').value = rp;
-      };
 
-      // Auto-select first category to show its suggestions immediately
-      const firstCatBtn = catWrap.querySelector('button');
-      if(firstCatBtn){ firstCatBtn.click(); }
-    }
+        // File upload
+        document.getElementById('nsfw-file-input').addEventListener('change', (e) => {
+          this.handleFileUpload(e.target.files[0]);
+        });
 
-    async function applyMode(){
-      PURPOSE = modeSel.value;
-      modeHidden.value = PURPOSE;
-      initBlock.classList.toggle('hidden', PURPOSE !== 'img2img');
-      await loadAndRenderModels();
-      await loadAndRenderSuggestions();
-    }
-    
-    const modeSel = document.getElementById('mode');
-    const modeHidden = document.getElementById('mode_input');
-    const initBlock = document.getElementById('init-block');
-    modeSel.addEventListener('change', applyMode);
-    await applyMode();
+        // Parameter sliders
+        document.getElementById('nsfw-steps').addEventListener('input', (e) => {
+          document.getElementById('nsfw-steps-value').textContent = e.target.value;
+        });
 
-    // Populate remix selector with gallery images
-    (async () => {
-      const remixSel = document.getElementById('remix');
-      const initUrlInput = document.getElementById('init_url');
-      if (remixSel) {
+        document.getElementById('nsfw-guidance').addEventListener('input', (e) => {
+          document.getElementById('nsfw-guidance-value').textContent = parseFloat(e.target.value).toFixed(1);
+        });
+
+        document.getElementById('nsfw-strength').addEventListener('input', (e) => {
+          document.getElementById('nsfw-strength-value').textContent = parseFloat(e.target.value).toFixed(2);
+        });
+
+        // Generate button
+        document.getElementById('nsfw-generate-btn').addEventListener('click', () => {
+          this.generateNSFWImage();
+        });
+      }
+
+      setMode(mode) {
+        this.currentMode = mode;
+        
+        // Update buttons
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.mode === mode);
+        });
+
+        // Show/hide upload section
+        const uploadSection = document.getElementById('nsfw-image-upload');
+        const strengthGroup = document.getElementById('nsfw-strength-group');
+        
+        if (mode === 'img2img') {
+          uploadSection.classList.add('active');
+          strengthGroup.style.display = 'block';
+        } else {
+          uploadSection.classList.remove('active');
+          strengthGroup.style.display = 'none';
+        }
+
+        this.showMessage(`Modus gewechselt zu: ${mode === 'text2img' ? 'Text zu Bild' : 'Bild zu Bild'}`, 'info');
+      }
+
+      async loadNSFWModels() {
         try {
-          const files = await fetchGalleryImages();
-          (files.items || []).forEach(f => {
-            const opt = document.createElement('option');
-            opt.value = f.url || f.file || f.path || '';
-            opt.textContent = f.name || opt.value.split('/').pop();
-            remixSel.appendChild(opt);
-          });
-          remixSel.addEventListener('change', () => {
-            initUrlInput.value = remixSel.value || '';
-          });
-        } catch (e) {
-          console.warn('remix list failed', e);
+          // Lade alle Image-Modelle und filtere die NSFW-fähigen
+          const response = await fetch('/api/models?type=image');
+          const allModels = await response.json();
+
+          if (!Array.isArray(allModels)) {
+            throw new Error('Ungültige API-Antwort');
+          }
+
+          // Filtere NSFW-fähige Modelle
+          const nsfwModels = allModels.filter(model => model.nsfw_capable === true);
+
+          this.renderNSFWModels(nsfwModels);
+        } catch (error) {
+          console.error('Failed to load NSFW models:', error);
+          this.showMessage('Fehler beim Laden der NSFW-Modelle: ' + error.message, 'error');
+          
+          // Fallback für Testing
+          this.renderNSFWModels([
+            {
+              id: 'test-nsfw-model-1',
+              name: 'Test NSFW Model',
+              architecture: 'sd15',
+              description: 'Test-Modell für Adult Content (NSFW)',
+              nsfw_capable: true
+            }
+          ]);
         }
       }
-    })();
 
-    LMS.attachModelToForm(document.getElementById('image-form'), PAGE_KEY());
-    document.getElementById('btn-clear').addEventListener('click', ()=>{ document.getElementById('prompt').value=''; });
+      renderNSFWModels(models) {
+        const container = document.getElementById('nsfw-model-list');
+        
+        if (models.length === 0) {
+          container.innerHTML = `
+            <div class="status-text" style="color: #dc2626;">
+              Keine NSFW-fähigen Modelle gefunden<br>
+              <small>Installiere Modelle mit NSFW-Unterstützung</small>
+            </div>
+          `;
+          return;
+        }
 
-    window.LMS.onGenerated = (url)=>{
-      const display = document.getElementById('display-container');
-      if(display){
-        display.innerHTML = '';
-        const imgEl = document.createElement('img');
-        imgEl.src = url;
-        imgEl.style.maxWidth = '100%';
-        imgEl.style.borderRadius = '0.5rem';
-        display.appendChild(imgEl);
-        display.classList.remove('hidden');
+        container.innerHTML = models.map(model => `
+          <div class="model-option" data-model-id="${model.id}">
+            <div style="flex: 1;">
+              <div style="font-weight: 500; margin-bottom: 2px;">
+                ${model.name}
+                <span class="nsfw-badge">NSFW</span>
+              </div>
+              <div style="font-size: 12px; color: #888;">
+                ${model.architecture} • ${model.description || 'Adult Content fähig'}
+              </div>
+            </div>
+            <div style="width: 12px; height: 12px; border: 2px solid #e91e63; border-radius: 50%;"></div>
+          </div>
+        `).join('');
+
+        // Add click handlers
+        container.querySelectorAll('.model-option').forEach(option => {
+          option.addEventListener('click', () => {
+            this.selectModel(option.dataset.modelId, option);
+          });
+        });
+
+        // Auto-select first model
+        if (models.length > 0) {
+          const firstOption = container.querySelector('.model-option');
+          this.selectModel(models[0].id, firstOption);
+        }
       }
-      LMS.toast('Dein Bild wurde generiert und ist in der Galerie verfügbar.', 'success');
-    };
-  })();
+
+      selectModel(modelId, element) {
+        // Remove previous selection
+        document.querySelectorAll('.model-option').forEach(opt => {
+          opt.classList.remove('selected');
+        });
+
+        // Select new model
+        element.classList.add('selected');
+        this.selectedModel = modelId;
+        
+        const modelName = element.querySelector('div').textContent;
+        this.showMessage(`NSFW-Modell ausgewählt: ${modelName}`, 'info');
+      }
+
+      handleFileUpload(file) {
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+          this.showMessage('Bitte wähle eine gültige Bilddatei', 'error');
+          return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+          this.showMessage('Bildgröße sollte unter 10MB sein', 'error');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.uploadedImage = file;
+          
+          // Show preview
+          const preview = document.getElementById('nsfw-upload-preview');
+          const previewImg = document.getElementById('nsfw-upload-preview-img');
+          previewImg.src = e.target.result;
+          preview.style.display = 'block';
+
+          // Update main preview
+          this.updatePreview(`
+            <img src="${e.target.result}" style="max-width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px;">
+            <div style="position: absolute; top: 10px; right: 10px; background: rgba(233, 30, 99, 0.9); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+              Quellbild geladen
+            </div>
+          `);
+
+          this.showMessage('Bild erfolgreich hochgeladen', 'success');
+        };
+        reader.readAsDataURL(file);
+      }
+
+      updateSliderValues() {
+        // Initialize slider displays
+        document.getElementById('nsfw-steps-value').textContent = document.getElementById('nsfw-steps').value;
+        document.getElementById('nsfw-guidance-value').textContent = parseFloat(document.getElementById('nsfw-guidance').value).toFixed(1);
+        document.getElementById('nsfw-strength-value').textContent = parseFloat(document.getElementById('nsfw-strength').value).toFixed(2);
+      }
+
+      async generateNSFWImage() {
+        // Validation
+        const prompt = document.getElementById('nsfw-prompt').value.trim();
+        if (!prompt) {
+          this.showMessage('Bitte gib einen Prompt ein', 'error');
+          document.getElementById('nsfw-prompt').focus();
+          return;
+        }
+
+        if (!this.selectedModel) {
+          this.showMessage('Bitte wähle ein NSFW-fähiges Modell aus', 'error');
+          return;
+        }
+
+        if (this.currentMode === 'img2img' && !this.uploadedImage) {
+          this.showMessage('Für Bild-zu-Bild benötigst du ein hochgeladenes Bild', 'error');
+          return;
+        }
+
+        this.isGenerating = true;
+        this.updateGenerateButton(true);
+        this.showProgress();
+
+        try {
+          // Prepare form data
+          const formData = new FormData();
+          formData.append('prompt', prompt);
+          formData.append('model_id', this.selectedModel);
+          formData.append('mode', this.currentMode);
+          formData.append('nsfw', 'true'); // Important: Enable NSFW mode
+
+          // Resolution
+          const resolution = document.getElementById('nsfw-resolution').value.split('x');
+          formData.append('width', resolution[0]);
+          formData.append('height', resolution[1]);
+
+          // Parameters
+          formData.append('num_inference_steps', document.getElementById('nsfw-steps').value);
+          formData.append('guidance_scale', document.getElementById('nsfw-guidance').value);
+          formData.append('output_format', document.getElementById('nsfw-format').value);
+
+          // Negative prompt
+          const negativePrompt = document.getElementById('nsfw-negative-prompt').value.trim();
+          if (negativePrompt) {
+            formData.append('negative_prompt', negativePrompt);
+          }
+
+          // Image-specific parameters
+          if (this.currentMode === 'img2img') {
+            formData.append('strength', document.getElementById('nsfw-strength').value);
+            if (this.uploadedImage) {
+              formData.append('init_image', this.uploadedImage);
+            }
+          }
+
+          // Simulate progress updates
+          this.simulateProgress();
+
+          // Make API call
+          const response = await fetch('/api/generate/universal', {
+            method: 'POST',
+            body: formData
+          });
+
+          const data = await response.json();
+
+          if (!data.ok) {
+            throw new Error(data.error?.message || 'NSFW-Generation fehlgeschlagen');
+          }
+
+          // Show result
+          this.showResult(data);
+          this.showMessage('Adult Content erfolgreich generiert!', 'success');
+
+        } catch (error) {
+          console.error('NSFW generation failed:', error);
+          this.showMessage('NSFW-Generation fehlgeschlagen: ' + error.message, 'error');
+        } finally {
+          this.isGenerating = false;
+          this.updateGenerateButton(false);
+          this.hideProgress();
+        }
+      }
+
+      simulateProgress() {
+        const steps = [
+          { progress: 10, text: 'NSFW-Modell laden...' },
+          { progress: 25, text: 'Prompt verarbeiten...' },
+          { progress: 50, text: 'Adult Content generieren...' },
+          { progress: 75, text: 'Details verfeinern...' },
+          { progress: 90, text: 'Speichern...' }
+        ];
+
+        let currentStep = 0;
+        const interval = setInterval(() => {
+          if (currentStep < steps.length && this.isGenerating) {
+            const step = steps[currentStep];
+            this.updateProgress(step.progress, step.text);
+            currentStep++;
+          } else {
+            clearInterval(interval);
+          }
+        }, 1000);
+      }
+
+      showProgress() {
+        document.getElementById('nsfw-progress-container').style.display = 'block';
+        this.updateProgress(0, 'Starte NSFW-Generation...');
+      }
+
+      hideProgress() {
+        setTimeout(() => {
+          document.getElementById('nsfw-progress-container').style.display = 'none';
+        }, 1000);
+      }
+
+      updateProgress(percentage, text) {
+        document.getElementById('nsfw-progress-fill').style.width = `${percentage}%`;
+        document.getElementById('nsfw-status-text').textContent = text;
+      }
+
+      updateGenerateButton(isGenerating) {
+        const button = document.getElementById('nsfw-generate-btn');
+        
+        if (isGenerating) {
+          button.disabled = true;
+          button.innerHTML = '⏳ Generiere Adult Content...';
+        } else {
+          button.disabled = false;
+          button.innerHTML = '🔞 Adult Content generieren';
+        }
+      }
+
+      showResult(data) {
+        const resultHtml = `
+          <div style="position: relative;">
+            <img src="${data.file}" style="max-width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px;">
+            <div style="position: absolute; top: 10px; left: 10px; background: rgba(233, 30, 99, 0.9); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+              <span class="nsfw-badge" style="margin: 0;">18+</span> Adult Content
+            </div>
+            <div style="position: absolute; bottom: 10px; left: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 8px; border-radius: 4px; font-size: 12px;">
+              <div style="font-weight: 500; margin-bottom: 4px;">✅ Adult Content generiert</div>
+              <div>${data.metadata?.resolution || ''} • ${data.model} • ${data.metadata?.generation_time?.toFixed(1) || '?'}s</div>
+            </div>
+            <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 5px;">
+              <a href="${data.file}" download style="background: #e91e63; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px;">📥 Download</a>
+              <a href="/gallery.html" style="background: #10b981; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px;">🖼️ Galerie</a>
+            </div>
+          </div>
+        `;
+        
+        this.updatePreview(resultHtml);
+      }
+
+      updatePreview(html) {
+        const previewArea = document.getElementById('nsfw-preview-area');
+        previewArea.innerHTML = html;
+        previewArea.classList.add('has-content');
+      }
+
+      showMessage(message, type = 'info') {
+        const container = document.getElementById('message-container');
+        
+        const colors = {
+          success: '#10b981',
+          error: '#dc2626',
+          info: '#e91e63'
+        };
+
+        const messageElement = document.createElement('div');
+        messageElement.className = type === 'success' ? 'success-message' : 
+                                 type === 'error' ? 'error-message' : 
+                                 'success-message';
+        messageElement.style.background = colors[type];
+        messageElement.textContent = message;
+
+        container.appendChild(messageElement);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+          messageElement.remove();
+        }, 5000);
+      }
+    }
+
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      new NSFWImageGenerator();
+    });
   </script>
 </body>
 </html>
