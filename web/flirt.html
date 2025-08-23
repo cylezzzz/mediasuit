@@ -3,120 +3,848 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Flirt KI · MediaSuite</title>
+  <title>Flirt KI · Enhanced</title>
   <meta name="color-scheme" content="dark" />
   <style>
-    :root{ --bg:#0b1220; --panel:#0f172a; --stroke:#243244; --text:#e5e7eb; --muted:#94a3b8; --radius:12px; --gap:18px; --focus:#22d3ee; }
+    :root{ 
+      --bg:#0b1220; --panel:#0f172a; --stroke:#243244; --text:#e5e7eb; --muted:#94a3b8; 
+      --radius:12px; --gap:18px; --focus:#22d3ee; --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
+    }
     *{box-sizing:border-box} html,body{height:100%}
-    body{ margin:0;background:#0b1220;color:#e5e7eb;
+    body{ 
+      margin:0;background:var(--bg);color:var(--text);
       font-family:system-ui,"Segoe UI",Roboto,Inter,Arial,sans-serif;
       padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-      display:flex;flex-direction:column }
+      display:flex;flex-direction:column;
+    }
+
     header{position:sticky;top:0;z-index:10;background:#0f172acc;border-bottom:1px solid var(--stroke);backdrop-filter:blur(8px)}
     .topbar{width:100%;padding:16px clamp(10px,2.4vw,28px);display:flex;align-items:center;justify-content:center;gap:12px}
-    .logo-dot{width:18px;height:18px;border-radius:50%;background:#22d3ee;box-shadow:0 0 18px #22d3ee}
-    .brand{margin:0;font-weight:900;font-size:clamp(24px,3.8vw,40px);text-align:center;text-shadow:0 0 8px rgba(229,231,235,.25),0 0 20px rgba(34,211,238,.28)}
-    .subtitle{color:#94a3b8;font-size:clamp(12px,1.6vw,14px);text-align:center;margin-top:-6px}
+    .logo-dot{width:18px;height:18px;border-radius:50%;background:var(--focus);box-shadow:0 0 18px var(--focus)}
+    .brand{margin:0;font-weight:900;font-size:clamp(24px,3.8vw,40px);text-align:center;text-shadow:0 0 8px rgba(229,231,235,.25)}
 
-    .wrap{flex:1;display:flex;flex-direction:column;max-width:1100px;margin:auto;width:100%;padding:16px clamp(10px,2.4vw,28px)}
-    .row{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
-    select,input,textarea{background:#0b1320;color:#e5e7eb;border:1px solid #243244;border-radius:10px;padding:8px 10px}
-    .btn{border:1px solid #243244;border-radius:12px;background:#0e1626;color:#e5e7eb;padding:10px 14px;font-weight:700;cursor:pointer}
-    .btn.primary{border-color:#22d3ee;box-shadow:0 0 0 2px rgba(34,211,238,.2) inset}
-    .btn.ghost{background:transparent}
-    .muted{color:#94a3b8;font-size:12px}
+    .wrap{flex:1;display:flex;flex-direction:column;max-width:1400px;margin:auto;width:100%;padding:16px clamp(10px,2.4vw,28px)}
+    
+    .controls{display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+    .btn{border:1px solid var(--stroke);border-radius:var(--radius);background:var(--panel);color:var(--text);padding:8px 16px;cursor:pointer;transition:all .2s}
+    .btn:hover{background:#1e293b;border-color:#3b4a5f}
+    .btn.primary{background:var(--focus);border-color:var(--focus);color:white}
+    .btn.danger{background:var(--danger);border-color:var(--danger);color:white}
 
-    .pill{padding:6px 10px;border:1px solid #243244;border-radius:999px;background:#0e1626;font-size:13px}
-    .sep{height:1px;background:#243244;margin:8px 0}
+    .main-grid{display:grid;grid-template-columns:1fr 320px;gap:var(--gap);flex:1}
+    @media(max-width:1100px){.main-grid{grid-template-columns:1fr}}
 
-    .chat-box{flex:1;min-height:260px;background:#0b1320;border:1px solid #243244;border-radius:12px;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
-    .msg{position:relative;padding:12px 14px;border-radius:14px;max-width:72%;line-height:1.4;font-size:14px}
-    .from-her{align-self:flex-start;background:#2563eb;color:#fff;border-bottom-left-radius:4px}
-    .from-ai{align-self:flex-end;background:#10b981;color:#fff;font-weight:500;border-bottom-right-radius:4px}
-    .analysis{align-self:flex-start;background:#1f2937;color:#e5e7eb;border:1px dashed #374151;max-width:86%}
-    .analysis small{display:block;color:#9ca3af;margin-top:6px}
-    .actions{position:absolute;right:6px;bottom:-26px;display:flex;gap:6px;opacity:.85}
-    .rate{border:1px solid #0b1320;background:#0b1320;color:#e5e7eb;border-radius:12px;padding:2px 8px;font-size:12px;cursor:pointer}
-    .rate:hover{border-color:#22d3ee}
+    .chat-container{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--stroke);border-radius:var(--radius)}
+    .chat-messages{flex:1;padding:16px;overflow-y:auto;max-height:500px;display:flex;flex-direction:column;gap:12px}
+    .chat-input{display:flex;gap:8px;padding:16px;border-top:1px solid var(--stroke)}
 
-    .switch{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--stroke);padding:8px 10px;border-radius:999px;background:#0e1626}
-    .switch input{appearance:none;width:34px;height:20px;border-radius:999px;background:#334155;position:relative;outline:none;cursor:pointer}
-    .switch input:after{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#e5e7eb;transition:left .15s}
-    .switch input:checked{background:#0ea5e9}
-    .switch input:checked:after{left:16px}
+    .message{padding:12px 16px;border-radius:16px;max-width:85%;line-height:1.4;position:relative}
+    .message.user{background:#2563eb;color:white;align-self:flex-end;margin-left:auto}
+    .message.ai{background:var(--success);color:white;align-self:flex-start}
+    .message.analysis{background:var(--panel);border:1px dashed var(--stroke);color:var(--text);font-size:13px;align-self:flex-start;margin-bottom:8px}
 
-    .flag {display:inline-block; padding:6px 10px; border-radius:999px; font-weight:800}
-    .flag.go {background:#065f46; color:#ecfdf5; border:1px solid #064e3b}
-    .flag.chill {background:#92400e; color:#fffbeb; border:1px solid #78350f}
-    .flag.next {background:#7f1d1d; color:#fee2e2; border:1px solid #7f1d1d}
+    .sidebar{display:flex;flex-direction:column;gap:var(--gap)}
+    .card{background:var(--panel);border:1px solid var(--stroke);border-radius:var(--radius);overflow:hidden}
+    .card-header{padding:12px 16px;border-bottom:1px solid var(--stroke);font-weight:600;font-size:14px}
+    .card-body{padding:16px}
+
+    .profile-select{width:100%;background:var(--bg);border:1px solid var(--stroke);border-radius:8px;padding:8px;color:var(--text)}
+    
+    .analysis-display{margin-bottom:16px}
+    .score-display{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .score-badge{padding:4px 12px;border-radius:20px;font-weight:600;font-size:13px}
+    .score-high{background:var(--success);color:white}
+    .score-medium{background:var(--warning);color:white}  
+    .score-low{background:var(--danger);color:white}
+
+    .probability-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+    .prob-item{display:flex;justify-content:space-between;padding:4px 8px;background:var(--bg);border-radius:6px;font-size:12px}
+
+    .trend-graph{height:60px;background:var(--bg);border:1px solid var(--stroke);border-radius:6px;padding:8px;position:relative}
+    .trend-line{position:absolute;bottom:8px;left:8px;right:8px;height:2px;background:var(--focus);border-radius:1px}
+
+    input[type="text"], textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--stroke);border-radius:8px;padding:8px;resize:none}
+    input[type="text"]:focus, textarea:focus{border-color:var(--focus);outline:none}
+
+    .switch{position:relative;width:44px;height:24px;border-radius:12px;background:var(--stroke);cursor:pointer;transition:background .2s}
+    .switch.active{background:var(--focus)}
+    .switch::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;background:white;border-radius:50%;transition:left .2s}
+    .switch.active::after{left:22px}
+
+    .tag{display:inline-block;padding:2px 8px;background:var(--stroke);border-radius:12px;font-size:11px;margin:2px}
+    .tag.personality{background:#8b5cf6;color:white}
+    .tag.mood{background:#06b6d4;color:white}
+    .tag.strategy{background:#f59e0b;color:white}
+
+    .stats-mini{display:flex;gap:8px;font-size:11px;color:var(--muted)}
+    .stats-mini span{display:flex;align-items:center;gap:4px}
+
+    .loading{opacity:0.7;animation:pulse 1.5s infinite}
+    @keyframes pulse{0%,100%{opacity:0.7}50%{opacity:1}}
   </style>
 </head>
 <body>
   <header>
     <div class="topbar">
       <span class="logo-dot"></span>
-      <h1 class="brand">Flirt KI</h1>
+      <h1 class="brand">Flirt KI Enhanced</h1>
       <span class="logo-dot"></span>
-    </div>
-    <div class="topbar" style="padding-top:0">
-      <div class="subtitle">Charakter-Profile · Analyse-Bubble · Score-Ampel · Trend</div>
     </div>
   </header>
 
   <div class="wrap">
-    <!-- Profile & Controls -->
-    <div class="row">
-      <select id="profileSelect" title="Aktives Profil"></select>
-      <button class="btn" id="btnNew"   type="button">Neu</button>
-      <button class="btn" id="btnEdit"  type="button">Bearbeiten</button>
-      <button class="btn" id="btnClone" type="button">Duplizieren</button>
-      <button class="btn ghost" id="btnDelete" type="button">Löschen</button>
-      <label class="switch">
+    <!-- Controls -->
+    <div class="controls">
+      <select id="profileSelect" class="profile-select">
+        <option value="">Profil wählen...</option>
+      </select>
+      <button class="btn" id="btnNew">Neu</button>
+      <button class="btn" id="btnEdit">Bearbeiten</button>
+      <button class="btn" id="btnClone">Duplizieren</button>
+      <button class="btn danger" id="btnDelete">Löschen</button>
+      
+      <label style="display:flex;align-items:center;gap:8px;margin-left:auto">
         <span>Analyse aktiv</span>
-        <input id="anToggle" type="checkbox" checked />
+        <div class="switch active" id="analysisToggle"></div>
       </label>
     </div>
 
-    <div class="sep"></div>
+    <div class="main-grid">
+      <!-- Chat Area -->
+      <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+          <div class="message ai">
+            Hallo! Ich bin deine KI-Flirt-Assistentin. Wie kann ich dir heute helfen? 😊
+          </div>
+        </div>
+        
+        <div class="chat-input">
+          <textarea id="messageInput" placeholder="Nachricht eingeben... (Enter = Senden)" rows="2"></textarea>
+          <button class="btn primary" id="sendBtn">Senden</button>
+        </div>
+      </div>
 
-    <!-- Chat -->
-    <div class="chat-box" id="chat"></div>
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <!-- Analysis Display -->
+        <div class="card">
+          <div class="card-header">📊 Live Analyse</div>
+          <div class="card-body">
+            <div class="analysis-display">
+              <div class="score-display">
+                <span>Flirt-Score:</span>
+                <div class="score-badge score-medium" id="flirtScore">75%</div>
+              </div>
+              
+              <div class="probability-grid">
+                <div class="prob-item">
+                  <span>Interesse:</span>
+                  <span id="probInterest">82%</span>
+                </div>
+                <div class="prob-item">
+                  <span>Humor:</span>
+                  <span id="probHumor">65%</span>
+                </div>
+                <div class="prob-item">
+                  <span>Romantik:</span>
+                  <span id="probRomance">78%</span>
+                </div>
+                <div class="prob-item">
+                  <span>Charme:</span>
+                  <span id="probCharm">71%</span>
+                </div>
+              </div>
+              
+              <div style="margin-top:12px">
+                <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Trend (letzte 10 Nachrichten)</div>
+                <div class="trend-graph">
+                  <canvas id="trendCanvas" width="280" height="44"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-    <div class="row" style="margin-top:12px">
-      <textarea id="inputMsg" rows="2" style="flex:1" placeholder="Nachricht eingeben… (Enter = Senden, Shift+Enter = neue Zeile)"></textarea>
-      <button class="btn primary" id="btnGen" type="button">Antwort generieren</button>
-    </div>
+        <!-- Character Profile -->
+        <div class="card">
+          <div class="card-header">👤 Aktuelles Profil</div>
+          <div class="card-body" id="profileDisplay">
+            <div style="font-weight:600;margin-bottom:8px" id="profileName">Standard Profil</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:12px" id="profileDesc">
+              Freundlich, humorvoll und charmant
+            </div>
+            
+            <div id="profileTags">
+              <span class="tag personality">Extrovertiert</span>
+              <span class="tag mood">Positiv</span>
+              <span class="tag strategy">Witzig</span>
+            </div>
+            
+            <div class="stats-mini" style="margin-top:12px">
+              <span>💬 <span id="statMessages">0</span></span>
+              <span>⭐ <span id="statAvgScore">0%</span></span>
+              <span>📈 <span id="statTrend">+0%</span></span>
+            </div>
+          </div>
+        </div>
 
-    <div class="row">
-      <button class="btn" id="btnExport" type="button">Profil-Export</button>
-      <button class="btn" id="btnImport" type="button">Profil-Import</button>
+        <!-- Strategy Suggestions -->
+        <div class="card">
+          <div class="card-header">💡 Empfehlungen</div>
+          <div class="card-body">
+            <div id="suggestions">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:8px">
+                Basierend auf aktueller Analyse:
+              </div>
+              <ul style="font-size:13px;margin:0;padding-left:16px" id="suggestionList">
+                <li>Mehr Humor einbauen (+15% Charm-Chance)</li>
+                <li>Persönliche Fragen stellen (+12% Interest)</li>
+                <li>Komplimente verwenden (+8% Romance)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export/Import -->
+        <div class="card">
+          <div class="card-header">⚙️ Aktionen</div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn" id="btnExport">Chat exportieren</button>
+            <button class="btn" id="btnImport">Profil importieren</button>
+            <button class="btn" id="btnAnalyze">Vollanalyse</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    // Config
-    let CFG = { backend: { respond_url: "http://127.0.0.1:8000/api/respond" }};
-    try { fetch("flirt.config.json").then(r=>r.json()).then(j=>{ if(j) CFG=j; }); } catch {}
-
-    const chat = document.getElementById("chat");
-    const inputMsg = document.getElementById("inputMsg");
-
-    // ENTER-Key: senden
-    inputMsg.addEventListener("keydown", (e)=>{
-      if(e.key==="Enter" && !e.shiftKey){
-        e.preventDefault();
-        document.getElementById("btnGen").click();
+    class FlirtAIEnhanced {
+      constructor() {
+        this.profiles = this.loadProfiles();
+        this.currentProfile = null;
+        this.analysisEnabled = true;
+        this.conversationHistory = [];
+        this.analysisHistory = [];
+        this.trendData = [];
+        
+        this.config = {
+          backend: { respond_url: "http://127.0.0.1:3000/api/respond" },
+          temperature: 0.8,
+          max_tokens: 150
+        };
+        
+        this.init();
       }
-    });
 
-    // Beispiel: Buttons funktionsfähig halten
-    document.getElementById("btnNew")?.addEventListener("click", ()=>alert("Neues Profil anlegen (implementiert in deiner Version)"));
-    document.getElementById("btnEdit")?.addEventListener("click", ()=>alert("Profil bearbeiten"));
-    document.getElementById("btnClone")?.addEventListener("click", ()=>alert("Profil duplizieren"));
-    document.getElementById("btnDelete")?.addEventListener("click", ()=>alert("Profil löschen"));
-    document.getElementById("btnExport")?.addEventListener("click", ()=>alert("Profil exportieren"));
-    document.getElementById("btnImport")?.addEventListener("click", ()=>alert("Profil importieren"));
-    document.getElementById("btnGen")?.addEventListener("click", ()=>alert("Antwort generieren (API-Call an /api/respond)"));
+      init() {
+        this.setupEventListeners();
+        this.loadConfig();
+        this.initializeDefaultProfile();
+        this.renderTrendGraph();
+      }
+
+      async loadConfig() {
+        try {
+          const response = await fetch("flirt.config.json");
+          if (response.ok) {
+            const config = await response.json();
+            Object.assign(this.config, config);
+          }
+        } catch (e) {
+          console.warn("Config nicht gefunden, verwende Defaults");
+        }
+      }
+
+      setupEventListeners() {
+        // Message Input
+        const messageInput = document.getElementById('messageInput');
+        messageInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            this.sendMessage();
+          }
+        });
+
+        document.getElementById('sendBtn').addEventListener('click', () => this.sendMessage());
+
+        // Analysis Toggle
+        document.getElementById('analysisToggle').addEventListener('click', (e) => {
+          this.analysisEnabled = !this.analysisEnabled;
+          e.target.classList.toggle('active', this.analysisEnabled);
+        });
+
+        // Profile Management
+        document.getElementById('profileSelect').addEventListener('change', (e) => {
+          if (e.target.value) {
+            this.loadProfile(e.target.value);
+          }
+        });
+
+        // Buttons
+        document.getElementById('btnNew').addEventListener('click', () => this.createNewProfile());
+        document.getElementById('btnEdit').addEventListener('click', () => this.editCurrentProfile());
+        document.getElementById('btnClone').addEventListener('click', () => this.cloneCurrentProfile());
+        document.getElementById('btnDelete').addEventListener('click', () => this.deleteCurrentProfile());
+        document.getElementById('btnExport').addEventListener('click', () => this.exportChat());
+        document.getElementById('btnImport').addEventListener('click', () => this.importProfile());
+        document.getElementById('btnAnalyze').addEventListener('click', () => this.runFullAnalysis());
+      }
+
+      initializeDefaultProfile() {
+        if (Object.keys(this.profiles).length === 0) {
+          this.profiles['default'] = {
+            id: 'default',
+            name: 'Standard Profil',
+            description: 'Freundlich, humorvoll und charmant',
+            personality: {
+              traits: ['extrovertiert', 'humorvoll', 'charmant', 'aufmerksam'],
+              communication_style: 'locker und spielerisch',
+              humor_level: 0.7,
+              romance_level: 0.6,
+              confidence: 0.8
+            },
+            context: 'Du bist ein charmanter Flirt-Assistent, der hilft, ansprechende und witzige Antworten zu formulieren.',
+            tags: ['personality:Extrovertiert', 'mood:Positiv', 'strategy:Witzig']
+          };
+          this.saveProfiles();
+        }
+
+        const defaultProfile = Object.keys(this.profiles)[0];
+        this.loadProfile(defaultProfile);
+        this.updateProfileSelector();
+      }
+
+      loadProfiles() {
+        try {
+          const saved = localStorage.getItem('flirt_ai_profiles');
+          return saved ? JSON.parse(saved) : {};
+        } catch (e) {
+          return {};
+        }
+      }
+
+      saveProfiles() {
+        localStorage.setItem('flirt_ai_profiles', JSON.stringify(this.profiles));
+      }
+
+      loadProfile(profileId) {
+        if (this.profiles[profileId]) {
+          this.currentProfile = this.profiles[profileId];
+          this.updateProfileDisplay();
+          this.conversationHistory = [];
+          this.analysisHistory = [];
+          this.trendData = [];
+          this.renderTrendGraph();
+        }
+      }
+
+      updateProfileSelector() {
+        const select = document.getElementById('profileSelect');
+        select.innerHTML = '<option value="">Profil wählen...</option>';
+        
+        Object.values(this.profiles).forEach(profile => {
+          const option = document.createElement('option');
+          option.value = profile.id;
+          option.textContent = profile.name;
+          option.selected = this.currentProfile && profile.id === this.currentProfile.id;
+          select.appendChild(option);
+        });
+      }
+
+      updateProfileDisplay() {
+        if (!this.currentProfile) return;
+
+        document.getElementById('profileName').textContent = this.currentProfile.name;
+        document.getElementById('profileDesc').textContent = this.currentProfile.description;
+        
+        const tagsContainer = document.getElementById('profileTags');
+        tagsContainer.innerHTML = '';
+        
+        (this.currentProfile.tags || []).forEach(tag => {
+          const [type, value] = tag.split(':');
+          const tagElement = document.createElement('span');
+          tagElement.className = `tag ${type}`;
+          tagElement.textContent = value;
+          tagsContainer.appendChild(tagElement);
+        });
+
+        // Stats aktualisieren
+        const messageCount = this.conversationHistory.filter(m => m.role === 'user').length;
+        const avgScore = this.analysisHistory.length > 0 
+          ? Math.round(this.analysisHistory.reduce((sum, a) => sum + a.overall_score, 0) / this.analysisHistory.length)
+          : 0;
+        const trend = this.calculateTrend();
+
+        document.getElementById('statMessages').textContent = messageCount;
+        document.getElementById('statAvgScore').textContent = avgScore + '%';
+        document.getElementById('statTrend').textContent = (trend >= 0 ? '+' : '') + trend + '%';
+      }
+
+      calculateTrend() {
+        if (this.analysisHistory.length < 2) return 0;
+        
+        const recent = this.analysisHistory.slice(-3);
+        const older = this.analysisHistory.slice(-6, -3);
+        
+        if (older.length === 0) return 0;
+        
+        const recentAvg = recent.reduce((sum, a) => sum + a.overall_score, 0) / recent.length;
+        const olderAvg = older.reduce((sum, a) => sum + a.overall_score, 0) / older.length;
+        
+        return Math.round(recentAvg - olderAvg);
+      }
+
+      async sendMessage() {
+        const input = document.getElementById('messageInput');
+        const message = input.value.trim();
+        
+        if (!message) return;
+        
+        input.value = '';
+        this.addMessage('user', message);
+        
+        // User-Message zur History hinzufügen
+        this.conversationHistory.push({ role: 'user', content: message });
+        
+        try {
+          // Zeige Loading
+          const loadingId = this.addMessage('ai', 'Denke nach...', true);
+          
+          // API Call vorbereiten
+          const analysisEnabled = this.analysisEnabled;
+          const fullHistory = this.conversationHistory.slice(-10); // Letzte 10 Nachrichten
+          
+          let analysisPrompt = '';
+          let replyPrompt = '';
+          
+          if (analysisEnabled && this.currentProfile) {
+            analysisPrompt = this.buildAnalysisPrompt(message, fullHistory);
+            replyPrompt = this.buildReplyPrompt(message, fullHistory);
+            
+            // Analyse + Antwort in einem Call
+            const response = await fetch(this.config.backend.respond_url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                analysis_system: analysisPrompt,
+                analysis_user: message,
+                reply_system: replyPrompt,
+                reply_user: message
+              })
+            });
+            
+            const data = await response.json();
+            
+            // Loading-Nachricht entfernen
+            this.removeMessage(loadingId);
+            
+            if (data.ok && data.analysis && data.reply) {
+              // Analyse verarbeiten
+              this.processAnalysis(data.analysis);
+              
+              // Antwort anzeigen
+              this.addMessage('ai', data.reply);
+              this.conversationHistory.push({ role: 'assistant', content: data.reply });
+            } else {
+              throw new Error('Invalid response format');
+            }
+            
+          } else {
+            // Einfache Antwort ohne Analyse
+            replyPrompt = this.buildSimpleReplyPrompt(message, fullHistory);
+            
+            const response = await fetch(this.config.backend.respond_url, {
+              method: 'POST', 
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                analysis_system: 'Return empty JSON: {}',
+                analysis_user: '',
+                reply_system: replyPrompt,
+                reply_user: message
+              })
+            });
+            
+            const data = await response.json();
+            
+            this.removeMessage(loadingId);
+            
+            if (data.ok && data.reply) {
+              this.addMessage('ai', data.reply);
+              this.conversationHistory.push({ role: 'assistant', content: data.reply });
+            } else {
+              throw new Error('Failed to get reply');
+            }
+          }
+          
+        } catch (error) {
+          console.error('Message send error:', error);
+          this.addMessage('ai', 'Entschuldigung, es gab einen Fehler beim Verarbeiten deiner Nachricht.', false, 'error');
+        }
+      }
+
+      buildAnalysisPrompt(message, history) {
+        const profile = this.currentProfile;
+        
+        return `Du bist ein Flirt- und Kommunikations-Analytiker. Analysiere die folgende Unterhaltung und die letzte Nachricht des Users im Kontext des Flirtens und der romantischen Kommunikation.
+
+PROFIL-KONTEXT: ${profile.name} - ${profile.description}
+PERSÖNLICHKEIT: ${JSON.stringify(profile.personality)}
+
+UNTERHALTUNGSHISTORIE:
+${history.map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n')}
+
+LETZTE USER-NACHRICHT: "${message}"
+
+Gib eine JSON-Analyse zurück mit:
+{
+  "overall_score": NUMBER (0-100, Gesamtflirt-Effektivität),
+  "interest_probability": NUMBER (0-100, Wahrscheinlichkeit von Interesse),
+  "humor_rating": NUMBER (0-100, Humor-Level),
+  "romance_potential": NUMBER (0-100, Romantisches Potenzial),
+  "charm_factor": NUMBER (0-100, Charme-Faktor),
+  "emotional_tone": STRING ("positiv", "neutral", "negativ"),
+  "conversation_flow": STRING ("gut", "mittelmäßig", "stockend"),
+  "suggestions": [
+    "Konkreter Verbesserungsvorschlag 1",
+    "Konkreter Verbesserungsvorschlag 2"
+  ],
+  "next_best_responses": [
+    "Optimale Antwortmöglichkeit 1",
+    "Optimale Antwortmöglichkeit 2"
+  ]
+}
+
+Antworte NUR mit dem JSON-Objekt.`;
+      }
+
+      buildReplyPrompt(message, history) {
+        const profile = this.currentProfile;
+        
+        return `Du bist ${profile.name}. ${profile.context}
+
+DEINE PERSÖNLICHKEIT:
+${JSON.stringify(profile.personality, null, 2)}
+
+KOMMUNIKATIONSSTIL: ${profile.personality.communication_style}
+HUMOR-LEVEL: ${profile.personality.humor_level * 100}%
+ROMANTIK-LEVEL: ${profile.personality.romance_level * 100}%
+SELBSTVERTRAUEN: ${profile.personality.confidence * 100}%
+
+UNTERHALTUNGSHISTORIE:
+${history.slice(-5).map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n')}
+
+Antworte auf die Nachricht "${message}" in deinem charakteristischen Stil. Sei:
+- Authentisch zu deiner Persönlichkeit
+- Charmant und ansprechend
+- Angemessen für die Flirt-Situation
+- Humorvoll wenn passend
+- Interessiert und aufmerksam
+
+Antworte direkt ohne Metakommentare.`;
+      }
+
+      buildSimpleReplyPrompt(message, history) {
+        return `Du bist ein freundlicher und charmanter Gesprächspartner. 
+
+UNTERHALTUNGSHISTORIE:
+${history.slice(-3).map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n')}
+
+Antworte freundlich und charmant auf: "${message}"`;
+      }
+
+      processAnalysis(analysis) {
+        try {
+          // Analyse zu History hinzufügen
+          this.analysisHistory.push(analysis);
+          
+          // Trend-Daten aktualisieren
+          this.trendData.push(analysis.overall_score || 0);
+          if (this.trendData.length > 20) {
+            this.trendData = this.trendData.slice(-20);
+          }
+          
+          // UI aktualisieren
+          this.updateAnalysisDisplay(analysis);
+          this.updateSuggestions(analysis);
+          this.renderTrendGraph();
+          this.updateProfileDisplay(); // Für Statistiken
+          
+        } catch (error) {
+          console.error('Analysis processing error:', error);
+        }
+      }
+
+      updateAnalysisDisplay(analysis) {
+        const score = analysis.overall_score || 0;
+        const scoreElement = document.getElementById('flirtScore');
+        scoreElement.textContent = score + '%';
+        
+        // Score-Farbe setzen
+        scoreElement.className = 'score-badge ' + 
+          (score >= 80 ? 'score-high' : 
+           score >= 60 ? 'score-medium' : 'score-low');
+        
+        // Wahrscheinlichkeiten aktualisieren
+        document.getElementById('probInterest').textContent = (analysis.interest_probability || 0) + '%';
+        document.getElementById('probHumor').textContent = (analysis.humor_rating || 0) + '%';
+        document.getElementById('probRomance').textContent = (analysis.romance_potential || 0) + '%';
+        document.getElementById('probCharm').textContent = (analysis.charm_factor || 0) + '%';
+      }
+
+      updateSuggestions(analysis) {
+        const suggestionsList = document.getElementById('suggestionList');
+        suggestionsList.innerHTML = '';
+        
+        if (analysis.suggestions && Array.isArray(analysis.suggestions)) {
+          analysis.suggestions.forEach(suggestion => {
+            const li = document.createElement('li');
+            li.textContent = suggestion;
+            suggestionsList.appendChild(li);
+          });
+        } else {
+          const li = document.createElement('li');
+          li.textContent = 'Keine spezifischen Empfehlungen verfügbar';
+          suggestionsList.appendChild(li);
+        }
+      }
+
+      renderTrendGraph() {
+        const canvas = document.getElementById('trendCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Canvas leeren
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        if (this.trendData.length < 2) return;
+        
+        // Trend-Linie zeichnen
+        ctx.strokeStyle = '#22d3ee';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        
+        const maxVal = Math.max(...this.trendData);
+        const minVal = Math.min(...this.trendData);
+        const range = maxVal - minVal || 1;
+        
+        this.trendData.forEach((value, index) => {
+          const x = (index / (this.trendData.length - 1)) * (canvas.width - 16) + 8;
+          const y = canvas.height - 8 - ((value - minVal) / range) * (canvas.height - 16);
+          
+          if (index === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        
+        ctx.stroke();
+        
+        // Punkte zeichnen
+        ctx.fillStyle = '#22d3ee';
+        this.trendData.forEach((value, index) => {
+          const x = (index / (this.trendData.length - 1)) * (canvas.width - 16) + 8;
+          const y = canvas.height - 8 - ((value - minVal) / range) * (canvas.height - 16);
+          
+          ctx.beginPath();
+          ctx.arc(x, y, 2, 0, 2 * Math.PI);
+          ctx.fill();
+        });
+      }
+
+      addMessage(sender, content, loading = false, type = 'normal') {
+        const messagesContainer = document.getElementById('chatMessages');
+        const messageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.id = messageId;
+        messageDiv.className = `message ${sender}`;
+        
+        if (loading) {
+          messageDiv.classList.add('loading');
+        }
+        
+        if (type === 'error') {
+          messageDiv.style.background = '#ef4444';
+        }
+        
+        messageDiv.textContent = content;
+        
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        
+        return messageId;
+      }
+
+      removeMessage(messageId) {
+        const messageElement = document.getElementById(messageId);
+        if (messageElement) {
+          messageElement.remove();
+        }
+      }
+
+      // Profile Management Methods
+      createNewProfile() {
+        const name = prompt('Name für neues Profil:', 'Neues Profil');
+        if (!name) return;
+        
+        const id = 'profile_' + Date.now();
+        this.profiles[id] = {
+          id: id,
+          name: name,
+          description: 'Individuelles Flirt-Profil',
+          personality: {
+            traits: ['freundlich', 'interessiert'],
+            communication_style: 'natürlich',
+            humor_level: 0.5,
+            romance_level: 0.5,
+            confidence: 0.6
+          },
+          context: 'Du bist ein charmanter Gesprächspartner.',
+          tags: ['personality:Standard', 'mood:Neutral']
+        };
+        
+        this.saveProfiles();
+        this.updateProfileSelector();
+        this.loadProfile(id);
+      }
+
+      editCurrentProfile() {
+        if (!this.currentProfile) return;
+        
+        const newName = prompt('Profil-Name:', this.currentProfile.name);
+        if (newName) {
+          this.currentProfile.name = newName;
+          this.saveProfiles();
+          this.updateProfileSelector();
+          this.updateProfileDisplay();
+        }
+      }
+
+      cloneCurrentProfile() {
+        if (!this.currentProfile) return;
+        
+        const newName = prompt('Name für Kopie:', this.currentProfile.name + ' (Kopie)');
+        if (!newName) return;
+        
+        const id = 'profile_' + Date.now();
+        this.profiles[id] = {
+          ...JSON.parse(JSON.stringify(this.currentProfile)),
+          id: id,
+          name: newName
+        };
+        
+        this.saveProfiles();
+        this.updateProfileSelector();
+        this.loadProfile(id);
+      }
+
+      deleteCurrentProfile() {
+        if (!this.currentProfile || Object.keys(this.profiles).length <= 1) {
+          alert('Das letzte Profil kann nicht gelöscht werden.');
+          return;
+        }
+        
+        if (confirm(`Profil "${this.currentProfile.name}" wirklich löschen?`)) {
+          delete this.profiles[this.currentProfile.id];
+          this.saveProfiles();
+          
+          // Erstes verfügbares Profil laden
+          const firstProfile = Object.keys(this.profiles)[0];
+          this.loadProfile(firstProfile);
+          this.updateProfileSelector();
+        }
+      }
+
+      exportChat() {
+        const exportData = {
+          profile: this.currentProfile,
+          conversation: this.conversationHistory,
+          analysis: this.analysisHistory,
+          timestamp: new Date().toISOString()
+        };
+        
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `flirt_chat_${Date.now()}.json`;
+        a.click();
+        
+        URL.revokeObjectURL(url);
+      }
+
+      importProfile() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        
+        input.onchange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const data = JSON.parse(e.target.result);
+              
+              if (data.profile && data.profile.name) {
+                const id = 'profile_' + Date.now();
+                this.profiles[id] = {
+                  ...data.profile,
+                  id: id
+                };
+                
+                this.saveProfiles();
+                this.updateProfileSelector();
+                this.loadProfile(id);
+                
+                alert('Profil erfolgreich importiert!');
+              } else {
+                throw new Error('Ungültiges Format');
+              }
+            } catch (error) {
+              alert('Fehler beim Importieren: ' + error.message);
+            }
+          };
+          reader.readAsText(file);
+        };
+        
+        input.click();
+      }
+
+      runFullAnalysis() {
+        if (this.analysisHistory.length === 0) {
+          alert('Keine Analysedaten verfügbar. Führe erst einige Unterhaltungen.');
+          return;
+        }
+        
+        const avgScore = Math.round(
+          this.analysisHistory.reduce((sum, a) => sum + (a.overall_score || 0), 0) / this.analysisHistory.length
+        );
+        
+        const trend = this.calculateTrend();
+        const messageCount = this.conversationHistory.filter(m => m.role === 'user').length;
+        
+        alert(`Vollanalyse für ${this.currentProfile.name}:
+        
+📊 Durchschnittlicher Flirt-Score: ${avgScore}%
+📈 Aktueller Trend: ${trend >= 0 ? '+' : ''}${trend}%
+💬 Nachrichten gesamt: ${messageCount}
+⭐ Beste Performance: ${Math.max(...this.analysisHistory.map(a => a.overall_score || 0))}%
+
+${trend > 10 ? '✅ Sehr positive Entwicklung!' : 
+  trend > 0 ? '📈 Positive Entwicklung!' : 
+  trend < -10 ? '⚠️ Negative Entwicklung - Strategie überdenken?' : 
+  '📊 Stabile Performance'}`);
+      }
+    }
+
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      new FlirtAIEnhanced();
+    });
   </script>
 </body>
 </html>
