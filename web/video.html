@@ -1,495 +1,27 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <title>LocalMediaSuite – Video Generator (Functional)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="assets/styles.css">
-  <script defer src="assets/app.js"></script>
-  <style>
-    .generation-form {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      gap: 30px;
-    }
-    
-    .controls-panel {
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 12px;
-      padding: 20px;
-      height: fit-content;
-    }
-    
-    .preview-panel {
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 12px;
-      padding: 20px;
-    }
-    
-    .model-option {
-      display: flex;
-      align-items: center;
-      padding: 12px;
-      margin: 8px 0;
-      background: #252525;
-      border: 2px solid transparent;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .model-option.selected {
-      border-color: #8b5cf6;
-      background: rgba(139, 92, 246, 0.1);
-    }
-    
-    .model-option:hover {
-      background: #333;
-    }
-    
-    .param-group {
-      margin-bottom: 20px;
-    }
-    
-    .param-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-      color: #e5e5e5;
-    }
-    
-    .param-input {
-      width: 100%;
-      padding: 8px 12px;
-      background: #2a2a2a;
-      border: 1px solid #444;
-      border-radius: 6px;
-      color: #fff;
-    }
-    
-    .param-input:focus {
-      outline: none;
-      border-color: #8b5cf6;
-    }
-    
-    .mode-selector {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    
-    .mode-btn {
-      flex: 1;
-      padding: 10px;
-      background: #333;
-      border: none;
-      border-radius: 6px;
-      color: #fff;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .mode-btn.active {
-      background: #8b5cf6;
-    }
-    
-    .image-upload {
-      display: none;
-      border: 2px dashed #444;
-      border-radius: 8px;
-      padding: 20px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    
-    .image-upload.active {
-      display: block;
-    }
-    
-    .upload-area {
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
-    
-    .upload-area:hover {
-      border-color: #8b5cf6;
-    }
-    
-    .preview-area {
-      min-height: 400px;
-      border: 2px dashed #444;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-      position: relative;
-      background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.05));
-    }
-    
-    .preview-area.has-content {
-      border-style: solid;
-      border-color: #8b5cf6;
-    }
-    
-    .preview-placeholder {
-      text-align: center;
-      color: #888;
-    }
-    
-    .generate-btn {
-      width: 100%;
-      padding: 15px;
-      background: linear-gradient(45deg, #8b5cf6, #3b82f6);
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .generate-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
-    }
-    
-    .generate-btn:disabled {
-      background: #666;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-    
-    .progress-bar {
-      width: 100%;
-      height: 4px;
-      background: #333;
-      border-radius: 2px;
-      margin: 10px 0;
-      overflow: hidden;
-    }
-    
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #8b5cf6, #3b82f6);
-      width: 0%;
-      transition: width 0.5s ease;
-    }
-    
-    .status-text {
-      text-align: center;
-      color: #888;
-      font-size: 14px;
-      margin-top: 10px;
-    }
-    
-    .error-message {
-      background: #dc2626;
-      color: white;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 15px;
-    }
-    
-    .success-message {
-      background: #10b981;
-      color: white;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 15px;
-    }
-    
-    .video-specs {
-      background: #2a2a2a;
-      border: 1px solid #444;
-      border-radius: 6px;
-      padding: 10px;
-      margin-bottom: 15px;
-      font-size: 12px;
-      color: #ccc;
-    }
-    
-    .spec-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 5px;
-    }
-    
-    .spec-row:last-child {
-      margin-bottom: 0;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1 class="text-xl font-bold">LocalMediaSuite</h1>
-    <nav class="flex gap-2 flex-wrap">
-      <a href="index.html">Home</a>
-      <a href="image.html">Image (SFW)</a>
-      <a href="image_nsfw.html">Image (NSFW)</a>
-      <a href="video.html" class="active">Video (SFW)</a>
-      <a href="video_nsfw.html">Video (NSFW)</a>
-      <a href="gallery.html">Gallery</a>
-      <a href="catalog.html">Catalog</a>
-      <a href="settings.html">Settings</a>
-    </nav>
-  </header>
-
-  <main class="generation-form">
-    <h2>Funktionaler Video-Generator</h2>
-    
-    <div id="message-container"></div>
-    
-    <div class="form-grid">
-      <!-- Controls Panel -->
-      <div class="controls-panel">
-        <!-- Generation Mode -->
-        <div class="param-group">
-          <label>Video-Modus</label>
-          <div class="mode-selector">
-            <button class="mode-btn active" data-mode="text2video">Text → Video</button>
-            <button class="mode-btn" data-mode="img2video">Bild → Video</button>
-          </div>
-        </div>
-
-        <!-- Model Selection -->
-        <div class="param-group">
-          <label>Video-Modell</label>
-          <div id="video-model-list" class="model-selector">
-            <div class="status-text">Lade Video-Modelle...</div>
-          </div>
-        </div>
-
-        <!-- Image Upload (for img2video) -->
-        <div id="video-image-upload" class="image-upload">
-          <div class="upload-area" onclick="document.getElementById('video-file-input').click()">
-            <input type="file" id="video-file-input" accept="image/*" style="display: none;">
-            <div>🎬 Startbild hochladen</div>
-            <div style="font-size: 12px; color: #888; margin-top: 5px;">
-              PNG, JPG, WEBP bis 10MB<br>
-              Wird zu Video animiert
-            </div>
-          </div>
-          <div id="video-upload-preview" style="margin-top: 15px; display: none;">
-            <img id="video-upload-preview-img" style="max-width: 100%; height: auto; border-radius: 6px;">
-          </div>
-        </div>
-
-        <!-- Video Parameters -->
-        <div class="param-group">
-          <label>Auflösung</label>
-          <select id="video-resolution" class="param-input">
-            <option value="1024x576" selected>1024×576 (SVD optimiert)</option>
-            <option value="1280x720">1280×720 (HD)</option>
-            <option value="1920x1080">1920×1080 (Full HD)</option>
-          </select>
-        </div>
-
-        <div class="param-group">
-          <label>Dauer: <span id="duration-value">3</span> Sekunden</label>
-          <input type="range" id="duration" min="1" max="10" value="3" class="param-input">
-        </div>
-
-        <div class="param-group">
-          <label>FPS</label>
-          <select id="fps" class="param-input">
-            <option value="12">12 fps</option>
-            <option value="24" selected>24 fps</option>
-            <option value="30">30 fps</option>
-            <option value="60">60 fps</option>
-          </select>
-        </div>
-
-        <div class="param-group">
-          <label>Motion Intensity: <span id="motion-value">127</span></label>
-          <input type="range" id="motion-bucket" min="100" max="255" value="127" class="param-input">
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #666; margin-top: 2px;">
-            <span>Subtil</span>
-            <span>Dynamisch</span>
-          </div>
-        </div>
-
-        <div class="param-group">
-          <label>Noise Level: <span id="noise-value">0.02</span></label>
-          <input type="range" id="noise-aug" min="0" max="0.1" step="0.01" value="0.02" class="param-input">
-        </div>
-
-        <!-- Video Specs Display -->
-        <div class="video-specs">
-          <div class="spec-row">
-            <span>Frames gesamt:</span>
-            <span id="total-frames">72</span>
-          </div>
-          <div class="spec-row">
-            <span>Geschätzte Größe:</span>
-            <span id="estimated-size">~15MB</span>
-          </div>
-          <div class="spec-row">
-            <span>Generation Zeit:</span>
-            <span id="estimated-time">~2-4min</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Preview Panel -->
-      <div class="preview-panel">
-        <div id="video-preview-area" class="preview-area">
-          <div class="preview-placeholder">
-            <div style="font-size: 48px; margin-bottom: 10px;">🎬</div>
-            <div>Bereit für Video-Generierung</div>
-            <div style="font-size: 12px; color: #666; margin-top: 5px;">
-              Beschreibe deine Video-Szene oder lade ein Startbild hoch
-            </div>
-          </div>
-        </div>
-
-        <div class="param-group">
-          <label for="video-prompt">Video Prompt</label>
-          <textarea 
-            id="video-prompt" 
-            class="param-input" 
-            rows="4" 
-            placeholder="Beschreibe deine Video-Szene... (z.B. 'Ruhiger Bergsee bei Sonnenuntergang mit sanften Wellen, cineastische Kamerabewegung')"
-            required
-          ></textarea>
-        </div>
-
-        <div id="video-progress-container" style="display: none;">
-          <div class="progress-bar">
-            <div id="video-progress-fill" class="progress-fill"></div>
-          </div>
-          <div id="video-status-text" class="status-text">Vorbereitung...</div>
-          <div style="display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-top: 5px;">
-            <span>ETA: <span id="eta-display">--:--</span></span>
-            <span>Frame: <span id="frame-progress">0/72</span></span>
-          </div>
-        </div>
-
-        <button id="video-generate-btn" class="generate-btn">
-          🎬 Video generieren
-        </button>
-      </div>
-    </div>
-  </main>
-
-  <script>
-    class FunctionalVideoGenerator {
-      constructor() {
-        this.selectedModel = null;
-        this.currentMode = 'text2video';
-        this.isGenerating = false;
-        this.uploadedImage = null;
-        this.videoSpecs = {
-          width: 1024,
-          height: 576,
-          fps: 24,
-          duration: 3,
-          frames: 72
-        };
-        
-        this.init();
-      }
-
-      init() {
-        this.setupEventListeners();
-        this.loadVideoModels();
-        this.updateSliderValues();
-        this.calculateVideoSpecs();
-      }
-
-      setupEventListeners() {
-        // Mode buttons
-        document.querySelectorAll('.mode-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            this.setMode(e.target.dataset.mode);
-          });
-        });
-
-        // File upload
-        document.getElementById('video-file-input').addEventListener('change', (e) => {
-          this.handleVideoFileUpload(e.target.files[0]);
-        });
-
-        // Parameter controls
-        document.getElementById('duration').addEventListener('input', (e) => {
-          document.getElementById('duration-value').textContent = e.target.value;
-          this.calculateVideoSpecs();
-        });
-
-        document.getElementById('fps').addEventListener('change', () => {
-          this.calculateVideoSpecs();
-        });
-
-        document.getElementById('video-resolution').addEventListener('change', () => {
-          this.calculateVideoSpecs();
-        });
-
-        document.getElementById('motion-bucket').addEventListener('input', (e) => {
-          document.getElementById('motion-value').textContent = e.target.value;
-        });
-
-        document.getElementById('noise-aug').addEventListener('input', (e) => {
-          document.getElementById('noise-value').textContent = parseFloat(e.target.value).toFixed(2);
-        });
-
-        // Generate button
-        document.getElementById('video-generate-btn').addEventListener('click', () => {
-          this.generateVideo();
-        });
-      }
-
-      setMode(mode) {
-        this.currentMode = mode;
-        
-        // Update buttons
-        document.querySelectorAll('.mode-btn').forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.mode === mode);
-        });
-
-        // Show/hide upload section
-        const uploadSection = document.getElementById('video-image-upload');
-        
-        if (mode === 'img2video') {
-          uploadSection.classList.add('active');
-        } else {
-          uploadSection.classList.remove('active');
-        }
-
-        this.showMessage(`Video-Modus: ${mode === 'text2video' ? 'Text zu Video' : 'Bild zu Video'}`, 'info');
-        this.loadVideoModels(); // Reload compatible models
-      }
-
-      async loadVideoModels() {
-        try {
-          const response = await fetch(`/api/models/compatible?mode=${this.currentMode}`);
-          const data = await response.json();
-
-          if (!data.ok) {
-            throw new Error('Konnte Video-Modelle nicht laden');
+{
+                id: 'animatediff-unrestricted',
+                name: 'AnimateDiff (Unrestricted)',
+                architecture: 'animatediff',
+                description: 'Animation von Standbildern ohne Beschränkungen',
+                nsfw_capable: true,
+                modalities: ['text2video', 'img2video']
+              }
+            ];
           }
 
-          this.renderVideoModels(data.compatible_models || []);
+          this.renderVideoModels(models);
         } catch (error) {
           console.error('Failed to load video models:', error);
           this.showMessage('Fehler beim Laden der Video-Modelle: ' + error.message, 'error');
           
-          // Fallback für Testing
+          // Fallback Mock-Modelle
           this.renderVideoModels([
             {
-              id: 'svd-img2vid-xt',
-              name: 'Stable Video Diffusion XT',
+              id: 'svd-unrestricted',
+              name: 'SVD (Unrestricted)',
               architecture: 'svd',
-              description: 'Hochqualitative Bild-zu-Video Generation'
+              description: 'Premium Video-Generation ohne Filter',
+              nsfw_capable: true
             }
           ]);
         }
@@ -501,8 +33,8 @@
         if (models.length === 0) {
           container.innerHTML = `
             <div class="status-text" style="color: #dc2626;">
-              Keine kompatiblen Video-Modelle gefunden<br>
-              <small>Installiere SVD über den Katalog</small>
+              Keine Video-Modelle gefunden<br>
+              <small>Installiere SVD oder andere Video-Modelle über den Katalog</small>
             </div>
           `;
           return;
@@ -510,13 +42,19 @@
 
         container.innerHTML = models.map(model => `
           <div class="model-option" data-model-id="${model.id}">
-            <div style="flex: 1;">
-              <div style="font-weight: 500; margin-bottom: 2px;">${model.name}</div>
+            <div style="flex: 1; z-index: 2; position: relative;">
+              <div style="font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                ${model.name}
+                ${model.nsfw_capable ? '<span class="nsfw-badge">Unrestricted</span>' : ''}
+              </div>
               <div style="font-size: 12px; color: #888;">
-                ${model.architecture} • ${model.description || 'Video-Generation'}
+                ${model.architecture?.toUpperCase()} • ${model.description || 'Video-Generation'}
+              </div>
+              <div style="font-size: 11px; color: #666; margin-top: 2px;">
+                Modi: ${(model.modalities || ['img2video']).join(', ')}
               </div>
             </div>
-            <div style="width: 12px; height: 12px; border: 2px solid #8b5cf6; border-radius: 50%;"></div>
+            <div style="width: 15px; height: 15px; border: 2px solid #e91e63; border-radius: 50%; z-index: 2; position: relative;"></div>
           </div>
         `).join('');
 
@@ -545,7 +83,7 @@
         this.selectedModel = modelId;
         
         const modelName = element.querySelector('div').textContent;
-        this.showMessage(`Video-Modell ausgewählt: ${modelName}`, 'info');
+        this.showMessage(`Unrestricted Video-Modell ausgewählt: ${modelName}`, 'success');
       }
 
       handleVideoFileUpload(file) {
@@ -556,8 +94,8 @@
           return;
         }
 
-        if (file.size > 10 * 1024 * 1024) {
-          this.showMessage('Bildgröße sollte unter 10MB sein', 'error');
+        if (file.size > 15 * 1024 * 1024) {
+          this.showMessage('Bildgröße sollte unter 15MB sein', 'error');
           return;
         }
 
@@ -565,26 +103,27 @@
         reader.onload = (e) => {
           this.uploadedImage = file;
           
-          // Show preview
+          // Show upload preview
           const preview = document.getElementById('video-upload-preview');
           const previewImg = document.getElementById('video-upload-preview-img');
           previewImg.src = e.target.result;
           preview.style.display = 'block';
 
-          // Update main preview
+          // Update main preview with enhanced styling
           this.updateVideoPreview(`
             <div style="position: relative;">
-              <img src="${e.target.result}" style="max-width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px;">
-              <div style="position: absolute; top: 10px; right: 10px; background: rgba(139,92,246,0.9); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
-                📷 Startbild geladen
+              <img src="${e.target.result}" style="max-width: 100%; max-height: 420px; object-fit: contain; border-radius: 10px; box-shadow: 0 8px 32px rgba(233,30,99,0.3);">
+              <div style="position: absolute; top: 15px; right: 15px; background: linear-gradient(45deg, #e91e63, #ff1493); color: white; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">
+                🎬 Startbild geladen
               </div>
-              <div style="position: absolute; bottom: 10px; left: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 6px; border-radius: 4px; font-size: 11px; text-align: center;">
-                🎬 Bereit für Animation zu Video
+              <div style="position: absolute; bottom: 15px; left: 15px; right: 15px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); color: white; padding: 12px; border-radius: 8px; font-size: 12px; text-align: center;">
+                <div style="font-weight: 600; margin-bottom: 4px;">🎭 Bereit für Unrestricted Animation</div>
+                <div style="color: #e91e63;">Wird zu Video ohne jegliche Filter animiert</div>
               </div>
             </div>
           `);
 
-          this.showMessage('Startbild für Video erfolgreich hochgeladen', 'success');
+          this.showMessage('Startbild für unrestricted Video erfolgreich hochgeladen', 'success');
         };
         reader.readAsDataURL(file);
       }
@@ -593,43 +132,61 @@
         const resolution = document.getElementById('video-resolution').value.split('x');
         const fps = parseInt(document.getElementById('fps').value);
         const duration = parseInt(document.getElementById('duration').value);
+        const quality = document.getElementById('quality-level').value;
         
         this.videoSpecs = {
           width: parseInt(resolution[0]),
           height: parseInt(resolution[1]),
           fps: fps,
           duration: duration,
-          frames: fps * duration
+          frames: fps * duration,
+          quality: quality
         };
 
         // Update display
         document.getElementById('total-frames').textContent = this.videoSpecs.frames;
+        document.getElementById('current-quality').textContent = document.getElementById('quality-level').options[document.getElementById('quality-level').selectedIndex].text;
         
-        // Estimate file size (rough calculation)
+        // Enhanced size estimation based on quality
         const pixelsPerFrame = this.videoSpecs.width * this.videoSpecs.height;
-        const estimatedSize = Math.round((pixelsPerFrame * this.videoSpecs.frames * 3) / (1024 * 1024 * 10)); // Very rough estimate
+        const qualityMultiplier = {
+          'draft': 0.3,
+          'standard': 1.0,
+          'high': 2.0,
+          'ultra': 3.5
+        };
+        const baseSize = (pixelsPerFrame * this.videoSpecs.frames * 3) / (1024 * 1024 * 8);
+        const estimatedSize = Math.round(baseSize * qualityMultiplier[quality]);
         document.getElementById('estimated-size').textContent = `~${estimatedSize}MB`;
         
-        // Estimate generation time (very rough)
-        const timePerFrame = 3; // seconds per frame (very rough estimate)
-        const totalTime = Math.round((this.videoSpecs.frames * timePerFrame) / 60);
-        document.getElementById('estimated-time').textContent = `~${Math.max(1, totalTime)}min`;
+        // Enhanced time estimation
+        const timeMultiplier = {
+          'draft': 1.0,
+          'standard': 1.5,
+          'high': 2.5,
+          'ultra': 4.0
+        };
+        const baseTime = Math.round((this.videoSpecs.frames * 4) / 60); // 4 sec per frame base
+        const estimatedTime = Math.max(1, Math.round(baseTime * timeMultiplier[quality]));
+        document.getElementById('estimated-time').textContent = `~${estimatedTime}min`;
 
         document.getElementById('frame-progress').textContent = `0/${this.videoSpecs.frames}`;
       }
 
       updateSliderValues() {
-        // Initialize slider displays
         document.getElementById('duration-value').textContent = document.getElementById('duration').value;
         document.getElementById('motion-value').textContent = document.getElementById('motion-bucket').value;
         document.getElementById('noise-value').textContent = parseFloat(document.getElementById('noise-aug').value).toFixed(2);
+        document.getElementById('quality-display').textContent = document.getElementById('quality-level').options[document.getElementById('quality-level').selectedIndex].text;
       }
 
-      async generateVideo() {
-        // Validation
+      async generateUnrestrictedVideo() {
+        // Enhanced validation
         const prompt = document.getElementById('video-prompt').value.trim();
+        const stylePrompt = document.getElementById('video-style-prompt').value.trim();
+        
         if (!prompt) {
-          this.showMessage('Bitte gib einen Video-Prompt ein', 'error');
+          this.showMessage('Bitte gib eine Video-Beschreibung ein', 'error');
           document.getElementById('video-prompt').focus();
           return;
         }
@@ -649,32 +206,46 @@
         this.showVideoProgress();
 
         try {
-          // Prepare form data
+          // Prepare enhanced form data
           const formData = new FormData();
-          formData.append('prompt', prompt);
+          
+          // Combine prompts for better results
+          let combinedPrompt = prompt;
+          if (stylePrompt) {
+            combinedPrompt += ', ' + stylePrompt;
+          }
+          
+          formData.append('prompt', combinedPrompt);
           formData.append('model_id', this.selectedModel);
           formData.append('mode', this.currentMode);
-          formData.append('nsfw', 'false');
+          formData.append('nsfw', 'true'); // Enable unrestricted mode
 
-          // Video resolution
+          // Enhanced video parameters
           formData.append('width', this.videoSpecs.width.toString());
           formData.append('height', this.videoSpecs.height.toString());
-
-          // Video parameters
           formData.append('fps', this.videoSpecs.fps.toString());
           formData.append('num_frames', this.videoSpecs.frames.toString());
           formData.append('motion_bucket_id', document.getElementById('motion-bucket').value);
           formData.append('noise_aug_strength', document.getElementById('noise-aug').value);
+
+          // Quality settings
+          formData.append('quality', this.videoSpecs.quality);
+
+          // Seed for reproducibility
+          const seed = document.getElementById('video-seed').value.trim();
+          if (seed) {
+            formData.append('seed', seed);
+          }
 
           // Image for img2video
           if (this.currentMode === 'img2video' && this.uploadedImage) {
             formData.append('init_image', this.uploadedImage);
           }
 
-          // Start progress simulation
-          this.simulateVideoProgress();
+          // Enhanced progress simulation
+          this.simulateEnhancedVideoProgress();
 
-          // Make API call
+          // Make API call to universal generation endpoint
           const response = await fetch('/api/generate/universal', {
             method: 'POST',
             body: formData
@@ -683,16 +254,16 @@
           const data = await response.json();
 
           if (!data.ok) {
-            throw new Error(data.error?.message || 'Video-Generation fehlgeschlagen');
+            throw new Error(data.error?.message || 'Unrestricted Video-Generation fehlgeschlagen');
           }
 
-          // Show result
-          this.showVideoResult(data);
-          this.showMessage('Video erfolgreich generiert!', 'success');
+          // Show enhanced result
+          this.showEnhancedVideoResult(data);
+          this.showMessage('🎬 Unrestricted Video erfolgreich generiert!', 'success');
 
         } catch (error) {
-          console.error('Video generation failed:', error);
-          this.showMessage('Video-Generation fehlgeschlagen: ' + error.message, 'error');
+          console.error('Unrestricted video generation failed:', error);
+          this.showMessage('Unrestricted Video-Generation fehlgeschlagen: ' + error.message, 'error');
         } finally {
           this.isGenerating = false;
           this.updateVideoGenerateButton(false);
@@ -700,17 +271,49 @@
         }
       }
 
-      simulateVideoProgress() {
-        const steps = [
-          { progress: 5, text: 'Video-Modell laden...', eta: this.videoSpecs.frames * 3 },
-          { progress: 15, text: 'Startbild vorbereiten...', eta: this.videoSpecs.frames * 2.8 },
-          { progress: 25, text: 'Frames initialisieren...', eta: this.videoSpecs.frames * 2.5 },
-          { progress: 40, text: 'Video generieren...', eta: this.videoSpecs.frames * 2 },
-          { progress: 65, text: 'Bewegung berechnen...', eta: this.videoSpecs.frames * 1.5 },
-          { progress: 80, text: 'Frames rendern...', eta: this.videoSpecs.frames * 1 },
-          { progress: 95, text: 'Video komprimieren...', eta: 30 },
-        ];
+      simulateEnhancedVideoProgress() {
+        const qualitySteps = {
+          'draft': [
+            { progress: 10, text: 'Unrestricted Modell laden...', eta: this.videoSpecs.frames * 2 },
+            { progress: 25, text: 'Content-Filter deaktivieren...', eta: this.videoSpecs.frames * 1.8 },
+            { progress: 45, text: 'Video frames generieren...', eta: this.videoSpecs.frames * 1.5 },
+            { progress: 70, text: 'Bewegung berechnen...', eta: this.videoSpecs.frames * 1 },
+            { progress: 85, text: 'Draft-Qualität rendern...', eta: this.videoSpecs.frames * 0.5 },
+            { progress: 95, text: 'Video finalisieren...', eta: 20 }
+          ],
+          'standard': [
+            { progress: 8, text: 'Unrestricted Modell laden...', eta: this.videoSpecs.frames * 3 },
+            { progress: 20, text: 'Erweiterte Parameter setzen...', eta: this.videoSpecs.frames * 2.5 },
+            { progress: 35, text: 'High-Quality frames generieren...', eta: this.videoSpecs.frames * 2 },
+            { progress: 55, text: 'Detaillierte Bewegung...', eta: this.videoSpecs.frames * 1.5 },
+            { progress: 75, text: 'Standard-Qualität rendern...', eta: this.videoSpecs.frames * 1 },
+            { progress: 90, text: 'Optimierungen anwenden...', eta: 45 },
+            { progress: 98, text: 'Video komprimieren...', eta: 15 }
+          ],
+          'high': [
+            { progress: 5, text: 'High-Performance Modell laden...', eta: this.videoSpecs.frames * 4 },
+            { progress: 15, text: 'Premium-Parameter konfigurieren...', eta: this.videoSpecs.frames * 3.5 },
+            { progress: 25, text: 'Ultra-detaillierte Frames...', eta: this.videoSpecs.frames * 3 },
+            { progress: 45, text: 'Komplexe Bewegungen...', eta: this.videoSpecs.frames * 2.5 },
+            { progress: 65, text: 'High-Quality rendern...', eta: this.videoSpecs.frames * 2 },
+            { progress: 80, text: 'Detail-Enhancement...', eta: this.videoSpecs.frames * 1.5 },
+            { progress: 92, text: 'Qualitätskontrolle...', eta: 60 },
+            { progress: 98, text: 'Finalisierung...', eta: 30 }
+          ],
+          'ultra': [
+            { progress: 3, text: 'Ultra-Performance Modell initialisieren...', eta: this.videoSpecs.frames * 6 },
+            { progress: 10, text: 'Maximum-Quality Setup...', eta: this.videoSpecs.frames * 5.5 },
+            { progress: 20, text: 'Perfekte Frame-Generierung...', eta: this.videoSpecs.frames * 5 },
+            { progress: 35, text: 'Ultra-detaillierte Bewegungen...', eta: this.videoSpecs.frames * 4 },
+            { progress: 50, text: 'Ultra-High-Quality Rendering...', eta: this.videoSpecs.frames * 3.5 },
+            { progress: 68, text: 'Advanced Post-Processing...', eta: this.videoSpecs.frames * 2.5 },
+            { progress: 82, text: 'Perfektion-Enhancement...', eta: this.videoSpecs.frames * 1.5 },
+            { progress: 93, text: 'Qualitätsprüfung...', eta: 90 },
+            { progress: 98, text: 'Ultra-Finalisierung...', eta: 45 }
+          ]
+        };
 
+        const steps = qualitySteps[this.videoSpecs.quality] || qualitySteps['standard'];
         let currentStep = 0;
         let simulatedFrames = 0;
         
@@ -719,12 +322,13 @@
             const step = steps[currentStep];
             this.updateVideoProgress(step.progress, step.text);
             
-            // Simulate frame progress
+            // Enhanced frame progress simulation
             const expectedFrames = Math.floor((step.progress / 100) * this.videoSpecs.frames);
             simulatedFrames = Math.min(expectedFrames, this.videoSpecs.frames);
             document.getElementById('frame-progress').textContent = `${simulatedFrames}/${this.videoSpecs.frames}`;
+            document.getElementById('video-progress-percent').textContent = `${Math.round(step.progress)}%`;
             
-            // Update ETA
+            // Enhanced ETA calculation
             const etaMinutes = Math.floor(step.eta / 60);
             const etaSeconds = step.eta % 60;
             document.getElementById('eta-display').textContent = `${etaMinutes}:${etaSeconds.toString().padStart(2, '0')}`;
@@ -733,23 +337,25 @@
           } else if (!this.isGenerating) {
             clearInterval(interval);
           }
-        }, 2000);
+        }, this.videoSpecs.quality === 'draft' ? 1500 : 
+            this.videoSpecs.quality === 'ultra' ? 3500 : 2500);
       }
 
       showVideoProgress() {
         document.getElementById('video-progress-container').style.display = 'block';
-        this.updateVideoProgress(0, 'Starte Video-Generation...');
+        this.updateVideoProgress(0, 'Starte Unrestricted Video-Generation...');
       }
 
       hideVideoProgress() {
         setTimeout(() => {
           document.getElementById('video-progress-container').style.display = 'none';
-        }, 2000);
+        }, 3000);
       }
 
       updateVideoProgress(percentage, text) {
         document.getElementById('video-progress-fill').style.width = `${percentage}%`;
         document.getElementById('video-status-text').textContent = text;
+        document.getElementById('video-progress-percent').textContent = `${Math.round(percentage)}%`;
       }
 
       updateVideoGenerateButton(isGenerating) {
@@ -757,32 +363,73 @@
         
         if (isGenerating) {
           button.disabled = true;
-          button.innerHTML = '⏳ Generiere Video...';
+          button.innerHTML = '⏳ Generiere Unrestricted Video...';
         } else {
           button.disabled = false;
-          button.innerHTML = '🎬 Video generieren';
+          button.innerHTML = '🎬 Unrestricted Video Generieren';
         }
       }
 
-      showVideoResult(data) {
+      showEnhancedVideoResult(data) {
         const resultHtml = `
           <div style="position: relative;">
-            <video controls style="max-width: 100%; max-height: 400px; border-radius: 8px;" autoplay muted loop>
+            <video 
+              controls 
+              style="max-width: 100%; max-height: 450px; border-radius: 12px; box-shadow: 0 12px 40px rgba(233,30,99,0.4);" 
+              autoplay 
+              muted 
+              loop
+              poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23222' width='100' height='100'/%3E%3C/svg%3E"
+            >
               <source src="${data.file}" type="video/mp4">
               Dein Browser unterstützt das Video-Element nicht.
             </video>
-            <div style="position: absolute; bottom: 10px; left: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 8px; border-radius: 4px; font-size: 12px;">
-              <div style="font-weight: 500; margin-bottom: 4px;">✅ Video generiert!</div>
-              <div>${data.metadata?.resolution || ''} • ${data.metadata?.frames || '?'} frames • ${data.metadata?.duration_sec?.toFixed(1) || '?'}s • ${data.model}</div>
+            
+            <!-- Enhanced overlay badges -->
+            <div style="position: absolute; top: 15px; left: 15px; display: flex; gap: 8px;">
+              <span style="background: linear-gradient(45deg, #e91e63, #ff1493); color: white; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; text-transform: uppercase;">
+                🔞 Unrestricted
+              </span>
+              <span style="background: rgba(0,0,0,0.8); color: white; padding: 6px 10px; border-radius: 6px; font-size: 10px;">
+                ${this.videoSpecs.quality.toUpperCase()}
+              </span>
             </div>
-            <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 5px;">
-              <a href="${data.file}" download style="background: #8b5cf6; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px;">📥 Download</a>
-              <a href="/gallery.html" style="background: #10b981; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px;">🎬 Galerie</a>
+            
+            <!-- Enhanced info panel -->
+            <div style="position: absolute; bottom: 15px; left: 15px; right: 15px; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); color: white; padding: 15px; border-radius: 10px; font-size: 13px;">
+              <div style="font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                ✅ Unrestricted Video generiert!
+                <span style="background: #10b981; padding: 2px 6px; border-radius: 4px; font-size: 10px;">SUCCESS</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
+                <div>📐 ${data.metadata?.resolution || `${this.videoSpecs.width}×${this.videoSpecs.height}`}</div>
+                <div>🎬 ${data.metadata?.frames || this.videoSpecs.frames} frames</div>
+                <div>⏱️ ${data.metadata?.duration_sec?.toFixed(1) || this.videoSpecs.duration}s</div>
+                <div>🚀 ${data.model || 'SVD'}</div>
+              </div>
+              ${data.metadata?.generation_time ? `<div style="margin-top: 6px; font-size: 10px; color: #888;">Generation: ${data.metadata.generation_time.toFixed(1)}s</div>` : ''}
+            </div>
+            
+            <!-- Enhanced action buttons -->
+            <div style="position: absolute; top: 15px; right: 15px; display: flex; gap: 8px;">
+              <a href="${data.file}" download style="background: linear-gradient(45deg, #e91e63, #ff1493); color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 4px; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                📥 Download
+              </a>
+              <a href="/gallery.html" style="background: linear-gradient(45deg, #10b981, #059669); color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 4px; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                🎭 Galerie
+              </a>
             </div>
           </div>
         `;
         
         this.updateVideoPreview(resultHtml);
+        
+        // Auto-play success sound effect (if available)
+        try {
+          const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAIACD4BAAH8AQACACAAZGFOYQoAAAAAAAAAAAAAAAAAAAA=');
+          audio.volume = 0.1;
+          audio.play().catch(() => {}); // Silent fail if audio not supported
+        } catch {}
       }
 
       updateVideoPreview(html) {
@@ -795,9 +442,9 @@
         const container = document.getElementById('message-container');
         
         const colors = {
-          success: '#10b981',
-          error: '#dc2626',
-          info: '#8b5cf6'
+          success: 'linear-gradient(135deg, #10b981, #059669)',
+          error: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+          info: 'linear-gradient(135deg, #e91e63, #ff1493)'
         };
 
         const messageElement = document.createElement('div');
@@ -805,20 +452,53 @@
                                  type === 'error' ? 'error-message' : 
                                  'success-message';
         messageElement.style.background = colors[type];
+        messageElement.style.boxShadow = '0 4px 15px rgba(233,30,99,0.3)';
         messageElement.textContent = message;
 
         container.appendChild(messageElement);
 
-        // Auto remove after 5 seconds
+        // Enhanced auto-removal with fade-out
         setTimeout(() => {
-          messageElement.remove();
-        }, 5000);
+          messageElement.style.opacity = '0';
+          messageElement.style.transform = 'translateY(-10px)';
+          setTimeout(() => messageElement.remove(), 300);
+        }, 4000);
       }
     }
 
     // Initialize when DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
-      new FunctionalVideoGenerator();
+      new UnrestrictedVideoGenerator();
+      
+      // Add some additional enhanced styling
+      const enhancedStyle = document.createElement('style');
+      enhancedStyle.textContent = `
+        @keyframes pulse-glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(233, 30, 99, 0.3); }
+          50% { box-shadow: 0 0 30px rgba(233, 30, 99, 0.6); }
+        }
+        
+        .model-option.selected {
+          animation: pulse-glow 2s infinite;
+        }
+        
+        .suggestion-chip:active {
+          transform: scale(0.95);
+        }
+        
+        .param-input:focus {
+          animation: pulse-glow 0.5s ease;
+        }
+        
+        video {
+          transition: all 0.3s ease;
+        }
+        
+        video:hover {
+          transform: scale(1.02);
+        }
+      `;
+      document.head.appendChild(enhancedStyle);
     });
   </script>
 </body>
