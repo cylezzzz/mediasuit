@@ -1,0 +1,165 @@
+<!doctype html><html lang="de"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
+    <link rel="icon" type="image/png" href="/assets/logo.png" />
+    <link rel="icon" href="/assets/logo.ico" sizes="any" />
+    <meta name="theme-color" content="#0a0e13" />
+<title>LocalMediaSuite</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/assets/styles.css" />
+<script defer src="/assets/app.js"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        base: { bg: "#0a0e13", card:"#111827", border:"#1f2937", text:"#f3f4f6", sub:"#9ca3af", accent:"#3b82f6" }
+      }
+    }
+  }
+}
+</script>
+</head><body>
+    <header class="sticky top-0 z-10 bg-[var(--bg)]/80 backdrop-blur border-b border-[var(--border)]">
+      <div class="max-w-6xl mx-auto flex items-center gap-4 p-4">
+        <img src="/assets/logo.svg" class="w-8 h-8" />
+        <nav class="flex gap-4 text-sm">
+          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/index.html">Home</a>
+          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/image.html">Image (SFW)</a>
+          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/image_nsfw.html">Image (NSFW)</a>
+          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/video.html">Video (SFW)</a>
+          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/video_nsfw.html">Video (NSFW)</a>
+          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/gallery.html">Galerie</a>
+          <a class="px-3 py-1 rounded bg-blue-600 text-white" href="/catalog.html">Katalog</a>
+          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/settings.html">Settings</a>
+        </nav>
+      </div>
+    </header>
+    <main class="max-w-6xl mx-auto p-4 space-y-6">
+<section class="card">
+  <h2 class="text-xl font-semibold mb-2">Katalog</h2>
+        <div id="rec" class="card mb-4">
+          <div class="flex items-center justify-between mb-2">
+            <div class="font-semibold">Empfohlene Modelle (ultra-realistisch)</div>
+            <div class="text-xs text-[var(--sub)]">Direktinstallation in den richtigen Ordner</div>
+          </div>
+          <div id="rec-list" class="grid md:grid-cols-2 gap-2"></div>
+        </div>
+  <div class="flex gap-2 mb-4">
+    <button data-type="image" class="tab px-3 py-1 rounded bg-blue-600 text-white">Image</button>
+    <button data-type="video" class="tab px-3 py-1 rounded hover:bg-gray-800">Video</button>
+    <button data-type="llm" class="tab px-3 py-1 rounded hover:bg-gray-800">LLM (Ollama)</button>
+    <label class="ml-auto inline-flex items-center gap-2 text-sm">
+      <input id="nsfw" type="checkbox" class="scale-125"><span>Nur NSFW‑fähig</span>
+    </label>
+  </div>
+  <div id="list" class="grid md:grid-cols-2 gap-3"></div>
+</section>
+<script>
+(async function(){
+  let current = 'image';
+  async function redraw(){
+    const nsfw = document.getElementById('nsfw').checked;
+    const items = await LMS.loadModels(current, nsfw);
+    const list = document.getElementById('list');
+    list.innerHTML = '';
+    if (items.length === 0) {
+      list.innerHTML = '<div class="text-base-sub">Keine Einträge gefunden.</div>';
+      return;
+    }
+    for (const m of items) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<div class="flex justify-between items-start">
+        <div>
+          <div class="font-semibold">${m.name}</div>
+          <div class="text-sm text-gray-400">${m.type.toUpperCase()} ${m.backend ? '('+m.backend+')': ''}</div>
+          <div class="text-sm">${m.recommended_use || ''}</div>
+          <div class="text-xs text-gray-400">${(m.tags||[]).join(', ')}</div>
+        </div>
+        ${m.has_sidecar ? '<span class="text-xs bg-green-700 text-white px-2 py-1 rounded">Sidecar</span>' : ''}
+      </div>`;
+      list.appendChild(card);
+    }
+  }
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(b=>b.classList.remove('bg-blue-600','text-white'));
+      btn.classList.add('bg-blue-600','text-white');
+      current = btn.dataset.type;
+      redraw();
+        // load recommendations
+        (async function(){
+          try{
+            const rImg = await LMS.api('/api/recommendations?type=image');
+            const rVid = await LMS.api('/api/recommendations?type=video');
+            const list = document.getElementById('rec-list');
+            ;[...rImg, ...rVid].forEach(r=>{
+              const d=document.createElement('div'); d.className='card';
+              d.innerHTML = `<div class='flex justify-between gap-2'>
+                <div>
+                  <div class='font-semibold'>${r.name}</div>
+                  <div class='text-sm text-gray-400'>${r.type.toUpperCase()} • HF: ${r.repo_id}</div>
+                  <div class='text-sm'>${r.recommended_use||''}</div>
+                  <div class='text-xs text-gray-400'>${(r.tags||[]).join(', ')}</div>
+                </div>
+                <button class='px-3 py-1 rounded bg-blue-600 text-white' data-repo='${r.repo_id}' data-type='${r.type}' data-name='${r.name}'>Installieren</button>
+              </div>`;
+              list.appendChild(d);
+            });
+            list.querySelectorAll('button').forEach(b=>{
+              b.addEventListener('click', async()=>{
+                b.disabled=true; const t=b.textContent; b.textContent='Installiere...';
+                try{
+                  await LMS.installModel({repo_id:b.dataset.repo, type:b.dataset.type, name:b.dataset.name});
+                  LMS.toast('Installiert');
+                  await LMS.api('/api/models/refresh',{method:'POST'});
+                  await redraw();
+                }catch(e){ LMS.toast('Installation fehlgeschlagen'); console.error(e); }
+                finally{ b.disabled=false; b.textContent=t; }
+              });
+            });
+          }catch(e){ console.error(e); }
+        })();
+    });
+  });
+  document.getElementById('nsfw').addEventListener('change', redraw);
+  redraw();
+        // load recommendations
+        (async function(){
+          try{
+            const rImg = await LMS.api('/api/recommendations?type=image');
+            const rVid = await LMS.api('/api/recommendations?type=video');
+            const list = document.getElementById('rec-list');
+            ;[...rImg, ...rVid].forEach(r=>{
+              const d=document.createElement('div'); d.className='card';
+              d.innerHTML = `<div class='flex justify-between gap-2'>
+                <div>
+                  <div class='font-semibold'>${r.name}</div>
+                  <div class='text-sm text-gray-400'>${r.type.toUpperCase()} • HF: ${r.repo_id}</div>
+                  <div class='text-sm'>${r.recommended_use||''}</div>
+                  <div class='text-xs text-gray-400'>${(r.tags||[]).join(', ')}</div>
+                </div>
+                <button class='px-3 py-1 rounded bg-blue-600 text-white' data-repo='${r.repo_id}' data-type='${r.type}' data-name='${r.name}'>Installieren</button>
+              </div>`;
+              list.appendChild(d);
+            });
+            list.querySelectorAll('button').forEach(b=>{
+              b.addEventListener('click', async()=>{
+                b.disabled=true; const t=b.textContent; b.textContent='Installiere...';
+                try{
+                  await LMS.installModel({repo_id:b.dataset.repo, type:b.dataset.type, name:b.dataset.name});
+                  LMS.toast('Installiert');
+                  await LMS.api('/api/models/refresh',{method:'POST'});
+                  await redraw();
+                }catch(e){ LMS.toast('Installation fehlgeschlagen'); console.error(e); }
+                finally{ b.disabled=false; b.textContent=t; }
+              });
+            });
+          }catch(e){ console.error(e); }
+        })();
+})();
+</script>
+</main>
+    </body></html>

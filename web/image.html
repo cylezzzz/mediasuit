@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <title>LocalMediaSuite – Image (SFW)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" href="/assets/logo.ico">
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body class="bg-gray-900 text-gray-100">
+  <header class="container mx-auto py-4 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <img src="/assets/logo.svg" alt="logo" style="height:28px"/>
+      <div class="font-semibold">LocalMediaSuite</div>
+      <div class="text-xs text-gray-400">Image (SFW)</div>
+    </div>
+    <nav class="flex gap-3 text-sm">
+      <a href="/index.html">Home</a>
+      <a href="/image.html" class="text-blue-400">Image (SFW)</a>
+      <a href="/image_nsfw.html" class="">Image (NSFW)</a>
+      <a href="/video.html">Video (SFW)</a>
+      <a href="/video_nsfw.html">Video (NSFW)</a>
+      <a href="/gallery.html">Gallery</a>
+      <a href="/catalog.html">Catalog</a>
+      <a href="/settings.html">Settings</a>
+    </nav>
+  </header>
+
+  <main class="container mx-auto px-3 pb-10">
+    <!-- Modell-Tabs -->
+    <div id="model-tabs" class="card mb-4"></div>
+
+    <!-- Mode & Basics -->
+    <div class="card mb-4">
+      <div class="grid sm:grid-cols-3 gap-3">
+        <div>
+          <label class="label">Modus</label>
+          <select id="mode" class="input w-full">
+            <option value="text2img" selected>Text → Bild</option>
+            <option value="img2img">Bild → Bild (Remix)</option>
+          </select>
+        </div>
+        <div class="sm:col-span-2 flex items-end justify-end">
+          <div class="text-xs text-gray-400">Wähle pro Lauf das gewünschte Verfahren. Der Model-Picker passt sich automatisch an.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kategorien & Vorschläge -->
+    <div class="grid md:grid-cols-3 gap-3 mb-4">
+      <div class="card">
+        <div class="font-semibold mb-2">Kategorien</div>
+        <div id="cat-chips" class="flex flex-wrap gap-2"></div>
+      </div>
+      <div class="card md:col-span-2">
+        <div class="flex items-center justify-between mb-2">
+          <div class="font-semibold">Prompt-Vorschläge</div>
+          <div class="flex items-center gap-2">
+            <button id="btn-random" class="btn">Zufalls-Prompt</button>
+            <span class="text-xs text-gray-400">SFW</span>
+          </div>
+        </div>
+        <div id="prompt-suggestions" class="flex flex-wrap gap-2"></div>
+      </div>
+    </div>
+
+    <!-- Generator-Form -->
+    <form id="image-form" data-endpoint="/api/generate/image" class="card" enctype="multipart/form-data">
+      <input type="hidden" name="mode" id="mode_input" value="text2img"/>
+      <input type="hidden" name="nsfw" value="false"/>
+
+      <div class="grid md:grid-cols-2 gap-3">
+        <div>
+          <label class="label">Prompt</label>
+          <textarea id="prompt" name="prompt" rows="6" class="input w-full" placeholder="Beschreibe das Bild…"></textarea>
+
+          <div id="init-block" class="mt-3 grid grid-cols-2 gap-3 hidden">
+            <div>
+              <label class="label">Upload (Eingangsbild)</label>
+              <input type="file" name="init_image" accept="image/*" class="input w-full"/>
+            </div>
+            <div>
+              <label class="label">Remix (aus Galerie)</label>
+              <select id="remix" class="input w-full">
+                <option value="">— wählen —</option>
+              </select>
+              <input type="hidden" name="init_url" id="init_url"/>
+            </div>
+          </div>
+          <div class="text-xs text-gray-400 mt-1">Hinweis: Upload überschreibt Remix. Für <b>Bild→Bild</b> ist eins von beidem erforderlich.</div>
+        </div>
+
+        <div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="label">Auflösung</label>
+              <select name="img_resolution" class="input w-full">
+                <option>768x768</option>
+                <option selected>1024x768</option>
+                <option>1536x1024</option>
+                <option>1024x1024</option>
+                <option>1920x1080</option>
+              </select>
+            </div>
+            <div>
+              <label class="label">Format</label>
+              <select name="img_format" class="input w-full">
+                <option value="png">PNG</option>
+                <option value="jpg" selected>JPG</option>
+              </select>
+            </div>
+            <div>
+              <label class="label">JPG-Qualität</label>
+              <input type="number" name="jpg_quality" class="input w-full" min="50" max="100" value="92"/>
+            </div>
+            <div>
+              <label class="label">Steps</label>
+              <input type="number" name="num_inference_steps" class="input w-full" min="10" max="60" value="28"/>
+            </div>
+            <div>
+              <label class="label">Guidance</label>
+              <input type="number" step="0.1" name="guidance_scale" class="input w-full" min="1" max="15" value="7.0"/>
+            </div>
+            <div>
+              <label class="label">Strength (nur Bild→Bild)</label>
+              <input type="number" step="0.01" name="strength" class="input w-full" min="0.1" max="0.95" value="0.65"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 flex items-center gap-2">
+        <button class="btn primary" type="submit">Generieren</button>
+        <button class="btn" type="button" id="btn-clear">Prompt leeren</button>
+      </div>
+    </form>
+
+    <!-- Ausgabe -->
+    <div id="last-output" class="card mt-4 hidden">
+      <div class="font-semibold mb-2">Ergebnis</div>
+      <img id="last-img" src="" alt="result" class="max-w-full rounded"/>
+    </div>
+  </main>
+
+  <script src="/assets/app.js"></script>
+  <script>
+  async function fetchSuggestions(domain, nsfw, purpose){{
+    const urls = [
+      `/api/suggestions?domain=${{domain}}&nsfw=${{nsfw}}&purpose=${{purpose}}`,
+      `/api/suggestions?type=${{domain}}&nsfw=${{nsfw}}&purpose=${{purpose}}`,
+      `/api/suggestions?type=${{domain}}&nsfw=${{nsfw}}`
+    ];
+    for (const u of urls){{ try{{ const r=await fetch(u); if(r.ok) return await r.json(); }}catch{{}} }}
+    if (purpose === "img2img"){{
+      return {{
+        categories: [
+          {{ id:"style", label:"Stil-Remix", ideas:[
+            "convert to moody cinematic look, chiaroscuro lighting, deep contrast",
+            "convert to glossy editorial fashion, studio highlights, clean backdrop"
+          ]}},
+          {{ id:"upscale", label:"Verbessern", ideas:[
+            "refine details, sharpen textures, natural skin, reduce artifacts",
+            "noise removal, color balance correction, realistic tone mapping"
+          ]}}
+        ],
+        modifiers: ["photorealistic, 8k details", "clean color grade, subtle film grain"]
+      }};
+    }} else {{
+      return {{
+        categories: [
+          {{ id:"portrait", label:"Portrait", ideas:[
+            "ultrarealistic studio portrait, soft light, 85mm lens, skin texture",
+            "outdoor natural light portrait, shallow depth of field"
+          ]}},
+          {{ id:"scene", label:"Szene", ideas:[
+            "golden hour city street, wet asphalt reflections, cinematic",
+            "modern interior, realistic materials, soft daylight"
+          ]}}
+        ],
+        modifiers: ["8k detailed, photorealistic", "filmic grade, dynamic range"]
+      }};
+    }}
+  }}
+
+  async function fetchGalleryImages(){{
+    const urls = ['/api/files?type=image','/api/gallery?type=image','/api/files/images'];
+    for (const u of urls){{ try{{ const r=await fetch(u); if(r.ok) return await r.json(); }}catch{{}} }}
+    return [];
+  }}
+
+  function pushPrompt(textarea, addition){{
+    const cur = textarea.value.trim();
+    if (!cur) {{ textarea.value = addition; return; }}
+    if (!cur.toLowerCase().includes(addition.toLowerCase())){{ textarea.value = cur + ", " + addition; }}
+  }}
+
+  (async function(){{
+    const NSFW = false;
+    let PURPOSE = "text2img";
+    const PAGE_KEY = () => `image:${{PURPOSE}}:${{NSFW?'nsfw':'sfw'}}`;
+
+    async function loadAndRenderModels(){{
+      const models = await LMS.loadModels('image', NSFW, PURPOSE);
+      const sel = LMS.getSelectedModel(PAGE_KEY());
+      if(!sel && models.length) LMS.setSelectedModel(PAGE_KEY(), models[0].id);
+      LMS.renderModelTabs({{
+        container: document.getElementById('model-tabs'),
+        models,
+        onSelect: (id)=> LMS.setSelectedModel(PAGE_KEY(), id),
+        activeId: LMS.getSelectedModel(PAGE_KEY()),
+        title: NSFW ? "Kompatible Bild-Modelle (NSFW-geeignet)" : "Kompatible Bild-Modelle"
+      }});
+    }}
+
+    async function loadAndRenderSuggestions(){{
+      const sug = await fetchSuggestions('image', NSFW, PURPOSE);
+      const catWrap = document.getElementById('cat-chips');
+      const ideasWrap = document.getElementById('prompt-suggestions');
+      const txt = document.getElementById('prompt');
+      catWrap.innerHTML = ''; ideasWrap.innerHTML = '';
+      (sug.categories||[]).forEach(c=>{{
+        const b = document.createElement('button');
+        b.type='button'; b.className='chip'; b.textContent=c.label;
+        b.addEventListener('click', ()=>{{
+          ideasWrap.innerHTML='';
+          (c.ideas||[]).forEach(p=>{{
+            const a=document.createElement('button');
+            a.type='button'; a.className='btn ghost'; a.textContent=p;
+            a.addEventListener('click', ()=> pushPrompt(txt, p));
+            ideasWrap.appendChild(a);
+          }});
+        }});
+        catWrap.appendChild(b);
+      }});
+      document.getElementById('btn-random').onclick = ()=>{{
+        const cats = sug.categories||[]; if(!cats.length) return;
+        const c = cats[Math.floor(Math.random()*cats.length)];
+        const idea = (c.ideas||[])[Math.floor(Math.random()*(c.ideas||[]).length)] || '';
+        const mod = (sug.modifiers||[])[Math.floor(Math.random()*(sug.modifiers||[]).length)] || '';
+        const rp = [idea, mod].filter(Boolean).join(', ');
+        if (rp) document.getElementById('prompt').value = rp;
+      }};
+    }}
+
+    // Remix populate
+    (async ()=>{{
+      const remixSel = document.getElementById('remix');
+      const initUrl = document.getElementById('init_url');
+      if (remixSel){{
+        try{{ const files = await fetchGalleryImages();
+          (files||[]).forEach(f=>{{
+            const o = document.createElement('option');
+            o.value = f.url || f.file || f.path || '';
+            o.textContent = f.name || o.value.split('/').pop();
+            remixSel.appendChild(o);
+          }});
+          remixSel.addEventListener('change', ()=>{{ initUrl.value = remixSel.value || ''; }});
+        }}catch(e){{ console.warn('remix list failed', e); }}
+      }}
+    }})();
+
+    const modeSel = document.getElementById('mode');
+    const modeHidden = document.getElementById('mode_input');
+    const initBlock = document.getElementById('init-block');
+
+    async function applyMode(){{
+      PURPOSE = modeSel.value;
+      modeHidden.value = PURPOSE;
+      initBlock.classList.toggle('hidden', PURPOSE !== 'img2img');
+      await loadAndRenderModels();
+      await loadAndRenderSuggestions();
+    }}
+
+    modeSel.addEventListener('change', applyMode);
+    await applyMode();
+
+    LMS.attachModelToForm(document.getElementById('image-form'), PAGE_KEY());
+    document.getElementById('btn-clear').addEventListener('click', ()=>{{ document.getElementById('prompt').value=''; }});
+
+    window.LMS.onGenerated = (url)=>{{
+      const box = document.getElementById('last-output');
+      const img = document.getElementById('last-img');
+      img.src = url; box.classList.remove('hidden');
+    }};
+  }})();
+  </script>
+</body>
+</html>

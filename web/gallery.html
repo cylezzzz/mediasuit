@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <title>LocalMediaSuite – Gallery</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" href="/assets/logo.ico">
+</head>
+<body class="bg-gray-900 text-gray-100">
+  <header><h1>Gallery</h1></header>
+  <main class="container mx-auto p-3">
+    <select id="type"><option value="image">Images</option><option value="video">Videos</option></select>
+    <div id="gallery-list" class="grid gap-4 mt-3"></div>
+  </main>
+  <script src="/assets/app.js"></script>
+  <script>
+(async function(){
+  const listEl = document.getElementById('gallery-list');
+  const filterSel = document.getElementById('type');
+
+  async function refresh(){
+    const type = (filterSel && filterSel.value) || 'image';
+    try {
+      const res = await LMS.fetchJSON(`/api/files?type=${type}`);
+      render(res.items || []);
+    } catch {}
+  }
+
+  function render(items){
+    listEl.innerHTML = '';
+    items.forEach(it=>{
+      const card = document.createElement('div');
+      card.className = 'card';
+      if (it.url.endsWith('.mp4')) {
+        card.innerHTML = `<video src="${it.url}" controls preload="metadata" class="w-full rounded"></video><div class="text-xs mt-1">${it.name}</div>`;
+      } else {
+        card.innerHTML = `<img src="${it.url}" class="max-w-full rounded"/><div class="text-xs mt-1">${it.name}</div>`;
+      }
+      listEl.appendChild(card);
+    });
+  }
+
+  await refresh();
+  setInterval(refresh, 5000);
+  try {
+    const bc = new BroadcastChannel('lms-events');
+    bc.onmessage = (e)=>{ if (e.data && e.data.type === 'generated') refresh(); };
+  } catch {}
+  if (filterSel) filterSel.addEventListener('change', refresh);
+})();
+  </script>
+</body>
+</html>

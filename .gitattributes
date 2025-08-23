@@ -1,0 +1,23 @@
+# Normalize line endings
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Treat media/model files as binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.mp4 binary
+*.mov binary
+*.avi binary
+*.safetensors binary
+*.ckpt binary
+*.pt binary
+*.pth binary
+*.bin binary
+*.onnx binary
+*.gguf binary
+*.ggml binary

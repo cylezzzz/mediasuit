@@ -1,0 +1,53 @@
+<!doctype html><html lang="de"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
+    <link rel="icon" type="image/png" href="/assets/logo.png" />
+    <link rel="icon" href="/assets/logo.ico" sizes="any" />
+    <meta name="theme-color" content="#0a0e13" />
+<title>LocalMediaSuite</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/assets/styles.css" />
+<script defer src="/assets/app.js"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        base: { bg: "#0a0e13", card:"#111827", border:"#1f2937", text:"#f3f4f6", sub:"#9ca3af", accent:"#3b82f6" }
+      }
+    }
+  }
+}
+</script>
+</head><body>
+    <header class="sticky top-0 z-10 bg-[var(--bg)]/80 backdrop-blur border-b border-[var(--border)]">
+      <div class="max-w-6xl mx-auto flex items-center gap-4 p-4">
+        <img src="/assets/logo.svg" class="w-8 h-8" />
+        <nav class="flex gap-4 text-sm">
+          <a class="px-3 py-1 rounded bg-blue-600 text-white" href="/index.html">Home</a>
+          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/image.html">Image (SFW)</a>
+          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/image_nsfw.html">Image (NSFW)</a>
+          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/video.html">Video (SFW)</a>
+          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/video_nsfw.html">Video (NSFW)</a>
+          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/gallery.html">Galerie</a>
+          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/catalog.html">Katalog</a>
+          <a class="px-3 py-1 rounded hover:bg-gray-800" href="/settings.html">Settings</a>
+        </nav>
+      </div>
+    </header>
+    <main class="max-w-6xl mx-auto p-4 space-y-6">
+<section class="card">
+  <h1 class="text-2xl font-semibold mb-2">LocalMediaSuite</h1>
+  <p class="text-base-sub">Willkommen. Wähle eine Funktion.</p>
+  <div class="grid md:grid-cols-3 gap-4 mt-4">
+    <a href="/image.html" class="card hover:ring-1 hover:ring-blue-500"><h3 class="font-semibold">Bild (SFW)</h3><p>Text→Bild, Bild→Bild</p></a>
+    <a href="/image_nsfw.html" class="card hover:ring-1 hover:ring-blue-500"><h3 class="font-semibold">Bild (NSFW)</h3><p>Ungefiltert, Adult</p></a>
+    <a href="/video.html" class="card hover:ring-1 hover:ring-blue-500"><h3 class="font-semibold">Video (SFW)</h3><p>Text→Video, Bild→Video</p></a>
+    <a href="/video_nsfw.html" class="card hover:ring-1 hover:ring-blue-500"><h3 class="font-semibold">Video (NSFW)</h3><p>Ungefiltert, Adult</p></a>
+    <a href="/gallery.html" class="card hover:ring-1 hover:ring-blue-500"><h3 class="font-semibold">Galerie</h3><p>Alle Ergebnisse mit Player</p></a>
+    <a href="/catalog.html" class="card hover:ring-1 hover:ring-blue-500"><h3 class="font-semibold">Katalog</h3><p>Modelle/Agenten (Ollama/SD/SVD)</p></a>
+  </div>
+</section>
+</main>
+    </body></html>

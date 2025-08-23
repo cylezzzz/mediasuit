@@ -1,0 +1,160 @@
+{
+  "image": {
+    "sfw": {
+      "categories": [
+        {
+          "id": "portrait",
+          "label": "Portrait",
+          "prompts": [
+            "Ultra-realistic studio portrait, sharp eyes, 85mm lens, soft light, high detail, skin texture, 4k",
+            "Cinematic close-up portrait, Rembrandt lighting, shallow depth of field, color graded, 4k",
+            "Outdoor portrait at golden hour, soft rim light, natural bokeh background, 35mm, 4k"
+          ]
+        },
+        {
+          "id": "landscape",
+          "label": "Landscape",
+          "prompts": [
+            "Epic mountain landscape at sunrise, low fog, dramatic sky, ultra wide 16mm, hyper-detailed, 8k",
+            "Coastal cliffs with crashing waves, moody lighting, long exposure effect, 4k",
+            "Dense forest with sunbeams, volumetric light, high detail, 4k"
+          ]
+        },
+        {
+          "id": "product",
+          "label": "Product",
+          "prompts": [
+            "Clean product photo on seamless background, softbox lighting, glossy reflections, 4k",
+            "Macro shot of a watch, extreme detail, studio lighting, 4k",
+            "Top-down flat lay, minimal composition, soft shadows, 4k"
+          ]
+        },
+        {
+          "id": "fashion",
+          "label": "Fashion",
+          "prompts": [
+            "Editorial fashion shot, dramatic pose, studio strobes, high contrast, 4k",
+            "Street style fashion, candid look, natural light, 35mm, 4k"
+          ]
+        },
+        {
+          "id": "architecture",
+          "label": "Architecture",
+          "prompts": [
+            "Modern building with glass facade, clean lines, overcast soft light, 4k",
+            "Classic cathedral interior, wide angle, dramatic perspective, 4k"
+          ]
+        },
+        {
+          "id": "anime",
+          "label": "Anime",
+          "prompts": [
+            "Anime character full body, dynamic pose, vibrant colors, cel shading, clean line art, 4k",
+            "Anime close-up portrait, expressive eyes, soft rim light, 4k"
+          ]
+        }
+      ],
+      "modifiers": [
+        "highly detailed",
+        "sharp focus",
+        "8k",
+        "photorealistic",
+        "film grain",
+        "volumetric lighting",
+        "studio lighting",
+        "rim light",
+        "DOF",
+        "global illumination",
+        "HDR",
+        "subsurface scattering"
+      ]
+    },
+    "nsfw": {
+      "categories": [
+        {
+          "id": "glamour",
+          "label": "Glamour / Boudoir",
+          "prompts": [
+            "Glamour portrait, tasteful boudoir style, soft window light, elegant pose, photorealistic, 4k",
+            "Low-key boudoir scene with silk sheets, soft shadows, cinematic tone, 4k"
+          ]
+        },
+        {
+          "id": "art_nude",
+          "label": "Artistic Nude (Non-explicit)",
+          "prompts": [
+            "Artistic non-explicit nude silhouette, backlit, chiaroscuro, tasteful, 4k",
+            "Fine-art nude study, classical composition, soft light, tasteful, 4k"
+          ]
+        },
+        {
+          "id": "cosplay",
+          "label": "Cosplay (Suggestive)",
+          "prompts": [
+            "Suggestive cosplay portrait, studio light, detailed costume, photorealistic, 4k",
+            "Cosplay fashion editorial, dynamic pose, dramatic lighting, 4k"
+          ]
+        }
+      ],
+      "modifiers": [
+        "soft focus",
+        "silky texture",
+        "cinematic shadows",
+        "skin texture",
+        "rim light",
+        "tasteful",
+        "photorealistic",
+        "high detail",
+        "studio lighting",
+        "bokeh background"
+      ]
+    }
+  },
+  "video": {
+    "sfw": {
+      "categories": [
+        {
+          "id": "cinematic",
+          "label": "Cinematic",
+          "prompts": [
+            "Cinematic establishing shot of a futuristic city at dusk, dramatic clouds, 5 seconds, 24fps",
+            "Slow pan over a serene lake at sunrise, mist on water, 4 seconds, 24fps"
+          ]
+        },
+        {
+          "id": "product",
+          "label": "Product Teaser",
+          "prompts": [
+            "Rotating product on seamless background, studio lighting, reflections, 5 seconds, 24fps",
+            "Macro dolly-in shot of a gadget, specular highlights, 4 seconds, 24fps"
+          ]
+        }
+      ],
+      "modifiers": [
+        "cinematic grade",
+        "shallow DOF",
+        "motion blur",
+        "soft light",
+        "HDR look"
+      ]
+    },
+    "nsfw": {
+      "categories": [
+        {
+          "id": "glamour_motion",
+          "label": "Glamour Motion",
+          "prompts": [
+            "Glamour motion clip, tasteful boudoir vibe, slow camera move, soft window light, 5 seconds, 24fps",
+            "Low-key silhouette with elegant pose, slow zoom, cinematic tone, 4 seconds, 24fps"
+          ]
+        }
+      ],
+      "modifiers": [
+        "tasteful",
+        "soft light",
+        "slow zoom",
+        "cinematic shadows"
+      ]
+    }
+  }
+}

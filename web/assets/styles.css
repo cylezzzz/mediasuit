@@ -1,0 +1,12 @@
+/* Minimal custom styling; Tailwind is loaded via CDN in HTML files */
+:root {
+  --bg: #0a0e13;
+  --card: #111827;
+  --border: #1f2937;
+  --text: #f3f4f6;
+  --sub: #9ca3af;
+  --accent: #3b82f6;
+}
+body { background: var(--bg); color: var(--text); }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem; }
+a { color: var(--accent); }

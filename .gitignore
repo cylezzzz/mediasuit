@@ -1,0 +1,103 @@
+# === LocalMediaSuite: keep structure, skip heavy artifacts ===
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.dll
+
+# Virtualenv & tooling
+.venv/
+.env/
+.env.*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.mypy_cache/
+.pytest_cache/
+
+# Logs & temp
+logs/
+*.log
+*.tmp
+*.temp
+*.swp
+
+# Node/Tailwind cache (if any)
+node_modules/
+pnpm-lock.yaml
+package-lock.json
+
+# Outputs: keep folders, ignore files
+outputs/**
+!outputs/
+!outputs/images/
+!outputs/videos/
+!outputs/.gitkeep
+!outputs/images/.gitkeep
+!outputs/videos/.gitkeep
+
+# Models: ignore model files, keep dirs (image/video/llm)
+models/**
+!models/
+!models/image/
+!models/video/
+!models/llm/
+!models/.gitkeep
+!models/image/.gitkeep
+!models/video/.gitkeep
+!models/llm/.gitkeep
+
+# Typical large model artifacts (global safeguard)
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.onnx
+*.tflite
+*.mlmodel
+*.h5
+*.gguf
+*.ggml
+*.tar
+*.tar.gz
+*.xz
+*.zst
+*.zip
+
+# Hugging Face downloaded blobs & weight shards
+**/diffusion_pytorch_model*.bin
+**/pytorch_model*.bin
+**/model*.safetensors
+**/model.safetensors.index.json
+**/resolve/**
+**/.cache/**
+**/snapshots/**
+
+# Generated media (keep folders)
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.mp4
+*.mov
+*.avi
+*.gif
+
+# Config overrides (keep sample but ignore secrets)
+settings.json
+config/local.*.json
+
+# Do not ignore the example/config files
+!config/
+!config/app.json
+!config/suggestions.json
+
+# OS-specific
+ehthumbs.db
+Icon?
+desktop.ini

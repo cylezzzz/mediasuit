@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <title>LocalMediaSuite – Settings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="icon" href="/assets/logo.ico">
+</head>
+<body class="bg-gray-900 text-gray-100">
+  <header><h1>Settings</h1></header>
+  <main class="container mx-auto p-3">
+    <form id="settings-form" class="card">
+      <label>Image Resolution <input name="img_resolution" value="1024x768"/></label>
+      <label>Video Resolution <input name="vid_resolution" value="1280x720"/></label>
+      <label>Video FPS <input name="vid_fps" type="number" value="24"/></label>
+      <label>Video Length (sec) <input name="vid_length_sec" type="number" value="3"/></label>
+      <label>Theme <select name="theme"><option value="dark">Dark</option><option value="light">Light</option></select></label>
+      <button type="submit">Speichern</button>
+    </form>
+  </main>
+  <script src="/assets/app.js"></script>
+  <script>
+(async function(){
+  const form = document.getElementById('settings-form');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(form).entries());
+    const patch = {
+      defaults: {
+        img_resolution: data.img_resolution,
+        vid_resolution: data.vid_resolution,
+        vid_fps: Number(data.vid_fps || 24),
+        vid_length_sec: Number(data.vid_length_sec || 3)
+      },
+      ui: {
+        theme: data.theme || 'dark'
+      }
+    };
+    try {
+      await LMS.fetchJSON('/api/settings', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(patch)
+      });
+      LMS.toast('Einstellungen gespeichert', 'success');
+    } catch {}
+  });
+})();
+  </script>
+</body>
+</html>
