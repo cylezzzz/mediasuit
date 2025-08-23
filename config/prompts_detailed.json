@@ -1,0 +1,702 @@
+{
+  "schema": {
+    "version": 1,
+    "about": "Detailed prompts catalog for LocalMediaSuite (image/video, sfw/nsfw). Each item can be used as-is or combined with UI modifiers. Fields are optional unless noted. Negative prompts are suggestions.",
+    "prompt_schema": {
+      "fields": {
+        "title": "Short human-readable name",
+        "description": "What this preset is good for",
+        "positive": "The main positive prompt text (string, required)",
+        "negative": "Optional negative prompt text",
+        "modifiers": [
+          "Optional list of style/quality keywords to append"
+        ],
+        "camera": {
+          "lens": "e.g., 35mm, 85mm",
+          "movement": "dolly, pan, orbit (video)"
+        },
+        "lighting": "Key lighting description, e.g., Rembrandt, softbox, golden hour",
+        "style": "Pipeline target look: photorealistic, cinematic, anime, painterly, etc.",
+        "params": {
+          "image": {
+            "width": "int",
+            "height": "int",
+            "steps": "int",
+            "guidance": "float",
+            "strength": "float (img2img only; 0.1-0.95)"
+          },
+          "video": {
+            "width": "int",
+            "height": "int",
+            "fps": "int",
+            "seconds": "int",
+            "num_frames": "int (optional override)"
+          }
+        },
+        "tags": [
+          "categorization tags"
+        ],
+        "nsfw": "boolean",
+        "domain": "image|video",
+        "mode": "text2img|img2img|text2video|img2video"
+      }
+    }
+  },
+  "catalog": {
+    "image": {
+      "sfw": {
+        "Portrait": [
+          {
+            "title": "Studio Headshot Clean",
+            "description": "Crisp corporate headshot with flattering light and neutral background.",
+            "positive": "ultra-realistic studio portrait, headshot, symmetrical face, neutral background, natural skin, subtle makeup",
+            "negative": "ugly, deformed, extra limbs, bad anatomy, overexposed, harsh shadows, lowres, jpeg artifacts, cartoonish",
+            "modifiers": [
+              "photorealistic",
+              "8k detail",
+              "skin texture",
+              "color accurate",
+              "subtle film grain"
+            ],
+            "camera": {
+              "lens": "85mm",
+              "movement": ""
+            },
+            "lighting": "two softboxes 45° + hair light, gentle fill",
+            "style": "photorealistic",
+            "params": {
+              "image": {
+                "width": 1024,
+                "height": 1536,
+                "steps": 28,
+                "guidance": 6.5,
+                "strength": 0.65
+              }
+            },
+            "tags": [
+              "portrait",
+              "studio",
+              "headshot"
+            ],
+            "nsfw": false,
+            "domain": "image",
+            "mode": "text2img"
+          },
+          {
+            "title": "Environmental Portrait Golden Hour",
+            "description": "Outdoor portrait with warm sunset tones and shallow depth of field.",
+            "positive": "cinematic outdoor portrait, golden hour, warm rim light, shallow depth of field, background bokeh, candid expression",
+            "negative": "blown highlights, raccoon eyes, washed out colors, low detail",
+            "modifiers": [
+              "high dynamic range",
+              "subtle film grain",
+              "color graded"
+            ],
+            "camera": {
+              "lens": "50mm",
+              "movement": ""
+            },
+            "lighting": "golden hour backlight + reflector fill",
+            "style": "cinematic",
+            "params": {
+              "image": {
+                "width": 1024,
+                "height": 1536,
+                "steps": 30,
+                "guidance": 7.0,
+                "strength": 0.6
+              }
+            },
+            "tags": [
+              "portrait",
+              "outdoor",
+              "golden-hour"
+            ],
+            "nsfw": false,
+            "domain": "image",
+            "mode": "text2img"
+          },
+          {
+            "title": "Beauty Close-up Skin Focus",
+            "description": "Close-up beauty portrait emphasizing skin texture and color fidelity.",
+            "positive": "beauty close-up portrait, pore-level skin texture, clean makeup, even tone, high fidelity color",
+            "negative": "wax skin, plastic look, over-smoothing, unnatural color",
+            "modifiers": [
+              "ultra detailed",
+              "color accurate",
+              "sharp focus"
+            ],
+            "camera": {
+              "lens": "100mm macro",
+              "movement": ""
+            },
+            "lighting": "large softbox butterfly light",
+            "style": "editorial",
+            "params": {
+              "image": {
+                "width": 1024,
+                "height": 1024,
+                "steps": 32,
+                "guidance": 7.2,
+                "strength": 0.55
+              }
+            },
+            "tags": [
+              "portrait",
+              "beauty",
+              "macro"
+            ],
+            "nsfw": false,
+            "domain": "image",
+            "mode": "text2img"
+          }
+        ],
+        "Landscape": [
+          {
+            "title": "Epic Mountains Dramatic Sky",
+            "description": "Wide landscape with dramatic clouds and crisp distant detail.",
+            "positive": "vast mountain range, dramatic sky, distant haze, alpine valley, realistic terrain, natural colors",
+            "negative": "washed-out sky, flat lighting, low detail, muddy textures",
+            "modifiers": [
+              "wide angle",
+              "volumetric light",
+              "high detail",
+              "matte grade"
+            ],
+            "camera": {
+              "lens": "24mm",
+              "movement": ""
+            },
+            "lighting": "directional sunlight with volumetric fog",
+            "style": "photorealistic",
+            "params": {
+              "image": {
+                "width": 1536,
+                "height": 1024,
+                "steps": 28,
+                "guidance": 6.8,
+                "strength": 0.6
+              }
+            },
+            "tags": [
+              "landscape",
+              "mountains",
+              "nature"
+            ],
+            "nsfw": false,
+            "domain": "image",
+            "mode": "text2img"
+          },
+          {
+            "title": "Coastal Sunset Reflections",
+            "description": "Sunset on wet sand with mirror-like reflections.",
+            "positive": "ocean shoreline at sunset, wet reflective sand, glowing clouds, gentle waves, long exposure look",
+            "negative": "banding sky, oversaturation, blown highlights",
+            "modifiers": [
+              "long exposure",
+              "soft motion hint",
+              "golden hour"
+            ],
+            "camera": {
+              "lens": "35mm",
+              "movement": ""
+            },
+            "lighting": "soft warm sunset with gentle contrast",
+            "style": "cinematic",
+            "params": {
+              "image": {
+                "width": 1536,
+                "height": 1024,
+                "steps": 26,
+                "guidance": 6.2,
+                "strength": 0.6
+              }
+            },
+            "tags": [
+              "landscape",
+              "seascape",
+              "sunset"
+            ],
+            "nsfw": false,
+            "domain": "image",
+            "mode": "text2img"
+          }
+        ],
+        "Product": [
+          {
+            "title": "Watch Macro Lux",
+            "description": "High-end watch macro with crisp metal and sapphire reflections.",
+            "positive": "luxury wristwatch macro, brushed steel, sapphire crystal reflections, spotless surface, studio product photo",
+            "negative": "fingerprints, dust, scratches, smudges, blur, noise",
+            "modifiers": [
+              "studio lighting",
+              "high microcontrast",
+              "polarized reflections"
+            ],
+            "camera": {
+              "lens": "100mm macro",
+              "movement": ""
+            },
+            "lighting": "two-strip softboxes + overhead fill, black cards for contrast",
+            "style": "commercial",
+            "params": {
+              "image": {
+                "width": 1280,
+                "height": 960,
+                "steps": 32,
+                "guidance": 7.0,
+                "strength": 0.55
+              }
+            },
+            "tags": [
+              "product",
+              "macro",
+              "watch"
+            ],
+            "nsfw": false,
+            "domain": "image",
+            "mode": "text2img"
+          },
+          {
+            "title": "Clean Seamless Packshot",
+            "description": "E-commerce ready seamless product shot.",
+            "positive": "isolated product on white seamless, crisp edges, shadow under object, color-accurate, dust-free",
+            "negative": "dirty background, uneven white, color shift, soft edges",
+            "modifiers": [
+              "clean background",
+              "true white",
+              "sharp shadow"
+            ],
+            "camera": {
+              "lens": "70mm",
+              "movement": ""
+            },
+            "lighting": "softbox both sides + underlight reflector",
+            "style": "ecommerce",
+            "params": {
+              "image": {
+                "width": 1024,
+                "height": 1024,
+                "steps": 24,
+                "guidance": 6.0,
+                "strength": 0.6
+              }
+            },
+            "tags": [
+              "product",
+              "ecommerce",
+              "packshot"
+            ],
+            "nsfw": false,
+            "domain": "image",
+            "mode": "text2img"
+          }
+        ],
+        "Sci-Fi": [
+          {
+            "title": "Neon Streets Rain",
+            "description": "Cyberpunk alley with neon reflections on wet asphalt.",
+            "positive": "cyberpunk alley at night, neon signs, rain-soaked asphalt reflections, crowd silhouettes, atmospheric haze",
+            "negative": "daylight, cartoonish, low detail, bland colors",
+            "modifiers": [
+              "neon glow",
+              "volumetric fog",
+              "high contrast",
+              "film grain"
+            ],
+            "camera": {
+              "lens": "35mm",
+              "movement": ""
+            },
+            "lighting": "moody backlights + practical neon",
+            "style": "cinematic",
+            "params": {
+              "image": {
+                "width": 1536,
+                "height": 1024,
+                "steps": 30,
+                "guidance": 7.0,
+                "strength": 0.6
+              }
+            },
+            "tags": [
+              "scifi",
+              "cyberpunk",
+              "city"
+            ],
+            "nsfw": false,
+            "domain": "image",
+            "mode": "text2img"
+          }
+        ],
+        "Anime": [
+          {
+            "title": "Shonen Hero Leap",
+            "description": "Dynamic anime hero mid-air with motion lines.",
+            "positive": "anime hero leaping, dynamic perspective, speed lines, intense expression, stylized shading",
+            "negative": "muddy lines, off-model, dull colors",
+            "modifiers": [
+              "cel shading",
+              "vivid colors",
+              "thick outlines"
+            ],
+            "camera": {
+              "lens": "28mm",
+              "movement": ""
+            },
+            "lighting": "hard rim light + colored fill",
+            "style": "anime",
+            "params": {
+              "image": {
+                "width": 1024,
+                "height": 1536,
+                "steps": 28,
+                "guidance": 8.0,
+                "strength": 0.55
+              }
+            },
+            "tags": [
+              "anime",
+              "action",
+              "character"
+            ],
+            "nsfw": false,
+            "domain": "image",
+            "mode": "text2img"
+          }
+        ]
+      },
+      "nsfw": {
+        "Glamour": [
+          {
+            "title": "Soft Glam Studio",
+            "description": "Tasteful lingerie glamour with silky texture and gentle contrast.",
+            "positive": "glamour lingerie studio portrait, soft silky skin, elegant pose, tasteful composition, photorealistic",
+            "negative": "explicit gory, deformed, lowres, plastic skin, excessive smoothing",
+            "modifiers": [
+              "soft focus",
+              "skin texture",
+              "subtle film grain",
+              "color graded"
+            ],
+            "camera": {
+              "lens": "85mm",
+              "movement": ""
+            },
+            "lighting": "large softbox key + subtle kicker",
+            "style": "glamour",
+            "params": {
+              "image": {
+                "width": 1024,
+                "height": 1536,
+                "steps": 30,
+                "guidance": 6.8,
+                "strength": 0.6
+              }
+            },
+            "tags": [
+              "nsfw",
+              "glamour",
+              "studio"
+            ],
+            "nsfw": true,
+            "domain": "image",
+            "mode": "text2img"
+          }
+        ],
+        "Artistic Nude": [
+          {
+            "title": "Chiaroscuro Study",
+            "description": "Fine-art nude with strong chiaroscuro and sculptural light.",
+            "positive": "fine-art nude, chiaroscuro, tasteful pose, sculptural highlights, shadow play",
+            "negative": "explicit hardcore, vulgar, low quality, blown highlights",
+            "modifiers": [
+              "dramatic shadows",
+              "tasteful",
+              "fine-art"
+            ],
+            "camera": {
+              "lens": "50mm",
+              "movement": ""
+            },
+            "lighting": "single-source side light, deep shadow falloff",
+            "style": "fine-art",
+            "params": {
+              "image": {
+                "width": 1024,
+                "height": 1536,
+                "steps": 28,
+                "guidance": 6.5,
+                "strength": 0.6
+              }
+            },
+            "tags": [
+              "nsfw",
+              "fine-art",
+              "chiaroscuro"
+            ],
+            "nsfw": true,
+            "domain": "image",
+            "mode": "text2img"
+          }
+        ],
+        "Erotica Explicit": [
+          {
+            "title": "Cinematic Explicit",
+            "description": "Explicit adult composition with controlled cinematic lighting.",
+            "positive": "explicit erotic scene, realistic anatomy, cinematic composition, photorealistic skin",
+            "negative": "underage, violence, non-consensual, exploitation, bestiality, illegal",
+            "modifiers": [
+              "cinematic shadows",
+              "high detail",
+              "color accurate"
+            ],
+            "camera": {
+              "lens": "50mm",
+              "movement": ""
+            },
+            "lighting": "low-key with practical accents",
+            "style": "photorealistic",
+            "params": {
+              "image": {
+                "width": 1024,
+                "height": 1536,
+                "steps": 28,
+                "guidance": 6.5,
+                "strength": 0.6
+              }
+            },
+            "tags": [
+              "nsfw",
+              "explicit",
+              "cinematic"
+            ],
+            "nsfw": true,
+            "domain": "image",
+            "mode": "text2img"
+          }
+        ]
+      }
+    },
+    "video": {
+      "sfw": {
+        "Cinematic": [
+          {
+            "title": "Neon Alley Tracking",
+            "description": "Tracking shot through neon-lit alley with atmospheric haze.",
+            "positive": "tracking shot through neon alley, atmospheric haze, puddle reflections, crowd silhouettes, cinematic grade",
+            "negative": "flat lighting, noisy, dull color, shaky",
+            "modifiers": [
+              "anamorphic flare",
+              "motion blur natural",
+              "deep contrast"
+            ],
+            "camera": {
+              "lens": "35mm",
+              "movement": "tracking"
+            },
+            "lighting": "neon practicals + backlight haze",
+            "style": "cinematic",
+            "params": {
+              "video": {
+                "width": 1280,
+                "height": 720,
+                "fps": 24,
+                "seconds": 4,
+                "num_frames": 0
+              }
+            },
+            "tags": [
+              "cinematic",
+              "city",
+              "neon"
+            ],
+            "nsfw": false,
+            "domain": "video",
+            "mode": "text2video"
+          },
+          {
+            "title": "Lake Sunrise Slow Pan",
+            "description": "Slow panoramic movement over calm lake at sunrise.",
+            "positive": "slow pan across calm mountain lake at sunrise, morning mist, warm light, serene mood",
+            "negative": "jerky, oversaturated, flicker, artifacts",
+            "modifiers": [
+              "smooth pan",
+              "HDR look",
+              "subtle film grain"
+            ],
+            "camera": {
+              "lens": "50mm",
+              "movement": "pan"
+            },
+            "lighting": "soft sunrise light + mist",
+            "style": "cinematic",
+            "params": {
+              "video": {
+                "width": 1920,
+                "height": 1080,
+                "fps": 24,
+                "seconds": 5,
+                "num_frames": 0
+              }
+            },
+            "tags": [
+              "nature",
+              "sunrise",
+              "pan"
+            ],
+            "nsfw": false,
+            "domain": "video",
+            "mode": "text2video"
+          }
+        ],
+        "Product Teaser": [
+          {
+            "title": "Rotating Phone Hero",
+            "description": "Product hero rotation with glossy reflections and clean bg.",
+            "positive": "hero product rotation, glossy reflections, clean white background, crisp edges",
+            "negative": "dirty background, jitter, aliasing, flicker",
+            "modifiers": [
+              "studio lighting",
+              "polished reflections",
+              "advertisement look"
+            ],
+            "camera": {
+              "lens": "70mm",
+              "movement": "orbit"
+            },
+            "lighting": "two large softboxes + top fill",
+            "style": "commercial",
+            "params": {
+              "video": {
+                "width": 1280,
+                "height": 720,
+                "fps": 30,
+                "seconds": 3,
+                "num_frames": 0
+              }
+            },
+            "tags": [
+              "product",
+              "teaser",
+              "rotation"
+            ],
+            "nsfw": false,
+            "domain": "video",
+            "mode": "text2video"
+          }
+        ],
+        "Sports / Action": [
+          {
+            "title": "Skateboard Kickflip",
+            "description": "Urban skate trick with handheld feel and motion blur.",
+            "positive": "skateboarder performs kickflip in urban alley, handheld feel, dynamic angle, gritty vibe",
+            "negative": "too dark, excessive shake, smear, low detail",
+            "modifiers": [
+              "slow motion",
+              "handheld vibe",
+              "dynamic angle"
+            ],
+            "camera": {
+              "lens": "24mm",
+              "movement": "handheld"
+            },
+            "lighting": "overcast daylight with bounce fill",
+            "style": "action",
+            "params": {
+              "video": {
+                "width": 1280,
+                "height": 720,
+                "fps": 30,
+                "seconds": 3,
+                "num_frames": 0
+              }
+            },
+            "tags": [
+              "sports",
+              "skate",
+              "urban"
+            ],
+            "nsfw": false,
+            "domain": "video",
+            "mode": "text2video"
+          }
+        ]
+      },
+      "nsfw": {
+        "Glamour Motion": [
+          {
+            "title": "Boudoir Slow Zoom",
+            "description": "Tasteful slow zoom glamour clip with soft light and shallow DOF.",
+            "positive": "boudoir glamour motion, elegant pose, silky fabric, shallow depth of field, tasteful composition",
+            "negative": "explicit hardcore, vulgar, jitter, excessive noise",
+            "modifiers": [
+              "slow zoom",
+              "soft focus",
+              "cinematic grade"
+            ],
+            "camera": {
+              "lens": "85mm",
+              "movement": "slow zoom"
+            },
+            "lighting": "large softbox key, subtle rim",
+            "style": "glamour",
+            "params": {
+              "video": {
+                "width": 1280,
+                "height": 720,
+                "fps": 24,
+                "seconds": 4,
+                "num_frames": 0
+              }
+            },
+            "tags": [
+              "nsfw",
+              "glamour",
+              "boudoir"
+            ],
+            "nsfw": true,
+            "domain": "video",
+            "mode": "text2video"
+          }
+        ],
+        "Erotic Video": [
+          {
+            "title": "Cinematic Explicit Motion",
+            "description": "Cinematic explicit sequence with controlled lighting and realistic motion.",
+            "positive": "explicit adult motion scene, photorealistic anatomy, cinematic framing, soft skin texture",
+            "negative": "underage, violence, non-consensual, exploitation, bestiality, illegal",
+            "modifiers": [
+              "cinematic shadows",
+              "high fps",
+              "realistic motion"
+            ],
+            "camera": {
+              "lens": "50mm",
+              "movement": "locked off"
+            },
+            "lighting": "low-key cinematic with practicals",
+            "style": "photorealistic",
+            "params": {
+              "video": {
+                "width": 1280,
+                "height": 720,
+                "fps": 30,
+                "seconds": 4,
+                "num_frames": 0
+              }
+            },
+            "tags": [
+              "nsfw",
+              "explicit",
+              "cinematic"
+            ],
+            "nsfw": true,
+            "domain": "video",
+            "mode": "text2video"
+          }
+        ]
+      }
+    }
+  }
+}
