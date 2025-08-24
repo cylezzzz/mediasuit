@@ -2,158 +2,447 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>LocalMediaSuite – Advanced Image</title>
-  <meta name="color-scheme" content="dark" />
+  <title>Advanced Image</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
   <style>
-    :root{ --bg:#0b1220; --panel:#0f172a; --stroke:#243244; --text:#e5e7eb; --muted:#94a3b8; --radius:16px; --gap:18px; --focus:#22d3ee; }
-    *{box-sizing:border-box} html,body{height:100%}
-    body{
-      margin:0;background:var(--bg);color:var(--text);
-      font-family:system-ui,Segoe UI,Roboto,Inter,Arial,sans-serif;
-      padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)
-    }
-    header{position:sticky;top:0;z-index:10;background:#0f172acc;border-bottom:1px solid var(--stroke);backdrop-filter:blur(8px)}
-    .topbar{width:100%;padding:16px clamp(10px,2.4vw,28px);display:flex;align-items:center;justify-content:center;gap:12px}
-    .logo-dot{width:18px;height:18px;border-radius:50%;background:#22d3ee;box-shadow:0 0 18px #22d3ee}
-    .brand{margin:0;font-weight:900;font-size:clamp(24px,3.8vw,40px);text-align:center;text-shadow:0 0 8px rgba(229,231,235,.25),0 0 20px rgba(34,211,238,.28)}
-    .subtitle{color:var(--muted);font-size:clamp(12px,1.6vw,14px);text-align:center;margin-top:-6px}
-
-    .wrap{width:100%;padding:16px clamp(10px,2.4vw,28px) 28px}
-    .grid{display:grid;grid-template-columns:2fr 1fr;gap:var(--gap)}
-    @media(max-width:1100px){.grid{grid-template-columns:1fr}}
-
-    .card{background:linear-gradient(180deg,#0f172a,#0b1320);border:1px solid var(--stroke);border-radius:var(--radius);overflow:hidden}
-    .card h3{margin:0;padding:14px 16px;border-bottom:1px solid var(--stroke);font-size:16px;background:#0f172a}
-    .card .body{padding:14px 16px;display:grid;gap:12px}
-    .row{display:grid;grid-template-columns:160px 1fr;gap:12px;align-items:center}
-    @media(max-width:700px){.row{grid-template-columns:1fr} .row label{margin-bottom:6px}}
-    label{color:var(--muted);font-size:13px}
-    input[type="text"],input[type="number"],select,textarea{
-      width:100%;background:#0b1320;color:var(--text);
-      border:1px solid var(--stroke);border-radius:12px;padding:10px 12px;font-size:14px;
-      outline:none;transition:border-color .12s ease,box-shadow .12s ease
-    }
-    textarea{resize:vertical;min-height:80px}
-    input:focus,select:focus,textarea:focus{border-color:var(--focus);box-shadow:0 0 0 2px rgba(34,211,238,.2)}
-    .btn{border:1px solid var(--stroke);border-radius:12px;background:#0e1626;color:var(--text);padding:10px 14px;font-weight:700;cursor:pointer}
-    .btn.primary{border-color:var(--focus);box-shadow:0 0 0 2px rgba(34,211,238,.2) inset}
-    .preview-box{background:#0b1320;border:1px solid var(--stroke);border-radius:var(--radius);min-height:240px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+    :root { --ink: #0d141c }
+    body { font-family: 'Inter', sans-serif; }
+    .chip { display:inline-flex; align-items:center; gap:.5rem; padding:.4rem .75rem; border-radius:9999px; border:1px solid #e5e7eb; background:#fff; font-size:.875rem }
+    .chip button { width:20px; height:20px; border:1px solid #e5e7eb; border-radius:9999px; display:inline-flex; align-items:center; justify-content:center }
+    canvas { touch-action:none; }
   </style>
 </head>
-<body>
-  <header>
-    <div class="topbar">
-      <span class="logo-dot"></span>
-      <h1 class="brand">LocalMediaSuite</h1>
-      <span class="logo-dot"></span>
-    </div>
-    <div class="topbar" style="padding-top:0">
-      <div class="subtitle">Advanced Image · Masking · Control · Batch</div>
-    </div>
+<body class="min-h-screen bg-slate-100 text-[var(--ink)]">
+  <header class="w-full bg-white border-b px-6 py-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">Stitch Dashboard</h1>
+    <nav class="space-x-4">
+      <a href="index.html" class="text-blue-600 hover:underline">Home</a>
+      <a href="overview.html" class="text-blue-600 hover:underline">Overview</a>
+      <a href="settings.html" class="text-blue-600 hover:underline">Settings</a>
+      <a href="studio.html" class="text-blue-600 hover:underline">Studio</a>
+    </nav>
   </header>
 
-  <div class="wrap">
-    <div class="grid">
+  <main class="p-6">
+    <h2 class="text-2xl font-semibold mb-4">Advanced Image</h2>
 
-      <!-- LEFT: Settings -->
-      <section class="card">
-        <h3>Erweiterte Bildgenerierung</h3>
-        <div class="body">
-          <div class="row">
-            <label for="prompt">Prompt</label>
-            <textarea id="prompt" placeholder="Ein fotorealistisches Portrait einer Cyberpunk-Stadt..."></textarea>
+    <div class="grid grid-cols-1 xl:grid-cols-[320px,1fr] gap-6">
+      <!-- LEFT: Layers / Adjustments / Effects -->
+      <aside class="bg-white rounded-xl shadow border p-4 space-y-5">
+        <div class="space-y-2">
+          <h3 class="text-lg font-semibold">Layers</h3>
+          <div class="flex items-center gap-3 bg-slate-50 px-3 py-2 rounded-lg">
+            <div class="size-12 rounded bg-center bg-cover"
+                 style='background-image:url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=300&auto=format&fit=crop")'></div>
+            <div class="leading-tight">
+              <p class="font-medium">Background</p>
+              <p class="text-sm text-slate-600">Layer 1</p>
+            </div>
           </div>
-          <div class="row">
-            <label for="negPrompt">Negativer Prompt</label>
-            <textarea id="negPrompt" placeholder="unscharf, low quality, artefacts..."></textarea>
-          </div>
-          <div class="row">
-            <label for="steps">Steps</label>
-            <input id="steps" type="number" value="30" min="1" max="200">
-          </div>
-          <div class="row">
-            <label for="guidance">Guidance Scale</label>
-            <input id="guidance" type="number" step="0.1" value="7.5" min="1" max="20">
-          </div>
-          <div class="row">
-            <label for="seed">Seed</label>
-            <input id="seed" type="number" placeholder="random">
-          </div>
-          <div class="row">
-            <label for="batch">Batch Size</label>
-            <input id="batch" type="number" value="1" min="1" max="8">
-          </div>
-          <div class="row">
-            <label for="format">Ausgabeformat</label>
-            <select id="format">
-              <option value="png">PNG</option>
-              <option value="jpg">JPG</option>
-              <option value="webp">WEBP</option>
-            </select>
-          </div>
-          <div class="row">
-            <label for="control">ControlNet</label>
-            <select id="control">
-              <option value="">-- deaktiviert --</option>
-              <option value="canny">Canny Edge</option>
-              <option value="depth">Depth Map</option>
-              <option value="pose">Pose Detection</option>
-            </select>
-          </div>
-          <div class="row">
-            <label for="mask">Maske</label>
-            <input id="mask" type="file" accept="image/*">
-          </div>
-          <div style="display:flex;gap:10px;justify-content:flex-end">
-            <button class="btn" id="reset">Zurücksetzen</button>
-            <button class="btn primary" id="generate">Generieren</button>
+          <div class="flex items-center gap-3 bg-slate-50 px-3 py-2 rounded-lg">
+            <div class="size-12 rounded bg-center bg-cover"
+                 style='background-image:url("https://images.unsplash.com/photo-1499084732479-de2c02d45fc4?q=80&w=300&auto=format&fit=crop")'></div>
+            <div class="leading-tight">
+              <p class="font-medium">Effects</p>
+              <p class="text-sm text-slate-600">Layer 2</p>
+            </div>
           </div>
         </div>
-      </section>
 
-      <!-- RIGHT: Preview -->
-      <section class="card">
-        <h3>Vorschau</h3>
-        <div class="body">
-          <div class="preview-box" id="preview">Noch kein Bild generiert.</div>
+        <div class="space-y-3">
+          <h3 class="text-lg font-semibold">Adjustments</h3>
+          <label class="text-sm font-medium">Brightness <span id="valBright" class="text-slate-500">100%</span></label>
+          <input id="brightness" type="range" min="50" max="150" value="100" />
+          <label class="text-sm font-medium">Contrast <span id="valContrast" class="text-slate-500">100%</span></label>
+          <input id="contrast" type="range" min="50" max="150" value="100" />
+          <label class="text-sm font-medium">Saturation <span id="valSat" class="text-slate-500">100%</span></label>
+          <input id="saturation" type="range" min="0" max="200" value="100" />
+        </div>
+
+        <div class="space-y-2">
+          <h3 class="text-lg font-semibold">Effects</h3>
+          <div id="effects" class="flex flex-wrap gap-2">
+            <span class="chip" data-effect="vignette">vignette</span>
+            <span class="chip" data-effect="blur">blur</span>
+            <span class="chip" data-effect="grain">grain</span>
+          </div>
+          <p class="text-xs text-slate-500">Klick auf einen Chip zum Ein/Ausblenden.</p>
+        </div>
+
+        <div class="space-y-2">
+          <h3 class="text-lg font-semibold">Maske (Bewegungsbereich)</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="btnDraw" class="px-3 py-2 rounded-lg border bg-slate-50">Zeichnen: AUS</button>
+            <button id="btnClearMask" class="px-3 py-2 rounded-lg border">Maske löschen</button>
+            <label class="col-span-2 text-sm">Pinselgröße</label>
+            <input id="brush" type="range" min="5" max="80" value="28" class="col-span-2">
+          </div>
+          <p class="text-xs text-slate-500">Tipp: markiere nur den Teil (z. B. „Büromaterial“), der sich bewegen soll.</p>
+        </div>
+
+        <div class="space-y-2">
+          <h3 class="text-lg font-semibold">Animation</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <select id="animType" class="col-span-2">
+              <option value="zoom">Zoom (ruhig)</option>
+              <option value="panx">Pan links↔rechts</option>
+              <option value="pulse">Pulse/Glow</option>
+            </select>
+            <div>
+              <label class="text-sm">Intensität</label>
+              <input id="intensity" type="range" min="1" max="100" value="30">
+            </div>
+            <div>
+              <label class="text-sm">Speed</label>
+              <input id="speed" type="range" min="1" max="100" value="40">
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <h3 class="text-lg font-semibold">Datei</h3>
+          <input id="fileInput" type="file" accept="image/*" class="w-full" />
+          <button id="btnReset" class="w-full px-3 py-2 rounded-lg border">Reset</button>
+        </div>
+      </aside>
+
+      <!-- RIGHT: Preview + Controls -->
+      <section class="space-y-6">
+        <div class="bg-white rounded-xl shadow border p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-lg font-semibold">Preview</h3>
+            <div class="text-sm text-slate-500" id="meta">—</div>
+          </div>
+
+          <!-- Preview Area -->
+          <div class="relative rounded-lg overflow-hidden bg-slate-200">
+            <canvas id="preview" class="w-full block"></canvas>
+            <!-- separate overlay for brush cursor / mask preview -->
+            <canvas id="overlay" class="pointer-events-none absolute inset-0"></canvas>
+
+            <!-- Effects overlays -->
+            <div id="vignette" class="pointer-events-none absolute inset-0 hidden"
+                 style="background:radial-gradient(ellipse at center, rgba(0,0,0,0) 60%, rgba(0,0,0,.35) 100%); mix-blend: multiply;"></div>
+            <div id="grain" class="pointer-events-none absolute inset-0 hidden"
+                 style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22 viewBox=%220 0 160 160%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%222%22 stitchTiles=%22stitch%22/></filter><rect width=%22160%22 height=%22160%22 filter=%22url(%23n)%22 opacity=%220.05%22/></svg>'); mix-blend: overlay;"></div>
+            <div id="blur" class="pointer-events-none absolute inset-0 hidden" style="backdrop-filter: blur(0.5px);"></div>
+          </div>
+
+          <div class="mt-3 flex flex-wrap gap-2">
+            <button id="btnStart" class="px-4 py-2 rounded-lg bg-black text-white">Animation Start</button>
+            <button id="btnStop"  class="px-4 py-2 rounded-lg border">Stop</button>
+            <button id="btnExport" class="px-4 py-2 rounded-lg border">Export WebM</button>
+          </div>
+          <p id="status" class="mt-2 text-sm text-slate-600"></p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow border p-4">
+          <h3 class="text-lg font-semibold mb-2">Schnellstart</h3>
+          <ol class="list-decimal pl-5 space-y-1 text-sm">
+            <li>Bild laden (links unten „Datei“).</li>
+            <li><b>Maske zeichnen</b> aktivieren und den Bereich ausmalen, der sich bewegen soll (z. B. die Büroartikel).</li>
+            <li>Animationstyp/Intensität/Speed wählen.</li>
+            <li><b>Animation Start</b> klicken. Export als WebM optional.</li>
+          </ol>
         </div>
       </section>
-
     </div>
-  </div>
+  </main>
 
   <script>
-    const prompt = document.getElementById('prompt');
-    const negPrompt = document.getElementById('negPrompt');
-    const steps = document.getElementById('steps');
-    const guidance = document.getElementById('guidance');
-    const seed = document.getElementById('seed');
-    const batch = document.getElementById('batch');
-    const format = document.getElementById('format');
-    const control = document.getElementById('control');
-    const mask = document.getElementById('mask');
-    const preview = document.getElementById('preview');
+    // === Elements ===
+    const cnv = document.getElementById('preview');
+    const ov  = document.getElementById('overlay');
+    const ctx = cnv.getContext('2d');
+    const octx= ov.getContext('2d');
+    const fileInput = document.getElementById('fileInput');
+    const statusEl = document.getElementById('status');
+    const metaEl = document.getElementById('meta');
 
-    document.getElementById('reset').addEventListener('click', () => {
-      prompt.value = "";
-      negPrompt.value = "";
-      steps.value = 30;
-      guidance.value = 7.5;
-      seed.value = "";
-      batch.value = 1;
-      format.value = "png";
-      control.value = "";
-      mask.value = "";
-      preview.textContent = "Noch kein Bild generiert.";
+    const sliders = {
+      brightness: document.getElementById('brightness'),
+      contrast:   document.getElementById('contrast'),
+      saturation: document.getElementById('saturation')
+    };
+    const labels = {
+      bright: document.getElementById('valBright'),
+      contrast: document.getElementById('valContrast'),
+      sat: document.getElementById('valSat')
+    };
+
+    const vignette = document.getElementById('vignette');
+    const grain = document.getElementById('grain');
+    const blur = document.getElementById('blur');
+
+    const btnDraw = document.getElementById('btnDraw');
+    const btnClearMask = document.getElementById('btnClearMask');
+    const brushSize = document.getElementById('brush');
+    const animType = document.getElementById('animType');
+    const intensity = document.getElementById('intensity');
+    const speed = document.getElementById('speed');
+
+    const btnStart = document.getElementById('btnStart');
+    const btnStop  = document.getElementById('btnStop');
+    const btnExport= document.getElementById('btnExport');
+    const btnReset = document.getElementById('btnReset');
+
+    // === State ===
+    const img = new Image();
+    let imgLoaded = false;
+    let drawing = false;
+    let drawEnabled = false;
+    let rafId = null;
+    let t0 = 0;
+
+    // offscreen canvases for masking/compositing
+    let maskCnv = document.createElement('canvas');
+    let maskCtx = maskCnv.getContext('2d');
+    let animCnv = document.createElement('canvas');
+    let animCtx = animCnv.getContext('2d');
+
+    // default demo image
+    img.crossOrigin = 'anonymous';
+    img.src = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1920&auto=format&fit=crop';
+    img.onload = () => { imgLoaded = true; fitCanvas(); resetMask(); drawFrame(0); };
+
+    // === Helpers ===
+    function fitCanvas() {
+      const maxW = cnv.parentElement.clientWidth;
+      const aspect = img.width / img.height || 16/9;
+      const width = Math.min(maxW, 960);
+      const height = Math.round(width / aspect);
+
+      [cnv, ov].forEach(c => { c.width = width; c.height = height; c.style.height = height+'px'; });
+      [maskCnv, animCnv].forEach(c => { c.width = width; c.height = height; });
+
+      metaEl.textContent = `${width}×${height}`;
+    }
+    window.addEventListener('resize', () => { if(imgLoaded){ fitCanvas(); resetMask(); drawFrame(0); }});
+
+    function show(msg, ok=true){ statusEl.textContent = msg; statusEl.className = 'mt-2 text-sm ' + (ok?'text-emerald-600':'text-rose-600'); }
+
+    function resetMask() {
+      maskCtx.clearRect(0,0,maskCnv.width,maskCnv.height);
+      octx.clearRect(0,0,ov.width,ov.height);
+    }
+
+    function currentFilter() {
+      const b = sliders.brightness.value;
+      const c = sliders.contrast.value;
+      const s = sliders.saturation.value;
+      return `brightness(${b}%) contrast(${c}%) saturate(${s}%)`;
+    }
+
+    function updateLabels(){
+      labels.bright.textContent = sliders.brightness.value + '%';
+      labels.contrast.textContent = sliders.contrast.value + '%';
+      labels.sat.textContent = sliders.saturation.value + '%';
+    }
+
+    // Draw base + masked animation for time t (seconds)
+    function drawFrame(t) {
+      if (!imgLoaded) return;
+      ctx.clearRect(0,0,cnv.width,cnv.height);
+
+      // base frame (static)
+      ctx.filter = currentFilter();
+      ctx.drawImage(img, 0, 0, cnv.width, cnv.height);
+      ctx.filter = 'none';
+
+      // prepare animated layer into animCnv
+      animCtx.clearRect(0,0,animCnv.width,animCnv.height);
+      const it = animType.value;
+      const amp = +intensity.value / 100;
+      const spd = +speed.value / 25; // tweak
+      const cx = animCnv.width/2, cy = animCnv.height/2;
+
+      animCtx.save();
+      animCtx.translate(cx, cy);
+
+      if (it === 'zoom') {
+        const z = 1 + Math.sin(t*spd)*0.05*amp*2; // ±5% * intensity
+        animCtx.scale(z, z);
+      } else if (it === 'panx') {
+        const dx = Math.sin(t*spd) * (animCnv.width * 0.02 * amp); // ±2% width
+        animCtx.translate(dx, 0);
+      } else if (it === 'pulse') {
+        // subtle scale plus glow later via overlay
+        const z = 1 + Math.sin(t*spd)*0.03*amp*2;
+        animCtx.scale(z, z);
+      }
+
+      animCtx.translate(-cx, -cy);
+      animCtx.filter = currentFilter();
+      animCtx.drawImage(img, 0, 0, animCnv.width, animCnv.height);
+      animCtx.restore();
+
+      // apply mask to animated layer: keep only painted area
+      animCtx.save();
+      animCtx.globalCompositeOperation = 'destination-in';
+      animCtx.drawImage(maskCnv, 0, 0);
+      animCtx.restore();
+
+      // composite onto main
+      ctx.drawImage(animCnv, 0, 0);
+
+      // pulse glow overlay only on masked region
+      if (animType.value === 'pulse') {
+        ctx.save();
+        ctx.globalAlpha = 0.20 * amp * (0.5 + 0.5*Math.sin(t*spd*2));
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.drawImage(maskCnv, 0, 0);
+        ctx.restore();
+      }
+    }
+
+    function loop(ts) {
+      if (!t0) t0 = ts;
+      const t = (ts - t0) / 1000;
+      drawFrame(t);
+      rafId = requestAnimationFrame(loop);
+    }
+
+    function start() {
+      if (rafId) cancelAnimationFrame(rafId);
+      t0 = 0;
+      rafId = requestAnimationFrame(loop);
+      show('Animation läuft …');
+    }
+    function stop() {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+      drawFrame(0);
+      show('Animation gestoppt.', false);
+    }
+
+    // === Mask drawing ===
+    function setDrawEnabled(on){
+      drawEnabled = on;
+      btnDraw.textContent = 'Zeichnen: ' + (on ? 'AN' : 'AUS');
+      btnDraw.classList.toggle('bg-emerald-50', on);
+    }
+    setDrawEnabled(false);
+
+    function pointerPos(e){
+      const rect = cnv.getBoundingClientRect();
+      const x = (e.clientX ?? e.touches?.[0].clientX) - rect.left;
+      const y = (e.clientY ?? e.touches?.[0].clientY) - rect.top;
+      return {x, y};
+    }
+
+    function drawBrush(x, y) {
+      const r = +brushSize.value;
+      maskCtx.fillStyle = 'rgba(255,255,255,1)';
+      maskCtx.beginPath();
+      maskCtx.arc(x, y, r, 0, Math.PI*2);
+      maskCtx.fill();
+
+      // preview ring on overlay
+      octx.clearRect(0,0,ov.width,ov.height);
+      octx.strokeStyle = 'rgba(59,130,246,.9)';
+      octx.lineWidth = 2;
+      octx.beginPath(); octx.arc(x, y, r, 0, Math.PI*2); octx.stroke();
+    }
+
+    function onDown(e){
+      if (!drawEnabled) return;
+      drawing = true;
+      const {x,y} = pointerPos(e);
+      drawBrush(x,y);
+    }
+    function onMove(e){
+      if (!drawEnabled) return;
+      const {x,y} = pointerPos(e);
+      if (drawing) drawBrush(x,y);
+    }
+    function onUp(){ drawing = false; octx.clearRect(0,0,ov.width,ov.height); }
+
+    cnv.addEventListener('mousedown', onDown);
+    cnv.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+
+    cnv.addEventListener('touchstart', (e)=>{e.preventDefault(); onDown(e);}, {passive:false});
+    cnv.addEventListener('touchmove',  (e)=>{e.preventDefault(); onMove(e);}, {passive:false});
+    cnv.addEventListener('touchend', onUp);
+
+    // === UI wiring ===
+    document.getElementById('effects').addEventListener('click', (e)=>{
+      const chip = e.target.closest('.chip'); if(!chip) return;
+      const key = chip.dataset.effect;
+      const el = {vignette, grain, blur}[key];
+      const on = el.classList.toggle('hidden');
+      chip.style.opacity = on ? .6 : 1; // .hidden toggled after, so invert
     });
 
-    document.getElementById('generate').addEventListener('click', () => {
-      // Hier später POST zum Backend
-      preview.textContent = "Generierung läuft...";
-      setTimeout(() => {
-        preview.innerHTML = "<img src='assets/thumbs/advanced_image_1.png' style='max-width:100%;border-radius:12px'>";
-      }, 2000);
+    [sliders.brightness, sliders.contrast, sliders.saturation].forEach(sl => {
+      sl.addEventListener('input', () => {
+        updateLabels();
+        if (!rafId) drawFrame(0);
+      });
+    });
+    updateLabels();
+
+    btnDraw.addEventListener('click', ()=> setDrawEnabled(!drawEnabled));
+    btnClearMask.addEventListener('click', ()=> { resetMask(); if(!rafId) drawFrame(0); });
+
+    btnStart.addEventListener('click', start);
+    btnStop.addEventListener('click', stop);
+
+    btnReset.addEventListener('click', () => {
+      sliders.brightness.value = 100;
+      sliders.contrast.value = 100;
+      sliders.saturation.value = 100;
+      updateLabels();
+      animType.value = 'zoom';
+      intensity.value = 30;
+      speed.value = 40;
+      resetMask();
+      stop();
+    });
+
+    fileInput.addEventListener('change', (e)=>{
+      const f = e.target.files?.[0];
+      if(!f) return;
+      const url = URL.createObjectURL(f);
+      img.onload = ()=>{ imgLoaded = true; fitCanvas(); resetMask(); drawFrame(0); URL.revokeObjectURL(url); };
+      img.src = url;
+    });
+
+    // === Export WebM ===
+    btnExport.addEventListener('click', async ()=>{
+      if (!imgLoaded) return show('Kein Bild geladen.', false);
+      const fps = 30;
+      const duration = 5; // Sekunden
+      const stream = cnv.captureStream(fps);
+      const rec = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+      const chunks = [];
+      rec.ondataavailable = e => chunks.push(e.data);
+      rec.onstop = () => {
+        const blob = new Blob(chunks, {type:'video/webm'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'advanced_image.webm';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        show('Export fertig: advanced_image.webm');
+      };
+      // animiere für Dauer X neu
+      let frames = 0;
+      const maxFrames = fps * duration;
+      if (rafId) cancelAnimationFrame(rafId);
+      t0 = performance.now();
+      function recLoop(ts){
+        const t = (ts - t0) / 1000;
+        drawFrame(t);
+        frames++;
+        if (frames < maxFrames) requestAnimationFrame(recLoop);
+        else { rec.stop(); }
+      }
+      rec.start();
+      requestAnimationFrame(recLoop);
+      show(`Export läuft (${duration}s @ ${fps}fps)…`);
     });
   </script>
 </body>

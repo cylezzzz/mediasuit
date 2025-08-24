@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Unified Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <style>
+    :root { --ink:#0d141c }
+    body { font-family: 'Inter', sans-serif; }
+    .chip { @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full border bg-white text-sm cursor-default; }
+    .chip button { @apply inline-flex items-center justify-center w-5 h-5 rounded-full border; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-100 text-[var(--ink)]">
+  <!-- Header identisch zum Rest -->
+  <header class="w-full bg-white border-b">
+    <div class="mx-auto max-w-[1400px] px-6 py-3 md:py-4 flex items-center justify-between">
+      <h1 class="text-lg md:text-xl font-bold">Stitch Dashboard</h1>
+      <nav class="hidden md:flex items-center gap-5 text-sm">
+        <a href="index.html" class="text-blue-600 hover:underline">Home</a>
+        <a href="overview.html" class="text-blue-600 hover:underline">Overview</a>
+        <a href="settings.html" class="text-blue-600 hover:underline">Settings</a>
+        <a href="studio.html" class="text-blue-600 hover:underline">Studio</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-[1400px] px-6 py-5">
+    <h2 class="text-xl md:text-2xl font-semibold mb-4">Unified Generator</h2>
+
+    <div class="grid grid-cols-1 xl:grid-cols-[320px,1fr] gap-6">
+      <!-- LEFT: Steuerung wie bei NSFW (kompakt, nur UI) -->
+      <aside class="bg-white rounded-2xl shadow border p-5 xl:sticky xl:top-24 h-max">
+        <h3 class="text-lg font-semibold mb-3">Einstellungen</h3>
+
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-sm font-medium">Typ</label>
+            <select id="g_type" class="w-full">
+              <option>Image</option>
+              <option selected>Video</option>
+              <option>Interactive</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-sm font-medium">Modell</label>
+            <select id="g_model" class="w-full">
+              <option>Standard</option>
+              <option selected>Firefly (beta)</option>
+              <option>Stable</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-sm font-medium">Format</label>
+            <select id="g_aspect" class="w-full">
+              <option selected>16:9</option>
+              <option>9:16</option>
+              <option>1:1</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-sm font-medium">Auflösung</label>
+            <select id="g_res" class="w-full">
+              <option>1280×720</option>
+              <option selected>1920×1080</option>
+              <option>2048×1152</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-sm font-medium">Dauer (s)</label>
+            <select id="g_dur" class="w-full">
+              <option>3</option><option selected>6</option><option>10</option><option>15</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-sm font-medium">FPS</label>
+            <select id="g_fps" class="w-full">
+              <option>24</option><option selected>30</option><option>48</option><option>60</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-sm font-medium">Qualität</label>
+            <select id="g_quality" class="w-full">
+              <option>Entwurf</option>
+              <option selected>Standard</option>
+              <option>Hoch</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-sm font-medium">Seed</label>
+            <div class="flex gap-2">
+              <input id="g_seed" class="flex-1" placeholder="zufällig" />
+              <button id="rndSeed" class="px-3 py-2 rounded-lg border bg-slate-50">zufällig</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2 mb-3">
+          <label class="text-sm font-medium">Stile/Looks</label>
+          <div id="styleChips" class="flex flex-wrap gap-2">
+            <span class="chip">cinematic</span>
+            <span class="chip">soft lighting</span>
+            <span class="chip">ultra realistic</span>
+          </div>
+          <div class="flex gap-2 mt-1">
+            <input id="styleInput" class="flex-1" placeholder="Stil hinzufügen…">
+            <button id="addStyle" class="px-3 py-2 rounded-lg border bg-slate-50">Add</button>
+          </div>
+        </div>
+
+        <div class="space-y-2 mb-4">
+          <label class="text-sm font-medium">Kategorien</label>
+          <div id="quickCats" class="flex flex-wrap gap-2">
+            <button class="px-3 py-1.5 rounded-lg border bg-slate-50" data-cat="nature">nature</button>
+            <button class="px-3 py-1.5 rounded-lg border bg-slate-50" data-cat="city">city</button>
+            <button class="px-3 py-1.5 rounded-lg border bg-slate-50" data-cat="portrait">portrait</button>
+            <button class="px-3 py-1.5 rounded-lg border bg-slate-50" data-cat="motion">motion</button>
+          </div>
+          <div>
+            <label class="text-sm font-medium">Aktive Kategorien</label>
+            <div id="activeCats" class="mt-2 flex flex-wrap gap-2"></div>
+          </div>
+          <div class="flex gap-2 mt-2">
+            <input id="catInput" class="flex-1" placeholder="Kategorie hinzufügen…" />
+            <button id="addCat" class="px-3 py-2 rounded-lg border bg-slate-50">Add</button>
+            <button id="clearCats" class="px-3 py-2 rounded-lg border">Clear</button>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <button id="generate" class="px-4 py-2 rounded-lg bg-black text-white">Generieren</button>
+          <button id="download" class="px-4 py-2 rounded-lg border">Download</button>
+        </div>
+      </aside>
+
+      <!-- RIGHT: Vorschau + Prompt-Bereich wie NSFW, aber neutral -->
+      <section class="space-y-4">
+        <div class="bg-white rounded-2xl shadow border p-5">
+          <div class="aspect-video bg-slate-200 rounded-xl overflow-hidden flex items-center justify-center">
+            <span class="text-slate-600">Vorschau</span>
+          </div>
+          <div class="mt-3 flex justify-end gap-2">
+            <button id="play" class="px-4 py-2 rounded-lg bg-black text-white">Abspielen</button>
+            <button id="switch" class="px-4 py-2 rounded-lg border">Bild/Video wechseln</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white rounded-2xl shadow border p-5">
+            <h3 class="text-lg font-semibold mb-2">Prompt</h3>
+            <textarea id="prompt" rows="5" class="w-full" placeholder="Beschreibe, was generiert werden soll…"></textarea>
+          </div>
+          <div class="bg-white rounded-2xl shadow border p-5">
+            <h3 class="text-lg font-semibold mb-2">Dynamische Kategorien</h3>
+            <div class="text-sm text-slate-600">Schnellauswahl &amp; Tags (nur UI)</div>
+            <div id="dynCats" class="mt-3 flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const $ = (s, r=document) => r.querySelector(s);
+    const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+    function makeRemovableChip(text, container){
+      const span = document.createElement('span');
+      span.className = 'chip';
+      span.innerHTML = `<span>${text}</span><button aria-label="remove">&times;</button>`;
+      span.querySelector('button').addEventListener('click', ()=> span.remove());
+      container.appendChild(span);
+    }
+
+    $('#addStyle').addEventListener('click', () => {
+      const val = $('#styleInput').value.trim(); if (!val) return; makeRemovableChip(val, $('#styleChips')); $('#styleInput').value = ''; });
+
+    const activeCats = new Set();
+    function renderCats(){ const wrap = $('#activeCats'); wrap.innerHTML = ''; activeCats.forEach(c => makeRemovableChip(c, wrap)); }
+    $('#addCat').addEventListener('click', () => { const val = $('#catInput').value.trim(); if (!val) return; activeCats.add(val); $('#catInput').value = ''; renderCats(); });
+    $('#clearCats').addEventListener('click', () => { activeCats.clear(); renderCats(); });
+    $$('#quickCats button').forEach(b => b.addEventListener('click', () => { activeCats.add(b.dataset.cat); renderCats(); }));
+
+    $('#rndSeed').addEventListener('click', () => { $('#g_seed').value = Math.floor(Math.random()*1e9); });
+  </script>
+</body>
+</html>

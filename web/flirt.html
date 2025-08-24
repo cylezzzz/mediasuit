@@ -1,850 +1,371 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Flirt KI · Enhanced</title>
+  <meta charset="utf-8" />
+  <title>LocalMediaSuite – Flirt KI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
   <style>
-    :root{ 
-      --bg:#0b1220; --panel:#0f172a; --stroke:#243244; --text:#e5e7eb; --muted:#94a3b8; 
-      --radius:12px; --gap:18px; --focus:#22d3ee; --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
+    :root{
+      --bg:#0b1220; --panel:#0f172a; --line:#243244; --text:#e5e7eb; --muted:#94a3b8;
+      --ok:#10b981; --warn:#f59e0b; --bad:#ef4444; --accent:#22d3ee; --btn:#1e293b;
+      --r:12px; --gap:18px;
     }
-    *{box-sizing:border-box} html,body{height:100%}
-    body{ 
-      margin:0;background:var(--bg);color:var(--text);
-      font-family:system-ui,"Segoe UI",Roboto,Inter,Arial,sans-serif;
-      padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-      display:flex;flex-direction:column;
-    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,Segoe UI,Roboto,Inter,Arial,sans-serif;display:flex;flex-direction:column}
 
-    header{position:sticky;top:0;z-index:10;background:#0f172acc;border-bottom:1px solid var(--stroke);backdrop-filter:blur(8px)}
-    .topbar{width:100%;padding:16px clamp(10px,2.4vw,28px);display:flex;align-items:center;justify-content:center;gap:12px}
-    .logo-dot{width:18px;height:18px;border-radius:50%;background:var(--focus);box-shadow:0 0 18px var(--focus)}
-    .brand{margin:0;font-weight:900;font-size:clamp(24px,3.8vw,40px);text-align:center;text-shadow:0 0 8px rgba(229,231,235,.25)}
+    /* Topbar */
+    header{position:sticky;top:0;z-index:10;background:#0f172acc;border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+    .top{display:flex;align-items:center;gap:10px;justify-content:center;padding:14px 20px}
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+    .brand{font-weight:900;letter-spacing:.2px}
 
-    .wrap{flex:1;display:flex;flex-direction:column;max-width:1400px;margin:auto;width:100%;padding:16px clamp(10px,2.4vw,28px)}
-    
-    .controls{display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
-    .btn{border:1px solid var(--stroke);border-radius:var(--radius);background:var(--panel);color:var(--text);padding:8px 16px;cursor:pointer;transition:all .2s}
-    .btn:hover{background:#1e293b;border-color:#3b4a5f}
-    .btn.primary{background:var(--focus);border-color:var(--focus);color:white}
-    .btn.danger{background:var(--danger);border-color:var(--danger);color:white}
+    /* Layout */
+    .wrap{max-width:1300px;margin:18px auto;padding:0 18px;display:grid;grid-template-columns:1fr 330px;gap:var(--gap);width:100%}
+    @media (max-width:1100px){ .wrap{grid-template-columns:1fr} }
 
-    .main-grid{display:grid;grid-template-columns:1fr 320px;gap:var(--gap);flex:1}
-    @media(max-width:1100px){.main-grid{grid-template-columns:1fr}}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+    .card-h{padding:12px 14px;border-bottom:1px solid var(--line);font-weight:700}
+    .card-b{padding:14px}
 
-    .chat-container{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--stroke);border-radius:var(--radius)}
-    .chat-messages{flex:1;padding:16px;overflow-y:auto;max-height:500px;display:flex;flex-direction:column;gap:12px}
-    .chat-input{display:flex;gap:8px;padding:16px;border-top:1px solid var(--stroke)}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    .toolbar .field{display:flex;align-items:center;gap:8px;background:#0c1728;border:1px solid var(--line);padding:6px 10px;border-radius:9px}
+    .toolbar select,.toolbar input{background:transparent;border:0;outline:none;color:var(--text)}
+    .btn{background:var(--btn);border:1px solid var(--line);color:var(--text);padding:8px 14px;border-radius:10px;cursor:pointer}
+    .btn:hover{filter:brightness(1.08)}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#03131c}
+    .btn.danger{background:var(--bad);border-color:var(--bad);color:white}
 
-    .message{padding:12px 16px;border-radius:16px;max-width:85%;line-height:1.4;position:relative}
-    .message.user{background:#2563eb;color:white;align-self:flex-end;margin-left:auto}
-    .message.ai{background:var(--success);color:white;align-self:flex-start}
-    .message.analysis{background:var(--panel);border:1px dashed var(--stroke);color:var(--text);font-size:13px;align-self:flex-start;margin-bottom:8px}
+    /* Chat */
+    .chat{display:flex;flex-direction:column;height:min(70vh,620px)}
+    .msgs{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+    .msg{max-width:85%;padding:10px 14px;border-radius:14px;line-height:1.35}
+    .me{align-self:flex-end;background:#2563eb;color:white}
+    .ai{align-self:flex-start;background:var(--ok);color:white}
+    .sys{align-self:center;background:#0b1627;border:1px dashed var(--line);color:var(--muted)}
+    .input{display:flex;gap:8px;border-top:1px solid var(--line);padding:10px}
+    textarea{flex:1;background:#0c1728;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:10px;resize:none;height:70px}
+    textarea:focus{outline:none;border-color:var(--accent)}
+    .hint{font-size:12px;color:var(--muted);margin-top:6px}
 
-    .sidebar{display:flex;flex-direction:column;gap:var(--gap)}
-    .card{background:var(--panel);border:1px solid var(--stroke);border-radius:var(--radius);overflow:hidden}
-    .card-header{padding:12px 16px;border-bottom:1px solid var(--stroke);font-weight:600;font-size:14px}
-    .card-body{padding:16px}
+    /* Sidebar */
+    .side{display:flex;flex-direction:column;gap:var(--gap)}
+    .statline{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .badge{padding:4px 10px;border-radius:999px;font-weight:800;font-size:12px}
+    .b-high{background:var(--ok);color:#022a1f}
+    .b-mid{background:var(--warn);color:#2a1f02}
+    .b-low{background:var(--bad);color:#2a0202}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .kv{display:flex;justify-content:space-between;background:#0c1728;border:1px solid var(--line);padding:6px 8px;border-radius:8px;font-size:13px}
 
-    .profile-select{width:100%;background:var(--bg);border:1px solid var(--stroke);border-radius:8px;padding:8px;color:var(--text)}
-    
-    .analysis-display{margin-bottom:16px}
-    .score-display{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-    .score-badge{padding:4px 12px;border-radius:20px;font-weight:600;font-size:13px}
-    .score-high{background:var(--success);color:white}
-    .score-medium{background:var(--warning);color:white}  
-    .score-low{background:var(--danger);color:white}
+    .spark{height:64px;background:#0c1728;border:1px solid var(--line);border-radius:8px;padding:8px}
+    .tags{display:flex;flex-wrap:wrap;gap:6px}
+    .tag{background:#2a1b52;color:#e9d5ff;padding:3px 8px;border-radius:999px;font-size:11px}
+    .tog{display:flex;gap:6px;flex-wrap:wrap}
+    .chip{padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:#0c1728;cursor:pointer}
+    .chip.active{border-color:var(--accent);box-shadow:0 0 0 2px #22d3ee33}
 
-    .probability-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-    .prob-item{display:flex;justify-content:space-between;padding:4px 8px;background:var(--bg);border-radius:6px;font-size:12px}
-
-    .trend-graph{height:60px;background:var(--bg);border:1px solid var(--stroke);border-radius:6px;padding:8px;position:relative}
-    .trend-line{position:absolute;bottom:8px;left:8px;right:8px;height:2px;background:var(--focus);border-radius:1px}
-
-    input[type="text"], textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--stroke);border-radius:8px;padding:8px;resize:none}
-    input[type="text"]:focus, textarea:focus{border-color:var(--focus);outline:none}
-
-    .switch{position:relative;width:44px;height:24px;border-radius:12px;background:var(--stroke);cursor:pointer;transition:background .2s}
-    .switch.active{background:var(--focus)}
-    .switch::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;background:white;border-radius:50%;transition:left .2s}
-    .switch.active::after{left:22px}
-
-    .tag{display:inline-block;padding:2px 8px;background:var(--stroke);border-radius:12px;font-size:11px;margin:2px}
-    .tag.personality{background:#8b5cf6;color:white}
-    .tag.mood{background:#06b6d4;color:white}
-    .tag.strategy{background:#f59e0b;color:white}
-
-    .stats-mini{display:flex;gap:8px;font-size:11px;color:var(--muted)}
-    .stats-mini span{display:flex;align-items:center;gap:4px}
-
-    .loading{opacity:0.7;animation:pulse 1.5s infinite}
-    @keyframes pulse{0%,100%{opacity:0.7}50%{opacity:1}}
+    a.nav{color:#9fb3c8;text-decoration:none;padding:6px 10px;border-radius:8px;border:1px solid transparent}
+    .nav:hover{border-color:#2a3b52;background:#0c1728}
+    nav.menu{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:10px 18px;border-top:1px solid var(--line);background:#0f172a}
   </style>
 </head>
 <body>
   <header>
-    <div class="topbar">
-      <span class="logo-dot"></span>
-      <h1 class="brand">Flirt KI Enhanced</h1>
-      <span class="logo-dot"></span>
+    <div class="top">
+      <span class="dot"></span>
+      <div class="brand">LocalMediaSuite · Flirt&nbsp;KI</div>
+      <span class="dot"></span>
     </div>
+    <nav class="menu">
+      <a class="nav" href="index.html">Home</a>
+      <a class="nav" href="image.html">Bild (SFW)</a>
+      <a class="nav" href="image_nsfw.html">Bild (NSFW)</a>
+      <a class="nav" href="video.html">Video (SFW)</a>
+      <a class="nav" href="video_nsfw.html">Video (NSFW)</a>
+      <a class="nav" href="gallery.html">Galerie</a>
+      <a class="nav" href="catalog.html">Katalog</a>
+      <a class="nav" href="settings.html">Settings</a>
+    </nav>
   </header>
 
-  <div class="wrap">
-    <!-- Controls -->
-    <div class="controls">
-      <select id="profileSelect" class="profile-select">
-        <option value="">Profil wählen...</option>
-      </select>
-      <button class="btn" id="btnNew">Neu</button>
-      <button class="btn" id="btnEdit">Bearbeiten</button>
-      <button class="btn" id="btnClone">Duplizieren</button>
-      <button class="btn danger" id="btnDelete">Löschen</button>
-      
-      <label style="display:flex;align-items:center;gap:8px;margin-left:auto">
-        <span>Analyse aktiv</span>
-        <div class="switch active" id="analysisToggle"></div>
-      </label>
-    </div>
-
-    <div class="main-grid">
-      <!-- Chat Area -->
-      <div class="chat-container">
-        <div class="chat-messages" id="chatMessages">
-          <div class="message ai">
-            Hallo! Ich bin deine KI-Flirt-Assistentin. Wie kann ich dir heute helfen? 😊
+  <main class="wrap">
+    <!-- Chat -->
+    <section class="card">
+      <div class="card-h">Chat</div>
+      <div class="card-b">
+        <div class="toolbar">
+          <div class="field">
+            🎯 <label for="age">Alter Zielperson</label>
+            <input id="age" type="number" min="18" max="80" value="26" style="width:70px">
           </div>
+          <div class="field">
+            🎚️ Vibe
+            <select id="vibe">
+              <option value="locker" selected>locker</option>
+              <option value="ausgewogen">ausgewogen</option>
+              <option value="formell">formeller</option>
+            </select>
+          </div>
+          <div class="field">
+            😊 Laune
+            <select id="mood">
+              <option value="neutral" selected>neutral</option>
+              <option value="gut">gut gelaunt</option>
+              <option value="gestresst">gestresst</option>
+              <option value="traurig">niedergeschlagen</option>
+            </select>
+          </div>
+          <button class="btn" id="btnClear">Reset</button>
         </div>
-        
-        <div class="chat-input">
-          <textarea id="messageInput" placeholder="Nachricht eingeben... (Enter = Senden)" rows="2"></textarea>
-          <button class="btn primary" id="sendBtn">Senden</button>
+
+        <div class="chat card">
+          <div class="msgs" id="msgs">
+            <div class="msg ai">Hi! Ich helfe dir, charmante Antworten zu formulieren – inklusive Chancen‑Einschätzung und Tipps passend zu Laune & Alter der Zielperson. 😊</div>
+          </div>
+          <div class="input">
+            <textarea id="text" placeholder="Deine Nachricht oder der Chat‑Verlauf (einfügen) …"></textarea>
+            <button class="btn primary" id="send">Senden</button>
+          </div>
+          <div class="card-b hint">Hinweis: Die Einschätzungen sind heuristisch (Platzhalter‑KI). Du kannst später deine richtige API unter <em>respondWithBackend()</em> anschließen.</div>
         </div>
       </div>
+    </section>
 
-      <!-- Sidebar -->
-      <div class="sidebar">
-        <!-- Analysis Display -->
-        <div class="card">
-          <div class="card-header">📊 Live Analyse</div>
-          <div class="card-body">
-            <div class="analysis-display">
-              <div class="score-display">
-                <span>Flirt-Score:</span>
-                <div class="score-badge score-medium" id="flirtScore">75%</div>
-              </div>
-              
-              <div class="probability-grid">
-                <div class="prob-item">
-                  <span>Interesse:</span>
-                  <span id="probInterest">82%</span>
-                </div>
-                <div class="prob-item">
-                  <span>Humor:</span>
-                  <span id="probHumor">65%</span>
-                </div>
-                <div class="prob-item">
-                  <span>Romantik:</span>
-                  <span id="probRomance">78%</span>
-                </div>
-                <div class="prob-item">
-                  <span>Charme:</span>
-                  <span id="probCharm">71%</span>
-                </div>
-              </div>
-              
-              <div style="margin-top:12px">
-                <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Trend (letzte 10 Nachrichten)</div>
-                <div class="trend-graph">
-                  <canvas id="trendCanvas" width="280" height="44"></canvas>
-                </div>
-              </div>
-            </div>
+    <!-- Sidebar -->
+    <aside class="side">
+      <section class="card">
+        <div class="card-h">📊 Live‑Analyse</div>
+        <div class="card-b">
+          <div class="statline">
+            <div>Flirt‑Score:</div>
+            <div id="scoreBadge" class="badge b-mid">–%</div>
+          </div>
+
+          <div class="grid2" style="margin-bottom:10px">
+            <div class="kv"><span>Interesse</span><strong id="pInterest">–%</strong></div>
+            <div class="kv"><span>Humor</span><strong id="pHumor">–%</strong></div>
+            <div class="kv"><span>Romantik</span><strong id="pRomance">–%</strong></div>
+            <div class="kv"><span>Harmonie</span><strong id="pHarmony">–%</strong></div>
+          </div>
+
+          <div class="spark">
+            <canvas id="spark" width="280" height="48"></canvas>
           </div>
         </div>
+      </section>
 
-        <!-- Character Profile -->
-        <div class="card">
-          <div class="card-header">👤 Aktuelles Profil</div>
-          <div class="card-body" id="profileDisplay">
-            <div style="font-weight:600;margin-bottom:8px" id="profileName">Standard Profil</div>
-            <div style="font-size:13px;color:var(--muted);margin-bottom:12px" id="profileDesc">
-              Freundlich, humorvoll und charmant
-            </div>
-            
-            <div id="profileTags">
-              <span class="tag personality">Extrovertiert</span>
-              <span class="tag mood">Positiv</span>
-              <span class="tag strategy">Witzig</span>
-            </div>
-            
-            <div class="stats-mini" style="margin-top:12px">
-              <span>💬 <span id="statMessages">0</span></span>
-              <span>⭐ <span id="statAvgScore">0%</span></span>
-              <span>📈 <span id="statTrend">+0%</span></span>
-            </div>
+      <section class="card">
+        <div class="card-h">💡 Nächste Schritte</div>
+        <div class="card-b">
+          <div class="tags" id="tips">
+            <!-- Tipps erscheinen hier -->
           </div>
         </div>
+      </section>
 
-        <!-- Strategy Suggestions -->
-        <div class="card">
-          <div class="card-header">💡 Empfehlungen</div>
-          <div class="card-body">
-            <div id="suggestions">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:8px">
-                Basierend auf aktueller Analyse:
-              </div>
-              <ul style="font-size:13px;margin:0;padding-left:16px" id="suggestionList">
-                <li>Mehr Humor einbauen (+15% Charm-Chance)</li>
-                <li>Persönliche Fragen stellen (+12% Interest)</li>
-                <li>Komplimente verwenden (+8% Romance)</li>
-              </ul>
-            </div>
+      <section class="card">
+        <div class="card-h">⚙️ Optionen</div>
+        <div class="card-b">
+          <div class="tog">
+            <div class="chip active" id="useHeuristics">Heuristik aktiv</div>
+            <div class="chip" id="useBackend">Backend verwenden</div>
+          </div>
+          <div class="hint" style="margin-top:10px">
+            Wenn <b>Backend verwenden</b> aktiv ist, wird <code>respondWithBackend()</code> aufgerufen (hier als Platzhalter implementiert).
           </div>
         </div>
-
-        <!-- Export/Import -->
-        <div class="card">
-          <div class="card-header">⚙️ Aktionen</div>
-          <div class="card-body" style="display:flex;flex-direction:column;gap:8px">
-            <button class="btn" id="btnExport">Chat exportieren</button>
-            <button class="btn" id="btnImport">Profil importieren</button>
-            <button class="btn" id="btnAnalyze">Vollanalyse</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+      </section>
+    </aside>
+  </main>
 
   <script>
-    class FlirtAIEnhanced {
-      constructor() {
-        this.profiles = this.loadProfiles();
-        this.currentProfile = null;
-        this.analysisEnabled = true;
-        this.conversationHistory = [];
-        this.analysisHistory = [];
-        this.trendData = [];
-        
-        this.config = {
-          backend: { respond_url: "http://127.0.0.1:3000/api/respond" },
-          temperature: 0.8,
-          max_tokens: 150
-        };
-        
-        this.init();
-      }
+    // ------- State -------
+    const msgs = document.getElementById('msgs');
+    const text = document.getElementById('text');
+    const moodSel = document.getElementById('mood');
+    const ageInp = document.getElementById('age');
+    const vibeSel = document.getElementById('vibe');
 
-      init() {
-        this.setupEventListeners();
-        this.loadConfig();
-        this.initializeDefaultProfile();
-        this.renderTrendGraph();
-      }
+    const scoreBadge = document.getElementById('scoreBadge');
+    const pInterest = document.getElementById('pInterest');
+    const pHumor = document.getElementById('pHumor');
+    const pRomance = document.getElementById('pRomance');
+    const pHarmony = document.getElementById('pHarmony');
+    const tipsBox = document.getElementById('tips');
 
-      async loadConfig() {
-        try {
-          const response = await fetch("flirt.config.json");
-          if (response.ok) {
-            const config = await response.json();
-            Object.assign(this.config, config);
-          }
-        } catch (e) {
-          console.warn("Config nicht gefunden, verwende Defaults");
-        }
-      }
+    const spark = document.getElementById('spark');
+    const ctx = spark.getContext('2d');
+    const trend = [];
 
-      setupEventListeners() {
-        // Message Input
-        const messageInput = document.getElementById('messageInput');
-        messageInput.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            this.sendMessage();
-          }
-        });
+    let mode = 'heuristic'; // 'heuristic' | 'backend'
 
-        document.getElementById('sendBtn').addEventListener('click', () => this.sendMessage());
+    // ------- UI helpers -------
+    const add = (cls, content) => {
+      const el = document.createElement('div');
+      el.className = 'msg ' + cls;
+      el.textContent = content;
+      msgs.appendChild(el);
+      msgs.scrollTop = msgs.scrollHeight;
+      return el;
+    };
 
-        // Analysis Toggle
-        document.getElementById('analysisToggle').addEventListener('click', (e) => {
-          this.analysisEnabled = !this.analysisEnabled;
-          e.target.classList.toggle('active', this.analysisEnabled);
-        });
+    const setBadge = (score) => {
+      scoreBadge.textContent = score + '%';
+      scoreBadge.className = 'badge ' + (score>=80 ? 'b-high' : score>=60 ? 'b-mid' : 'b-low');
+    };
 
-        // Profile Management
-        document.getElementById('profileSelect').addEventListener('change', (e) => {
-          if (e.target.value) {
-            this.loadProfile(e.target.value);
-          }
-        });
+    const drawTrend = () => {
+      ctx.clearRect(0,0,spark.width,spark.height);
+      if (trend.length < 2) return;
+      const min = Math.min(...trend), max = Math.max(...trend);
+      const r = (max-min) || 1;
+      ctx.strokeStyle = '#22d3ee';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      trend.forEach((v,i)=>{
+        const x = i/(trend.length-1)*(spark.width-16)+8;
+        const y = spark.height-6 - ((v-min)/r)*(spark.height-16);
+        i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+      });
+      ctx.stroke();
+      ctx.fillStyle = '#22d3ee';
+      trend.forEach((v,i)=>{
+        const x = i/(trend.length-1)*(spark.width-16)+8;
+        const y = spark.height-6 - ((v-min)/r)*(spark.height-16);
+        ctx.beginPath(); ctx.arc(x,y,2,0,6.283); ctx.fill();
+      });
+    };
 
-        // Buttons
-        document.getElementById('btnNew').addEventListener('click', () => this.createNewProfile());
-        document.getElementById('btnEdit').addEventListener('click', () => this.editCurrentProfile());
-        document.getElementById('btnClone').addEventListener('click', () => this.cloneCurrentProfile());
-        document.getElementById('btnDelete').addEventListener('click', () => this.deleteCurrentProfile());
-        document.getElementById('btnExport').addEventListener('click', () => this.exportChat());
-        document.getElementById('btnImport').addEventListener('click', () => this.importProfile());
-        document.getElementById('btnAnalyze').addEventListener('click', () => this.runFullAnalysis());
-      }
+    const chip = (txt)=> {
+      const s = document.createElement('span'); s.className='tag'; s.textContent=txt; return s;
+    };
 
-      initializeDefaultProfile() {
-        if (Object.keys(this.profiles).length === 0) {
-          this.profiles['default'] = {
-            id: 'default',
-            name: 'Standard Profil',
-            description: 'Freundlich, humorvoll und charmant',
-            personality: {
-              traits: ['extrovertiert', 'humorvoll', 'charmant', 'aufmerksam'],
-              communication_style: 'locker und spielerisch',
-              humor_level: 0.7,
-              romance_level: 0.6,
-              confidence: 0.8
-            },
-            context: 'Du bist ein charmanter Flirt-Assistent, der hilft, ansprechende und witzige Antworten zu formulieren.',
-            tags: ['personality:Extrovertiert', 'mood:Positiv', 'strategy:Witzig']
-          };
-          this.saveProfiles();
-        }
+    // ------- Heuristic "analysis" (lokal) -------
+    function analyzeHeuristically(message, {mood, age, vibe}) {
+      const m = message.toLowerCase();
 
-        const defaultProfile = Object.keys(this.profiles)[0];
-        this.loadProfile(defaultProfile);
-        this.updateProfileSelector();
-      }
+      // einfache Features
+      const positives = ['gern','mag','cool','spannend','süß','nett','danke','freu','wow','gern'];
+      const compliments = ['schön','hübsch','toll','fantastisch','beeindruckend'];
+      const questions = (m.match(/\?/g)||[]).length;
+      const hasEmoji = /[\u{1F600}-\u{1FAFF}]/u.test(m);
 
-      loadProfiles() {
-        try {
-          const saved = localStorage.getItem('flirt_ai_profiles');
-          return saved ? JSON.parse(saved) : {};
-        } catch (e) {
-          return {};
-        }
-      }
+      let pos = positives.filter(w=>m.includes(w)).length;
+      let comp = compliments.filter(w=>m.includes(w)).length;
 
-      saveProfiles() {
-        localStorage.setItem('flirt_ai_profiles', JSON.stringify(this.profiles));
-      }
+      // Basisscores (0-100)
+      let interest = 45 + pos*6 + questions*5;
+      let humor = 40 + (hasEmoji?6:0) + (m.includes('witz')?10:0);
+      let romance = 35 + comp*10 + (m.includes('date')?12:0);
+      let harmony = 50 + pos*4 - (m.includes('nicht')?6:0);
 
-      loadProfile(profileId) {
-        if (this.profiles[profileId]) {
-          this.currentProfile = this.profiles[profileId];
-          this.updateProfileDisplay();
-          this.conversationHistory = [];
-          this.analysisHistory = [];
-          this.trendData = [];
-          this.renderTrendGraph();
-        }
-      }
+      // Mood‑Einfluss
+      const moodBoost = {
+        neutral:{i:0,h:0,r:0,ha:0},
+        gut:{i:8,h:10,r:4,ha:6},
+        gestresst:{i:-6,h:-4,r:-2,ha:-8},
+        traurig:{i:-4,h:-2,r:4,ha:-6}
+      }[mood] || {i:0,h:0,r:0,ha:0};
+      interest+=moodBoost.i; humor+=moodBoost.h; romance+=moodBoost.r; harmony+=moodBoost.ha;
 
-      updateProfileSelector() {
-        const select = document.getElementById('profileSelect');
-        select.innerHTML = '<option value="">Profil wählen...</option>';
-        
-        Object.values(this.profiles).forEach(profile => {
-          const option = document.createElement('option');
-          option.value = profile.id;
-          option.textContent = profile.name;
-          option.selected = this.currentProfile && profile.id === this.currentProfile.id;
-          select.appendChild(option);
-        });
-      }
+      // Vibe/Alter → Stil‑Gewichtung (ohne Stereotype, nur Ton)
+      const formality = vibe==='formell' ? 1 : vibe==='ausgewogen' ? 0.5 : 0;
+      if (formality>0){ humor-=3*formality; romance+=2*formality; }
+      if (age>=35){ harmony+=3; }
+      if (age<=23){ humor+=4; }
 
-      updateProfileDisplay() {
-        if (!this.currentProfile) return;
+      // clamp
+      const clamp = v => Math.max(0, Math.min(100, Math.round(v)));
+      interest=clamp(interest); humor=clamp(humor); romance=clamp(romance); harmony=clamp(harmony);
+      const score = clamp(0.35*interest + 0.25*harmony + 0.25*humor + 0.15*romance);
 
-        document.getElementById('profileName').textContent = this.currentProfile.name;
-        document.getElementById('profileDesc').textContent = this.currentProfile.description;
-        
-        const tagsContainer = document.getElementById('profileTags');
-        tagsContainer.innerHTML = '';
-        
-        (this.currentProfile.tags || []).forEach(tag => {
-          const [type, value] = tag.split(':');
-          const tagElement = document.createElement('span');
-          tagElement.className = `tag ${type}`;
-          tagElement.textContent = value;
-          tagsContainer.appendChild(tagElement);
-        });
+      // Tipps
+      const tips = [];
+      if (humor<65) tips.push('Leichten Humor einbauen (eine lockere Frage + Emoji).');
+      if (interest<70) tips.push('Offene Frage stellen, die zum Erzählen einlädt.');
+      if (romance<60 && vibe!=='formell') tips.push('Ein warmes, respektvolles Kompliment hilft.');
+      if (harmony<65) tips.push('Sanfter Ton, aufgreifen was sie schrieb, Missverständnisse vermeiden.');
+      tips.push(vibe==='formell' ? 'Etwas präziser & höflicher formulieren.' :
+               vibe==='locker' ? 'Locker bleiben, kurze Sätze, positive Energie.' :
+               'Ausgewogen: freundlich & klar.');
 
-        // Stats aktualisieren
-        const messageCount = this.conversationHistory.filter(m => m.role === 'user').length;
-        const avgScore = this.analysisHistory.length > 0 
-          ? Math.round(this.analysisHistory.reduce((sum, a) => sum + a.overall_score, 0) / this.analysisHistory.length)
-          : 0;
-        const trend = this.calculateTrend();
+      // respons‑Vorschlag
+      const openers = [
+        'Klingt spannend – was hat dich daran am meisten gereizt?',
+        'Mag ich! Erzähl mir mehr darüber 😊',
+        'Nice! Wie kam’s dazu?',
+        'Fühlt sich gut an – was wäre dein perfekter nächster Schritt?'
+      ];
+      const compliment = 'Du hast eine sympathische Art – das merkt man sofort.';
+      const reply =
+        (romance>70 && vibe!=='formell'
+          ? `${compliment} ${openers[Math.floor(Math.random()*openers.length)]}`
+          : openers[Math.floor(Math.random()*openers.length)]);
 
-        document.getElementById('statMessages').textContent = messageCount;
-        document.getElementById('statAvgScore').textContent = avgScore + '%';
-        document.getElementById('statTrend').textContent = (trend >= 0 ? '+' : '') + trend + '%';
-      }
-
-      calculateTrend() {
-        if (this.analysisHistory.length < 2) return 0;
-        
-        const recent = this.analysisHistory.slice(-3);
-        const older = this.analysisHistory.slice(-6, -3);
-        
-        if (older.length === 0) return 0;
-        
-        const recentAvg = recent.reduce((sum, a) => sum + a.overall_score, 0) / recent.length;
-        const olderAvg = older.reduce((sum, a) => sum + a.overall_score, 0) / older.length;
-        
-        return Math.round(recentAvg - olderAvg);
-      }
-
-      async sendMessage() {
-        const input = document.getElementById('messageInput');
-        const message = input.value.trim();
-        
-        if (!message) return;
-        
-        input.value = '';
-        this.addMessage('user', message);
-        
-        // User-Message zur History hinzufügen
-        this.conversationHistory.push({ role: 'user', content: message });
-        
-        try {
-          // Zeige Loading
-          const loadingId = this.addMessage('ai', 'Denke nach...', true);
-          
-          // API Call vorbereiten
-          const analysisEnabled = this.analysisEnabled;
-          const fullHistory = this.conversationHistory.slice(-10); // Letzte 10 Nachrichten
-          
-          let analysisPrompt = '';
-          let replyPrompt = '';
-          
-          if (analysisEnabled && this.currentProfile) {
-            analysisPrompt = this.buildAnalysisPrompt(message, fullHistory);
-            replyPrompt = this.buildReplyPrompt(message, fullHistory);
-            
-            // Analyse + Antwort in einem Call
-            const response = await fetch(this.config.backend.respond_url, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                analysis_system: analysisPrompt,
-                analysis_user: message,
-                reply_system: replyPrompt,
-                reply_user: message
-              })
-            });
-            
-            const data = await response.json();
-            
-            // Loading-Nachricht entfernen
-            this.removeMessage(loadingId);
-            
-            if (data.ok && data.analysis && data.reply) {
-              // Analyse verarbeiten
-              this.processAnalysis(data.analysis);
-              
-              // Antwort anzeigen
-              this.addMessage('ai', data.reply);
-              this.conversationHistory.push({ role: 'assistant', content: data.reply });
-            } else {
-              throw new Error('Invalid response format');
-            }
-            
-          } else {
-            // Einfache Antwort ohne Analyse
-            replyPrompt = this.buildSimpleReplyPrompt(message, fullHistory);
-            
-            const response = await fetch(this.config.backend.respond_url, {
-              method: 'POST', 
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                analysis_system: 'Return empty JSON: {}',
-                analysis_user: '',
-                reply_system: replyPrompt,
-                reply_user: message
-              })
-            });
-            
-            const data = await response.json();
-            
-            this.removeMessage(loadingId);
-            
-            if (data.ok && data.reply) {
-              this.addMessage('ai', data.reply);
-              this.conversationHistory.push({ role: 'assistant', content: data.reply });
-            } else {
-              throw new Error('Failed to get reply');
-            }
-          }
-          
-        } catch (error) {
-          console.error('Message send error:', error);
-          this.addMessage('ai', 'Entschuldigung, es gab einen Fehler beim Verarbeiten deiner Nachricht.', false, 'error');
-        }
-      }
-
-      buildAnalysisPrompt(message, history) {
-        const profile = this.currentProfile;
-        
-        return `Du bist ein Flirt- und Kommunikations-Analytiker. Analysiere die folgende Unterhaltung und die letzte Nachricht des Users im Kontext des Flirtens und der romantischen Kommunikation.
-
-PROFIL-KONTEXT: ${profile.name} - ${profile.description}
-PERSÖNLICHKEIT: ${JSON.stringify(profile.personality)}
-
-UNTERHALTUNGSHISTORIE:
-${history.map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n')}
-
-LETZTE USER-NACHRICHT: "${message}"
-
-Gib eine JSON-Analyse zurück mit:
-{
-  "overall_score": NUMBER (0-100, Gesamtflirt-Effektivität),
-  "interest_probability": NUMBER (0-100, Wahrscheinlichkeit von Interesse),
-  "humor_rating": NUMBER (0-100, Humor-Level),
-  "romance_potential": NUMBER (0-100, Romantisches Potenzial),
-  "charm_factor": NUMBER (0-100, Charme-Faktor),
-  "emotional_tone": STRING ("positiv", "neutral", "negativ"),
-  "conversation_flow": STRING ("gut", "mittelmäßig", "stockend"),
-  "suggestions": [
-    "Konkreter Verbesserungsvorschlag 1",
-    "Konkreter Verbesserungsvorschlag 2"
-  ],
-  "next_best_responses": [
-    "Optimale Antwortmöglichkeit 1",
-    "Optimale Antwortmöglichkeit 2"
-  ]
-}
-
-Antworte NUR mit dem JSON-Objekt.`;
-      }
-
-      buildReplyPrompt(message, history) {
-        const profile = this.currentProfile;
-        
-        return `Du bist ${profile.name}. ${profile.context}
-
-DEINE PERSÖNLICHKEIT:
-${JSON.stringify(profile.personality, null, 2)}
-
-KOMMUNIKATIONSSTIL: ${profile.personality.communication_style}
-HUMOR-LEVEL: ${profile.personality.humor_level * 100}%
-ROMANTIK-LEVEL: ${profile.personality.romance_level * 100}%
-SELBSTVERTRAUEN: ${profile.personality.confidence * 100}%
-
-UNTERHALTUNGSHISTORIE:
-${history.slice(-5).map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n')}
-
-Antworte auf die Nachricht "${message}" in deinem charakteristischen Stil. Sei:
-- Authentisch zu deiner Persönlichkeit
-- Charmant und ansprechend
-- Angemessen für die Flirt-Situation
-- Humorvoll wenn passend
-- Interessiert und aufmerksam
-
-Antworte direkt ohne Metakommentare.`;
-      }
-
-      buildSimpleReplyPrompt(message, history) {
-        return `Du bist ein freundlicher und charmanter Gesprächspartner. 
-
-UNTERHALTUNGSHISTORIE:
-${history.slice(-3).map(h => `${h.role.toUpperCase()}: ${h.content}`).join('\n')}
-
-Antworte freundlich und charmant auf: "${message}"`;
-      }
-
-      processAnalysis(analysis) {
-        try {
-          // Analyse zu History hinzufügen
-          this.analysisHistory.push(analysis);
-          
-          // Trend-Daten aktualisieren
-          this.trendData.push(analysis.overall_score || 0);
-          if (this.trendData.length > 20) {
-            this.trendData = this.trendData.slice(-20);
-          }
-          
-          // UI aktualisieren
-          this.updateAnalysisDisplay(analysis);
-          this.updateSuggestions(analysis);
-          this.renderTrendGraph();
-          this.updateProfileDisplay(); // Für Statistiken
-          
-        } catch (error) {
-          console.error('Analysis processing error:', error);
-        }
-      }
-
-      updateAnalysisDisplay(analysis) {
-        const score = analysis.overall_score || 0;
-        const scoreElement = document.getElementById('flirtScore');
-        scoreElement.textContent = score + '%';
-        
-        // Score-Farbe setzen
-        scoreElement.className = 'score-badge ' + 
-          (score >= 80 ? 'score-high' : 
-           score >= 60 ? 'score-medium' : 'score-low');
-        
-        // Wahrscheinlichkeiten aktualisieren
-        document.getElementById('probInterest').textContent = (analysis.interest_probability || 0) + '%';
-        document.getElementById('probHumor').textContent = (analysis.humor_rating || 0) + '%';
-        document.getElementById('probRomance').textContent = (analysis.romance_potential || 0) + '%';
-        document.getElementById('probCharm').textContent = (analysis.charm_factor || 0) + '%';
-      }
-
-      updateSuggestions(analysis) {
-        const suggestionsList = document.getElementById('suggestionList');
-        suggestionsList.innerHTML = '';
-        
-        if (analysis.suggestions && Array.isArray(analysis.suggestions)) {
-          analysis.suggestions.forEach(suggestion => {
-            const li = document.createElement('li');
-            li.textContent = suggestion;
-            suggestionsList.appendChild(li);
-          });
-        } else {
-          const li = document.createElement('li');
-          li.textContent = 'Keine spezifischen Empfehlungen verfügbar';
-          suggestionsList.appendChild(li);
-        }
-      }
-
-      renderTrendGraph() {
-        const canvas = document.getElementById('trendCanvas');
-        const ctx = canvas.getContext('2d');
-        
-        // Canvas leeren
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        if (this.trendData.length < 2) return;
-        
-        // Trend-Linie zeichnen
-        ctx.strokeStyle = '#22d3ee';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        
-        const maxVal = Math.max(...this.trendData);
-        const minVal = Math.min(...this.trendData);
-        const range = maxVal - minVal || 1;
-        
-        this.trendData.forEach((value, index) => {
-          const x = (index / (this.trendData.length - 1)) * (canvas.width - 16) + 8;
-          const y = canvas.height - 8 - ((value - minVal) / range) * (canvas.height - 16);
-          
-          if (index === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        });
-        
-        ctx.stroke();
-        
-        // Punkte zeichnen
-        ctx.fillStyle = '#22d3ee';
-        this.trendData.forEach((value, index) => {
-          const x = (index / (this.trendData.length - 1)) * (canvas.width - 16) + 8;
-          const y = canvas.height - 8 - ((value - minVal) / range) * (canvas.height - 16);
-          
-          ctx.beginPath();
-          ctx.arc(x, y, 2, 0, 2 * Math.PI);
-          ctx.fill();
-        });
-      }
-
-      addMessage(sender, content, loading = false, type = 'normal') {
-        const messagesContainer = document.getElementById('chatMessages');
-        const messageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        
-        const messageDiv = document.createElement('div');
-        messageDiv.id = messageId;
-        messageDiv.className = `message ${sender}`;
-        
-        if (loading) {
-          messageDiv.classList.add('loading');
-        }
-        
-        if (type === 'error') {
-          messageDiv.style.background = '#ef4444';
-        }
-        
-        messageDiv.textContent = content;
-        
-        messagesContainer.appendChild(messageDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        
-        return messageId;
-      }
-
-      removeMessage(messageId) {
-        const messageElement = document.getElementById(messageId);
-        if (messageElement) {
-          messageElement.remove();
-        }
-      }
-
-      // Profile Management Methods
-      createNewProfile() {
-        const name = prompt('Name für neues Profil:', 'Neues Profil');
-        if (!name) return;
-        
-        const id = 'profile_' + Date.now();
-        this.profiles[id] = {
-          id: id,
-          name: name,
-          description: 'Individuelles Flirt-Profil',
-          personality: {
-            traits: ['freundlich', 'interessiert'],
-            communication_style: 'natürlich',
-            humor_level: 0.5,
-            romance_level: 0.5,
-            confidence: 0.6
-          },
-          context: 'Du bist ein charmanter Gesprächspartner.',
-          tags: ['personality:Standard', 'mood:Neutral']
-        };
-        
-        this.saveProfiles();
-        this.updateProfileSelector();
-        this.loadProfile(id);
-      }
-
-      editCurrentProfile() {
-        if (!this.currentProfile) return;
-        
-        const newName = prompt('Profil-Name:', this.currentProfile.name);
-        if (newName) {
-          this.currentProfile.name = newName;
-          this.saveProfiles();
-          this.updateProfileSelector();
-          this.updateProfileDisplay();
-        }
-      }
-
-      cloneCurrentProfile() {
-        if (!this.currentProfile) return;
-        
-        const newName = prompt('Name für Kopie:', this.currentProfile.name + ' (Kopie)');
-        if (!newName) return;
-        
-        const id = 'profile_' + Date.now();
-        this.profiles[id] = {
-          ...JSON.parse(JSON.stringify(this.currentProfile)),
-          id: id,
-          name: newName
-        };
-        
-        this.saveProfiles();
-        this.updateProfileSelector();
-        this.loadProfile(id);
-      }
-
-      deleteCurrentProfile() {
-        if (!this.currentProfile || Object.keys(this.profiles).length <= 1) {
-          alert('Das letzte Profil kann nicht gelöscht werden.');
-          return;
-        }
-        
-        if (confirm(`Profil "${this.currentProfile.name}" wirklich löschen?`)) {
-          delete this.profiles[this.currentProfile.id];
-          this.saveProfiles();
-          
-          // Erstes verfügbares Profil laden
-          const firstProfile = Object.keys(this.profiles)[0];
-          this.loadProfile(firstProfile);
-          this.updateProfileSelector();
-        }
-      }
-
-      exportChat() {
-        const exportData = {
-          profile: this.currentProfile,
-          conversation: this.conversationHistory,
-          analysis: this.analysisHistory,
-          timestamp: new Date().toISOString()
-        };
-        
-        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `flirt_chat_${Date.now()}.json`;
-        a.click();
-        
-        URL.revokeObjectURL(url);
-      }
-
-      importProfile() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        
-        input.onchange = (e) => {
-          const file = e.target.files[0];
-          if (!file) return;
-          
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            try {
-              const data = JSON.parse(e.target.result);
-              
-              if (data.profile && data.profile.name) {
-                const id = 'profile_' + Date.now();
-                this.profiles[id] = {
-                  ...data.profile,
-                  id: id
-                };
-                
-                this.saveProfiles();
-                this.updateProfileSelector();
-                this.loadProfile(id);
-                
-                alert('Profil erfolgreich importiert!');
-              } else {
-                throw new Error('Ungültiges Format');
-              }
-            } catch (error) {
-              alert('Fehler beim Importieren: ' + error.message);
-            }
-          };
-          reader.readAsText(file);
-        };
-        
-        input.click();
-      }
-
-      runFullAnalysis() {
-        if (this.analysisHistory.length === 0) {
-          alert('Keine Analysedaten verfügbar. Führe erst einige Unterhaltungen.');
-          return;
-        }
-        
-        const avgScore = Math.round(
-          this.analysisHistory.reduce((sum, a) => sum + (a.overall_score || 0), 0) / this.analysisHistory.length
-        );
-        
-        const trend = this.calculateTrend();
-        const messageCount = this.conversationHistory.filter(m => m.role === 'user').length;
-        
-        alert(`Vollanalyse für ${this.currentProfile.name}:
-        
-📊 Durchschnittlicher Flirt-Score: ${avgScore}%
-📈 Aktueller Trend: ${trend >= 0 ? '+' : ''}${trend}%
-💬 Nachrichten gesamt: ${messageCount}
-⭐ Beste Performance: ${Math.max(...this.analysisHistory.map(a => a.overall_score || 0))}%
-
-${trend > 10 ? '✅ Sehr positive Entwicklung!' : 
-  trend > 0 ? '📈 Positive Entwicklung!' : 
-  trend < -10 ? '⚠️ Negative Entwicklung - Strategie überdenken?' : 
-  '📊 Stabile Performance'}`);
-      }
+      return {score, interest, humor, romance, harmony, tips, reply};
     }
 
-    // Initialize when DOM is loaded
-    document.addEventListener('DOMContentLoaded', () => {
-      new FlirtAIEnhanced();
+    // ------- Backend placeholder -------
+    async function respondWithBackend(message, context){
+      // >>>> HIER später deine echte API nutzen <<<<
+      // Platzhalter: nutzt die gleiche Heuristik und tut so, als wäre es „vom Server“.
+      await new Promise(r=>setTimeout(r, 600));
+      return analyzeHeuristically(message, context);
+    }
+
+    // ------- Actions -------
+    document.getElementById('send').addEventListener('click', async ()=>{
+      const message = text.value.trim();
+      if (!message) return;
+      add('me', message);
+      text.value = '';
+
+      const context = { mood: moodSel.value, age: Number(ageInp.value)||26, vibe: vibeSel.value };
+
+      // Analyse
+      const res = mode==='backend'
+        ? await respondWithBackend(message, context)
+        : analyzeHeuristically(message, context);
+
+      // Anzeige
+      setBadge(res.score);
+      pInterest.textContent = res.interest+'%';
+      pHumor.textContent = res.humor+'%';
+      pRomance.textContent = res.romance+'%';
+      pHarmony.textContent = res.harmony+'%';
+
+      tipsBox.innerHTML='';
+      res.tips.slice(0,4).forEach(t=>tipsBox.appendChild(chip(t)));
+
+      // Trend
+      trend.push(res.score); if (trend.length>20) trend.shift(); drawTrend();
+
+      // Antwort
+      add('ai', res.reply);
     });
+
+    document.getElementById('btnClear').addEventListener('click', ()=>{
+      msgs.innerHTML='';
+      add('ai','Neustart. Schreib mir, worauf du antworten willst. 🙂');
+      [pInterest,pHumor,pRomance,pHarmony].forEach(e=>e.textContent='–%');
+      setBadge(0); trend.length=0; drawTrend();
+    });
+
+    // Chips toggles
+    const cHeu = document.getElementById('useHeuristics');
+    const cBack = document.getElementById('useBackend');
+    cHeu.addEventListener('click', ()=>{ mode='heuristic'; cHeu.classList.add('active'); cBack.classList.remove('active'); add('sys','Heuristik aktiviert'); });
+    cBack.addEventListener('click', ()=>{ mode='backend'; cBack.classList.add('active'); cHeu.classList.remove('active'); add('sys','Backend‑Modus aktiviert (Platzhalter)'); });
+
+    // Enter = Senden
+    text.addEventListener('keydown', e=>{
+      if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); document.getElementById('send').click(); }
+    });
+
+    // Initial trend
+    drawTrend();
   </script>
 </body>
 </html>

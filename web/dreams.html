@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<title>Dreams</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<style>
+:root{
+  --bg:#0a0e13; --card:#0f1420; --muted:#9aa4b2; --text:#e6eaf1;
+  --accent:#ec4899; --accent2:#8b5cf6; --accent3:#3b82f6; --border:#1f2a3b;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,Segoe UI,Roboto,Arial,sans-serif}
+a{color:var(--accent);text-decoration:none}
+header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#0a0e13 0%,rgba(10,14,19,.85) 100%);border-bottom:1px solid var(--border)}
+.wrap{max-width:1240px;margin:0 auto;padding:16px}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.navbtn{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:#0d1320;text-decoration:none;color:var(--text)}
+.navbtn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent}
+.section{padding:16px 0}
+.kv{display:grid;grid-template-columns:380px 1fr;gap:16px}
+.box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px}
+h2{margin:12px 0 8px 0}
+small.m{color:var(--muted)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:#111825;color:var(--text);cursor:pointer}
+.btn.primary{background:linear-gradient(135deg,var(--accent3),var(--accent2));border-color:transparent}
+.badge{display:inline-flex;align-items:center;gap:6px;background:#0d1320;border:1px solid var(--border);border-radius:999px;padding:6px 10px}
+.pill{border:1px dashed var(--border);border-radius:999px;padding:6px 10px}
+.notice{color:var(--muted);font-size:13px}
+
+.preview{width:100%;aspect-ratio:3/4;background:#0b0f14;border:1px solid var(--border);border-radius:14px;position:relative;overflow:hidden;display:grid;place-items:center}
+.preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.preview .label{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);padding:6px 10px;border-radius:999px;border:1px solid var(--border);font-weight:600}
+
+.sidepre{display:flex;gap:10px;margin-top:10px}
+.sidepre img{width:120px;height:auto;border-radius:10px;border:1px solid var(--border);background:#0b0f14;object-fit:cover}
+
+pre.payload{background:#0b111b;border:1px solid var(--border);padding:12px;border-radius:12px;max-height:42vh;overflow:auto}
+
+/* Galerie */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.thumb{aspect-ratio:3/4;background:#0b0f14;object-fit:cover;width:100%}
+.cardrow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-top:1px solid var(--border)}
+.cardrow .muted{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}
+
+/* Inputs */
+label{display:block;margin:10px 0 4px 0;color:var(--muted)}
+input[type="text"], textarea, select, input[type="number"]{
+  width:100%;background:#0b111b;border:1px solid var(--border);border-radius:10px;color:var(--text);padding:8px 10px
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <div style="font-weight:800">Dreams</div>
+        <div class="notice">Nutzt die Auswahl aus <code>character_lab.html</code> (Body & Pose)</div>
+      </div>
+    </div>
+    <nav>
+      <a class="navbtn" href="character_lab.html">Character Lab</a>
+      <a class="navbtn primary" href="dreams.html">Dreams</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="section kv">
+    <!-- LEFT: PREVIEW -->
+    <div class="box">
+      <h2>Character Preview</h2>
+      <div class="row" style="margin-bottom:8px">
+        <span class="badge">Body: <span id="lblBody">—</span></span>
+        <span class="badge">Pose: <span id="lblPose">—</span></span>
+        <button class="btn" id="btnReset">Reset Auswahl</button>
+      </div>
+
+      <div class="preview" id="preview">
+        <div class="notice">Keine Auswahl vorhanden. Bitte in <strong>character_lab.html</strong> speichern.</div>
+      </div>
+
+      <div class="sidepre">
+        <img data-preview="body" alt="Body-Preview (assets/body/...png)">
+        <img data-preview="pose" alt="Pose-Preview (assets/poses/...png)">
+      </div>
+
+      <div style="margin-top:10px">
+        <small class="m">Fallback-Platzhalter (falls keine Auswahl gespeichert):</small>
+        <div class="row" style="margin-top:6px">
+          <span class="pill">assets/body/<strong>slim.png</strong></span>
+          <span class="pill">assets/poses/<strong>front.png</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: GENERATOR -->
+    <div class="box">
+      <h2>Generator</h2>
+
+      <label>Typ</label>
+      <div class="row">
+        <label><input type="radio" name="gtype" value="image" checked> Bild</label>
+        <label><input type="radio" name="gtype" value="video"> Video</label>
+      </div>
+
+      <label>Orientation</label>
+      <select id="orientation">
+        <option value="portrait" selected>Portrait (3:4)</option>
+        <option value="square">Quadrat (1:1)</option>
+        <option value="landscape">Landscape (16:9)</option>
+      </select>
+
+      <label>Modell</label>
+      <select id="model">
+        <option>sdxl-realistic-v1</option>
+        <option>sd15-photoreal</option>
+        <option>animediff-v3</option>
+      </select>
+
+      <label>Prompt</label>
+      <textarea id="prompt" rows="4" placeholder="ultra realistic portrait, studio lighting, shallow depth of field"></textarea>
+
+      <label>Negative Prompt</label>
+      <textarea id="nprompt" rows="3" placeholder="low quality, blurry, extra fingers"></textarea>
+
+      <div class="row">
+        <div style="flex:1">
+          <label>Auflösung</label>
+          <select id="resolution">
+            <option value="768x1024">768 × 1024</option>
+            <option value="512x768">512 × 768</option>
+            <option value="1080x1440">1080 × 1440</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <label>Steps</label>
+          <input id="steps" type="number" value="30" min="5" max="150" />
+        </div>
+        <div style="flex:1">
+          <label>Guidance</label>
+          <input id="cfg" type="number" value="7.5" step="0.5" min="1" max="20" />
+        </div>
+        <div style="flex:1">
+          <label>Seed</label>
+          <input id="seed" type="number" value="0" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnGenerate">Generate</button>
+        <button class="btn" id="btnDownload">Payload speichern</button>
+      </div>
+      <small class="m">Ohne API wird ein Mock aus Body+Pose (Canvas) erzeugt. Mit API: setze <code>window.DREAMS_API_URL</code>.</small>
+    </div>
+  </section>
+
+  <!-- RESULTS GALLERY -->
+  <section class="section">
+    <div class="box">
+      <h2>Results</h2>
+      <div class="row" style="margin-bottom:8px">
+        <button class="btn" id="btnClearGallery">Galerie leeren</button>
+        <small class="m">Speicher: <code>localStorage.dreamsGallery</code></small>
+      </div>
+      <div id="gallery" class="grid"></div>
+    </div>
+  </section>
+
+  <!-- PAYLOAD VIEW -->
+  <section class="section">
+    <div class="box">
+      <h2>Payload</h2>
+      <pre class="payload" id="payload">{}</pre>
+      <small class="m">Diese JSON kannst du an deine API schicken. <code>character</code> enthält Body & Pose inkl. Bildpfaden.</small>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ====== Config: setze diesen Wert auf deine echte API (optional) ======
+   Beispiel: window.DREAMS_API_URL = "/api/generate";
+*/
+window.DREAMS_API_URL = window.DREAMS_API_URL || ""; // leer = Mock-Modus
+
+const $ = (s)=>document.querySelector(s);
+const qs = (k)=>new URLSearchParams(location.search).get(k);
+
+// Fallback, falls keine Auswahl gespeichert wurde
+const FALLBACK = {
+  body: { id:"slim", label:"Slim", image:"assets/body/slim.png", tags:["slim"] },
+  pose: { id:"front", label:"Front Pose", image:"assets/poses/front.png", tags:["front","basic"] }
+};
+
+function loadSelection(){
+  try{
+    const raw = localStorage.getItem('characterSelection');
+    if(!raw) return FALLBACK;
+    const sel = JSON.parse(raw);
+    return { body: sel.body || FALLBACK.body, pose: sel.pose || FALLBACK.pose };
+  }catch(e){ return FALLBACK; }
+}
+
+function renderPreviews(sel){
+  const bi = document.querySelector('[data-preview="body"]');
+  const pi = document.querySelector('[data-preview="pose"]');
+  if(bi) bi.src = sel.body.image;
+  if(pi) pi.src = sel.pose.image;
+  $('#lblBody').textContent = sel.body.label || '—';
+  $('#lblPose').textContent = sel.pose.label || '—';
+
+  const box = $('#preview');
+  box.innerHTML = '';
+  const bodyImg = document.createElement('img'); bodyImg.src = sel.body.image;
+  const poseImg = document.createElement('img'); poseImg.src = sel.pose.image; poseImg.style.opacity = .55;
+  box.appendChild(bodyImg); box.appendChild(poseImg);
+  const label = document.createElement('div'); label.className='label';
+  label.textContent = 'Composite Preview (' + (qs('orientation')||'portrait') + ')';
+  box.appendChild(label);
+}
+
+function buildPayload(sel){
+  const type = (document.querySelector('input[name="gtype"]:checked')||{}).value || 'image';
+  return {
+    type,
+    orientation: $('#orientation').value,
+    model: $('#model').value,
+    prompt: $('#prompt').value.trim(),
+    negative_prompt: $('#nprompt').value.trim(),
+    resolution: $('#resolution').value,
+    steps: Number($('#steps').value||30),
+    guidance: Number($('#cfg').value||7.5),
+    seed: Number($('#seed').value||0),
+    character: sel
+  };
+}
+
+function downloadJSON(obj, name){
+  const s = JSON.stringify(obj, null, 2);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([s], {type:'application/json'}));
+  a.download = name || 'payload.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ========= Results Gallery (persist in localStorage) ========= */
+function loadGallery(){
+  try{ return JSON.parse(localStorage.getItem('dreamsGallery')||'[]'); }catch(e){ return []; }
+}
+function saveGallery(list){ localStorage.setItem('dreamsGallery', JSON.stringify(list)); }
+function renderGallery(){
+  const list = loadGallery();
+  const grid = $('#gallery');
+  grid.innerHTML = '';
+  if(!list.length){
+    const empty = document.createElement('div'); empty.className='notice'; empty.textContent='Noch keine Ergebnisse.';
+    grid.appendChild(empty); return;
+  }
+  list.forEach((it, idx)=>{
+    const card = document.createElement('div'); card.className='card';
+    const img = document.createElement('img'); img.className='thumb'; img.src = it.url; img.alt = it.prompt || 'result';
+    const row = document.createElement('div'); row.className='cardrow';
+    const meta = document.createElement('div'); meta.className='muted'; meta.title = it.prompt || '';
+    meta.textContent = (it.prompt || '').slice(0,48) + ((it.prompt||'').length>48?'…':'');
+    const actions = document.createElement('div'); actions.style.display='flex'; actions.style.gap='6px';
+    const dl = document.createElement('a'); dl.className='btn'; dl.textContent='Download'; dl.href = it.url; dl.download = 'dream.png';
+    const rm = document.createElement('button'); rm.className='btn'; rm.textContent='Löschen';
+    rm.addEventListener('click', ()=>{
+      const g = loadGallery(); g.splice(idx,1); saveGallery(g); renderGallery();
+    });
+    actions.appendChild(dl); actions.appendChild(rm);
+    row.appendChild(meta); row.appendChild(actions);
+    card.appendChild(img); card.appendChild(row);
+    grid.appendChild(card);
+  });
+}
+
+/* ========= Mock Composer (Body+Pose -> PNG dataURL) ========= */
+function loadImage(src){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=>resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+function getCanvasSize(orientation){
+  if(orientation==='square') return {w:1024,h:1024};
+  if(orientation==='landscape') return {w:1280,h:720};
+  return {w:768,h:1024}; // portrait
+}
+async function composeMock(sel, orientation){
+  const {w,h} = getCanvasSize(orientation);
+  const [bImg, pImg] = await Promise.all([loadImage(sel.body.image), loadImage(sel.pose.image)]);
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#0b0f14'; ctx.fillRect(0,0,w,h);
+  // draw body
+  const br = Math.min(w / bImg.width, h / bImg.height);
+  const bw = bImg.width * br, bh = bImg.height * br;
+  ctx.drawImage(bImg, (w-bw)/2, (h-bh)/2, bw, bh);
+  // draw pose (alpha)
+  const pr = Math.min(w / pImg.width, h / pImg.height);
+  const pw = pImg.width * pr, ph = pImg.height * pr;
+  ctx.globalAlpha = 0.55;
+  ctx.drawImage(pImg, (w-pw)/2, (h-ph)/2, pw, ph);
+  ctx.globalAlpha = 1;
+  // label
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fillRect(10, h-44, 280, 34);
+  ctx.strokeStyle = '#1f2a3b'; ctx.strokeRect(10, h-44, 280, 34);
+  ctx.fillStyle = '#e6eaf1'; ctx.font = 'bold 14px system-ui,Segoe UI,Roboto,Arial';
+  ctx.fillText(`Mock ${orientation}`, 18, h-22);
+  return c.toDataURL('image/png');
+}
+
+/* ========= Generate handlers ========= */
+async function callRealAPI(payload){
+  const res = await fetch(window.DREAMS_API_URL, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if(!res.ok) throw new Error('API error: '+res.status);
+  const data = await res.json();
+  if(!data.image_url) throw new Error('Antwort ohne image_url');
+  return data.image_url;
+}
+
+(function init(){
+  // Orientation aus URL unterstützen (wie /generate?orientation=portrait)
+  const o = qs('orientation'); if(o) $('#orientation').value = o;
+
+  let sel = loadSelection();
+  renderPreviews(sel);
+  renderGallery();
+
+  $('#btnGenerate').addEventListener('click', async ()=>{
+    const payload = buildPayload(sel);
+    $('#payload').textContent = JSON.stringify(payload, null, 2);
+
+    try{
+      let url = "";
+      if(window.DREAMS_API_URL){
+        // echter API-Call
+        url = await callRealAPI(payload);
+      }else{
+        // Mock: Canvas-Komposition
+        url = await composeMock(sel, payload.orientation || 'portrait');
+      }
+      // in Galerie übernehmen
+      const g = loadGallery();
+      g.unshift({ url, prompt: payload.prompt || `${sel.body.label} • ${sel.pose.label}`, ts: Date.now() });
+      saveGallery(g);
+      renderGallery();
+    }catch(err){
+      alert('Generate fehlgeschlagen: ' + (err.message||err));
+    }
+  });
+
+  $('#btnDownload').addEventListener('click', ()=>{
+    const p = buildPayload(sel);
+    downloadJSON(p, 'generate_payload.json');
+  });
+
+  $('#btnReset').addEventListener('click', ()=>{
+    localStorage.removeItem('characterSelection');
+    sel = loadSelection();
+    renderPreviews(sel);
+    $('#payload').textContent = '{}';
+  });
+
+  $('#btnClearGallery').addEventListener('click', ()=>{
+    if(confirm('Galerie wirklich leeren?')){
+      saveGallery([]); renderGallery();
+    }
+  });
+
+  // Exponiere aktuelle Auswahl, falls du es woanders brauchst
+  window.currentCharacter = sel;
+})();
+</script>
+</body>
+</html>

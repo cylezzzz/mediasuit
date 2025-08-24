@@ -1,1 +1,57 @@
-<!-- create.html placeholder wie Create Dreams UI mit Character, Background, Pose, etc. -->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Inhalt erstellen - Stitch Studio</title>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <a href="index.html" class="brand"><span class="logo-dot"></span><span>Stitch Studio</span></a>
+            <nav class="main-nav">
+                <a href="create.html" class="active">Erstellen</a>
+                <a href="gallery.html">Galerie</a>
+                <a href="catalog.html">Katalog</a>
+                <a href="character_lab.html">Charaktere</a>
+                <a href="flirt.html">Flirt KI</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="wrap" style="max-width: 800px;">
+            <div class="card">
+                <div class="card-header">Erstelle einen neuen Traum</div>
+                <div class="card-body">
+                    <div>
+                        <label for="promptInput">Prompt</label>
+                        <input id="promptInput" type="text" placeholder="Ein futuristischer Wald bei Nacht, leuchtende Pilze..." class="input-field"/>
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <label for="categorySelect">Kategorie</label>
+                        <select id="categorySelect" class="select-field">
+                            <option value="">Kategorie wählen</option>
+                            <option value="fantasy">Fantasy</option>
+                            <option value="sci-fi">Sci-Fi</option>
+                            <option value="anime">Anime</option>
+                            <option value="realistic">Realistisch</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-footer">
+                     <button id="submitBtn" class="btn">Absenden</button>
+                </div>
+            </div>
+
+            <div class="card" id="responseBox">
+                <div class="card-header">Antwort</div>
+                <div class="card-body">
+                    <pre id="responseText">Hier wird das Ergebnis angezeigt...</pre>
+                </div>
+            </div>
+        </div>
+    </main>
+    </body>
+</html>

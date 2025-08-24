@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Character Lab</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <style>
+    :root{
+      --bg:#0a0e13; --card:#0f1420; --muted:#9aa4b2; --text:#e6eaf1;
+      --accent:#ec4899; --accent2:#8b5cf6; --border:#1e293b;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    a{color:var(--accent);text-decoration:none}
+    header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#0a0e13 0%,rgba(10,14,19,.85) 100%);backdrop-filter:saturate(1.2) blur(6px);border-bottom:1px solid var(--border)}
+    .wrap{max-width:1200px;margin:0 auto;padding:16px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .tab{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:#0d1320;cursor:pointer}
+    .tab.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(236,72,153,.25) inset}
+    main .section{padding:16px 0}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+    .thumb{aspect-ratio:3/4;background:#0b0f14;object-fit:cover;width:100%}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-top:1px solid var(--border)}
+    .title{font-weight:600}
+    .muted{color:var(--muted);font-size:13px}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:#111825;cursor:pointer}
+    .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:#fff}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px}
+    .chip{padding:6px 10px;border:1px solid var(--border);border-radius:999px;cursor:pointer}
+    .chip.active{border-color:var(--accent);background:#18122b}
+    .sel{display:flex;gap:10px;flex-wrap:wrap}
+    .pill{border:1px dashed var(--border);border-radius:999px;padding:6px 10px}
+    footer{border-top:1px solid var(--border);margin-top:16px}
+    .selected{outline:2px solid var(--accent);outline-offset:-2px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <div style="font-weight:800">Character Lab</div>
+          <div class="muted">Wähle Body & Pose – wird in <strong>dreams.html</strong> verwendet</div>
+        </div>
+      </div>
+      <div class="tabs" id="tabs">
+        <div class="tab active" data-target="body">Body</div>
+        <div class="tab" data-target="poses">Poses</div>
+        <div class="tab" data-target="summary">Zusammenfassung</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- FILTERS -->
+    <section class="section" id="filters">
+      <div class="chips" id="bodyFilters"></div>
+      <div class="chips" id="poseFilters" style="display:none"></div>
+    </section>
+
+    <!-- BODY GRID -->
+    <section class="section" id="bodySection">
+      <div class="grid" id="bodyGrid"></div>
+    </section>
+
+    <!-- POSES GRID -->
+    <section class="section" id="posesSection" style="display:none">
+      <div class="grid" id="poseGrid"></div>
+    </section>
+
+    <!-- SUMMARY -->
+    <section class="section" id="summarySection" style="display:none">
+      <h2>Auswahl</h2>
+      <div class="sel" id="selectionBadge"></div>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" id="saveBtn">Nur lokal speichern</button>
+        <a class="btn primary" href="dreams.html">Weiter zu Dreams</a>
+      </div>
+      <p class="muted" style="margin-top:8px">
+        Speichert als <code>localStorage.characterSelection</code>.
+      </p>
+      <pre id="preview" style="background:#0b111b;border:1px solid var(--border);padding:12px;border-radius:12px;overflow:auto;max-height:50vh"></pre>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap muted">
+      Erwartete Assets: <code>assets/body/*.png</code> und <code>assets/poses/*.png</code> (Platzhalter ok, später ersetzen).
+    </div>
+  </footer>
+
+  <!-- Optionen: exakt diese Dateinamen nutzen -->
+  <script type="application/json" id="options">
+  {
+    "body": [
+      { "id": "slim",       "label": "Slim",       "image": "assets/body/slim.png",       "tags": ["slim"] },
+      { "id": "athletic",   "label": "Athletic",   "image": "assets/body/athletic.png",   "tags": ["athletic","fit"] },
+      { "id": "curvy",      "label": "Curvy",      "image": "assets/body/curvy.png",      "tags": ["curvy"] },
+      { "id": "voluptuous", "label": "Voluptuous", "image": "assets/body/voluptuous.png", "tags": ["curvy","voluptuous"] },
+      { "id": "muscular",   "label": "Muscular",   "image": "assets/body/muscular.png",   "tags": ["muscular","athletic"] }
+    ],
+    "poses": [
+      { "id": "front",         "label": "Front Pose",         "image": "assets/poses/front.png",         "tags": ["basic","front"] },
+      { "id": "side_hand_hip", "label": "Side – Hand on Hip", "image": "assets/poses/side_hand_hip.png", "tags": ["side","model"] },
+      { "id": "over_shoulder", "label": "Over the Shoulder",  "image": "assets/poses/over_shoulder.png", "tags": ["portrait","turn"] },
+      { "id": "kneel",         "label": "Kneeling",           "image": "assets/poses/kneel.png",         "tags": ["dynamic","kneel"] },
+      { "id": "sit",           "label": "Sitting",            "image": "assets/poses/sit.png",           "tags": ["indoor","relaxed","sit"] }
+    ]
+  }
+  </script>
+
+  <script>
+    const S = { body:null, pose:null, options:{body:[],poses:[]} };
+    const $ = s => document.querySelector(s);
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach(t=>{
+      t.addEventListener('click', ()=>{
+        document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+        t.classList.add('active');
+        const target = t.dataset.target;
+        $('#bodySection').style.display    = target==='body'?'block':'none';
+        $('#posesSection').style.display   = target==='poses'?'block':'none';
+        $('#summarySection').style.display = target==='summary'?'block':'none';
+        $('#bodyFilters').style.display    = target==='body'?'flex':'none';
+        $('#poseFilters').style.display    = target==='poses'?'flex':'none';
+        if(target==='summary') renderSummary();
+      });
+    });
+
+    // Helpers
+    function renderCards(container, items, kind){
+      container.innerHTML = '';
+      items.forEach(item=>{
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.id = item.id;
+
+        const img = document.createElement('img');
+        img.className = 'thumb';
+        img.loading = 'lazy';
+        img.src = item.image;
+        img.alt = item.label;
+
+        const row = document.createElement('div'); row.className = 'row';
+        const title = document.createElement('div'); title.className='title'; title.textContent = item.label;
+        const choose = document.createElement('button'); choose.className='btn'; choose.textContent='Auswählen';
+        choose.addEventListener('click', ()=>{
+          if(kind==='body'){ S.body = item; highlight(container, item.id); }
+          if(kind==='pose'){ S.pose = item; highlight(container, item.id); }
+        });
+
+        row.appendChild(title);
+        row.appendChild(choose);
+        card.appendChild(img);
+        card.appendChild(row);
+        if((kind==='body' && S.body?.id===item.id) || (kind==='pose' && S.pose?.id===item.id)){
+          card.classList.add('selected');
+        }
+        container.appendChild(card);
+      });
+    }
+    function highlight(container, id){
+      container.querySelectorAll('.card').forEach(c=>c.classList.toggle('selected', c.dataset.id==id));
+    }
+    function renderFilters(container, items, onFilter){
+      const all = new Set(); items.forEach(i => (i.tags||[]).forEach(t => all.add(t)));
+      container.innerHTML = '';
+      const mk = (label, value, active=false)=>{
+        const chip = document.createElement('button');
+        chip.className = 'chip' + (active ? ' active' : '');
+        chip.textContent = label;
+        chip.addEventListener('click', ()=>{
+          container.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+          chip.classList.add('active');
+          onFilter(value);
+        });
+        container.appendChild(chip);
+      };
+      mk('Alle','*',true);
+      [...all].sort().forEach(t => mk(t,t,false));
+    }
+    function renderSummary(){
+      const badge = $('#selectionBadge');
+      badge.innerHTML = '';
+      const pill = (name,val)=>{ const p=document.createElement('span'); p.className='pill'; p.textContent = `${name}: ${val?val.label:'—'}`; badge.appendChild(p); };
+      pill('Body', S.body);
+      pill('Pose', S.pose);
+
+      const payload = {
+        body: S.body ? { id:S.body.id, label:S.body.label, image:S.body.image, tags:S.body.tags } : null,
+        pose: S.pose ? { id:S.pose.id, label:S.pose.label, image:S.pose.image, tags:S.pose.tags } : null
+      };
+      $('#preview').textContent = JSON.stringify(payload, null, 2);
+    }
+
+    // Buttons
+    $('#saveBtn').addEventListener('click', ()=>{
+      const data = $('#preview').textContent || '{}';
+      localStorage.setItem('characterSelection', data);
+      alert('Gespeichert in localStorage als "characterSelection".');
+    });
+
+    // Init
+    (function init(){
+      try{
+        S.options = JSON.parse(document.getElementById('options').textContent);
+      }catch(e){ console.error('Options JSON fehlerhaft', e); }
+
+      renderCards($('#bodyGrid'), S.options.body, 'body');
+      renderFilters($('#bodyFilters'), S.options.body, (tag)=>{
+        const list = (tag==='*') ? S.options.body : S.options.body.filter(i => (i.tags||[]).includes(tag));
+        renderCards($('#bodyGrid'), list, 'body');
+      });
+
+      renderCards($('#poseGrid'), S.options.poses, 'pose');
+      renderFilters($('#poseFilters'), S.options.poses, (tag)=>{
+        const list = (tag==='*') ? S.options.poses : S.options.poses.filter(i => (i.tags||[]).includes(tag));
+        renderCards($('#poseGrid'), list, 'pose');
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Overview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <style>
+    :root{
+      --bg:#0a0e13; --card:#0f1420; --muted:#9aa4b2; --text:#e6eaf1;
+      --border:#1e293b; --grad1:#ec4899; --grad2:#8b5cf6; --grad3:#3b82f6;
+    }
+    body{font-family:'Inter',sans-serif}
+    /* Shimmer for skeleton */
+    .shimmer{position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 100%);background-size:200% 100%;animation:sh 1.4s infinite}
+    @keyframes sh{0%{background-position:-200% 0}100%{background-position:200% 0}}
+  </style>
+</head>
+<body class="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+  <!-- Header -->
+  <header class="sticky top-0 z-50 backdrop-blur border-b border-[var(--border)]"
+          style="background:linear-gradient(180deg,rgba(10,14,19,.9) 0%,rgba(10,14,19,.75) 100%)">
+    <div class="max-w-[1240px] mx-auto px-5 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-7 h-7 rounded-lg" style="background:linear-gradient(135deg,var(--grad1),var(--grad2))"></div>
+        <h1 class="text-lg font-bold">Stitch Dashboard</h1>
+      </div>
+      <nav class="flex items-center gap-2">
+        <a href="index.html" class="px-3 py-1.5 rounded-lg hover:bg-white/5">Home</a>
+        <a href="overview.html" class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">Overview</a>
+        <a href="settings.html" class="px-3 py-1.5 rounded-lg hover:bg-white/5">Settings</a>
+        <a href="studio.html" class="px-3 py-1.5 rounded-lg hover:bg-white/5">Studio</a>
+        <a href="character_lab.html" class="px-3 py-1.5 rounded-lg hover:bg-white/5">Character Lab</a>
+        <a href="dreams.html" class="px-3 py-1.5 rounded-lg hover:bg-white/5">Dreams</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-[1240px] mx-auto px-5 py-8 space-y-6">
+    <div class="flex items-center justify-between">
+      <h2 class="text-2xl font-semibold">Overview</h2>
+      <div class="text-sm text-[var(--muted)]">Assets: <code>assets/body/*.png</code>, <code>assets/poses/*.png</code></div>
+    </div>
+
+    <!-- Quick cards -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Character Lab card -->
+      <article class="rounded-2xl border border-[var(--border)] bg-[var(--card)]/90 shadow-lg p-5 flex items-start justify-between">
+        <div>
+          <div class="text-sm text-[var(--muted)]">Character</div>
+          <div class="text-xl font-semibold">Character Lab</div>
+          <p class="text-[var(--muted)] mt-1">Body &amp; Pose auswählen und speichern.</p>
+          <a href="character_lab.html"
+             class="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-xl border border-white/10 text-white"
+             style="background:linear-gradient(135deg,var(--grad1),var(--grad2))">
+             Öffnen
+          </a>
+        </div>
+        <img src="assets/body/slim.png" class="w-24 h-auto rounded-xl border border-[var(--border)]" alt="Body placeholder">
+      </article>
+
+      <!-- Dreams card -->
+      <article class="rounded-2xl border border-[var(--border)] bg-[var(--card)]/90 shadow-lg p-5 flex items-start justify-between">
+        <div>
+          <div class="text-sm text-[var(--muted)]">Generator</div>
+          <div class="text-xl font-semibold">Dreams</div>
+          <p class="text-[var(--muted)] mt-1">Vorschau, Payload &amp; Ergebnis-Galerie.</p>
+          <a href="dreams.html"
+             class="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-xl border border-white/10 text-white"
+             style="background:linear-gradient(135deg,var(--grad3),var(--grad2))">
+             Öffnen
+          </a>
+        </div>
+        <img src="assets/poses/front.png" class="w-24 h-auto rounded-xl border border-[var(--border)]" alt="Pose placeholder">
+      </article>
+    </section>
+
+    <!-- Embedded Preview -->
+    <section class="rounded-2xl border border-[var(--border)] bg-[var(--card)]/70 shadow-xl overflow-hidden">
+      <div class="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Preview: Dreams</h3>
+        <a href="dreams.html" class="text-sm text-[var(--muted)] hover:text-white">In neuem Tab öffnen</a>
+      </div>
+      <div class="relative">
+        <div id="frameSkeleton" class="shimmer rounded-none"></div>
+        <iframe id="dreamsFrame" src="dreams.html" title="Dreams Preview"
+                class="w-full" style="height:72vh;border:0;"></iframe>
+      </div>
+    </section>
+
+    <!-- Recent Results -->
+    <section class="rounded-2xl border border-[var(--border)] bg-[var(--card)]/70 shadow-xl p-5 space-y-3">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Recent Results</h3>
+        <div class="flex items-center gap-2">
+          <button id="clearRecent" class="px-3 py-1.5 rounded-lg border border-[var(--border)] bg-white/5 hover:bg-white/10">
+            Leeren
+          </button>
+        </div>
+      </div>
+      <div id="recentGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
+      <p id="recentEmpty" class="text-[var(--muted)] hidden">Noch keine Ergebnisse – generiere in <a class="underline" href="dreams.html">Dreams</a>.</p>
+    </section>
+  </main>
+
+  <script>
+    // Frame skeleton off when loaded
+    const fr = document.getElementById('dreamsFrame');
+    const sk = document.getElementById('frameSkeleton');
+    fr.addEventListener('load', ()=> sk?.remove());
+
+    // Recent Results from localStorage.dreamsGallery
+    const loadGallery = () => { try { return JSON.parse(localStorage.getItem('dreamsGallery')||'[]'); } catch { return []; } };
+    const saveGallery = (l) => localStorage.setItem('dreamsGallery', JSON.stringify(l));
+
+    function renderRecent(){
+      const grid = document.getElementById('recentGrid');
+      const empty = document.getElementById('recentEmpty');
+      const list = loadGallery();
+      grid.innerHTML = '';
+      if(!list.length){ empty.classList.remove('hidden'); return; }
+      empty.classList.add('hidden');
+
+      list.slice(0,12).forEach((it, idx)=>{
+        const card = document.createElement('div');
+        card.className = 'rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden shadow hover:shadow-lg transition';
+
+        const img = document.createElement('img');
+        img.src = it.url; img.alt = it.prompt || 'result';
+        img.className = 'w-full aspect-[3/4] object-cover';
+        card.appendChild(img);
+
+        const row = document.createElement('div');
+        row.className = 'px-3 py-2 border-t border-[var(--border)] flex items-center justify-between gap-2';
+        const meta = document.createElement('div');
+        meta.className = 'text-xs text-[var(--muted)] truncate';
+        meta.title = it.prompt || '';
+        meta.textContent = (it.prompt||'').slice(0,55) + ((it.prompt||'').length>55?'…':'');
+        const dl = document.createElement('a');
+        dl.href = it.url; dl.download = 'dream.png';
+        dl.className = 'text-xs px-2 py-1 rounded border border-[var(--border)] bg-white/5 hover:bg-white/10';
+        dl.textContent = 'Download';
+        row.appendChild(meta); row.appendChild(dl);
+        card.appendChild(row);
+
+        grid.appendChild(card);
+      });
+    }
+
+    document.getElementById('clearRecent').addEventListener('click', ()=>{
+      if(confirm('Recent Results wirklich leeren?')){
+        saveGallery([]); renderRecent();
+      }
+    });
+
+    renderRecent();
+  </script>
+</body>
+</html>

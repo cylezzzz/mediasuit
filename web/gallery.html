@@ -1,518 +1,373 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="utf-8" />
+  <title>Stitch Studio – Galerie</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
-  <link rel="icon" type="image/png" href="/assets/logo.png" />
-  <link rel="icon" href="/assets/logo.ico" sizes="any" />
-  <meta name="theme-color" content="#0a0e13" />
-  <title>LocalMediaSuite – Galerie</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/assets/styles.css" />
-  <script defer src="/assets/app.js"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            base: { bg: "#0a0e13", card:"#111827", border:"#1f2937", text:"#f3f4f6", sub:"#9ca3af", accent:"#3b82f6" }
-          }
-        }
-      }
+  <meta name="color-scheme" content="dark" />
+  <style>
+    :root{
+      --bg:#0a0e13; --panel:#0f1420; --border:#1f2a3b; --text:#e6eaf1; --muted:#9aa4b2;
+      --accent:#3b82f6; --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444;
+      --r:12px; --gap:16px;
     }
-  </script>
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,Segoe UI,Roboto,Inter,Arial,sans-serif}
+
+    /* Header */
+    header{position:sticky;top:0;z-index:10;background:#0a0e13d9;border-bottom:1px solid var(--border);backdrop-filter:blur(8px)}
+    .header-container{max-width:1400px;margin:0 auto;padding:12px 18px;display:flex;gap:14px;align-items:center}
+    .brand{display:flex;align-items:center;gap:8px;color:#e6eaf1;text-decoration:none;font-weight:800}
+    .logo-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+    .main-nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+    .main-nav a{padding:6px 10px;border:1px solid transparent;border-radius:8px;color:#c8d1de;text-decoration:none}
+    .main-nav a:hover,.main-nav a.active{border-color:#2a3b52;background:#0f172a}
+
+    /* Layout */
+    .wrap{max-width:1400px;margin:18px auto;padding:0 18px;display:grid;gap:var(--gap)}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+    .card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);font-weight:700}
+    .card-body{padding:14px}
+
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap}
+    .field{display:flex;align-items:center;gap:8px;background:#0c1728;border:1px solid var(--border);padding:6px 10px;border-radius:9px}
+    select,input{background:transparent;border:0;color:var(--text);outline:none}
+    .btn{background:#1e2937;border:1px solid #2a3b52;color:#e6eaf1;padding:8px 12px;border-radius:10px;cursor:pointer}
+    .btn:hover{filter:brightness(1.08)}
+    .btn.danger{background:var(--danger);border-color:var(--danger)}
+    .btn.ghost{background:transparent;border:1px solid var(--border)}
+    .status{font-size:12px;color:var(--muted)}
+
+    /* Grid */
+    .item-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+    @media (max-width:1200px){.item-grid{grid-template-columns:repeat(4,1fr)}}
+    @media (max-width:860px){.item-grid{grid-template-columns:repeat(3,1fr)}}
+    @media (max-width:620px){.item-grid{grid-template-columns:repeat(2,1fr)}}
+
+    .item-card{position:relative;border:1px solid var(--border);background:#0f1626;border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+    .item-thumb{aspect-ratio:1/1;background:#0b1323 center/cover no-repeat}
+    .item-info{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px;border-top:1px solid var(--border)}
+    .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:#d8dfeb}
+    .actions{display:flex;gap:6px}
+    .iconbtn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;border:1px solid #2a3b52;background:#121b2b;cursor:pointer}
+    .iconbtn:hover{filter:brightness(1.1)}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;padding:20px}
+    .modal.open{display:flex}
+    .modal-box{width:min(96vw,1200px);background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+    .modal-head{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border)}
+    .modal-title{font-weight:700}
+    .modal-body{padding:10px;display:flex;align-items:center;justify-content:center;background:#0b1323}
+    .modal-body img{max-width:100%;height:auto;border-radius:8px}
+    .modal-body video{max-width:100%;border-radius:8px;background:#000}
+    .modal-foot{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-top:1px solid var(--border)}
+    .meta{font-size:12px;color:var(--muted)}
+    .close{background:#1f2937;border:1px solid #2a3b52;color:#e6eaf1;padding:6px 10px;border-radius:8px;cursor:pointer}
+    .danger{background:var(--danger);border-color:var(--danger)}
+    .download{background:var(--ok);border-color:var(--ok);color:#03160f}
+
+    /* Empty */
+    .empty{padding:30px;text-align:center;color:var(--muted)}
+  </style>
 </head>
 <body>
-  <header class="sticky top-0 z-10 bg-[var(--bg-primary)]/90 backdrop-blur border-b border-[var(--border-primary)]">
-    <div class="max-w-6xl mx-auto flex items-center gap-4 p-4">
-      <img src="/assets/logo.svg" class="w-8 h-8" alt="Logo" />
-      <div class="font-semibold text-xl">LocalMediaSuite</div>
-      <nav class="flex gap-3 text-sm ml-auto"><a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/index.html">Home</a>
-        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/image.html">Image (SFW)</a>
-        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/image_nsfw.html">Image (NSFW)</a>
-        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/video.html">Video (SFW)</a>
-        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/video_nsfw.html">Video (NSFW)</a>
-        <a class="px-3 py-1 rounded bg-blue-600 text-white" href="/gallery.html">Galerie</a>
-        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/catalog.html">Katalog</a>
-        <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/settings.html">Settings</a>
-          <a class="px-3 py-1 rounded hover:bg-gray-800 transition-colors" href="/advanced_image.html">Advanced Image</a>
-        </nav>
+  <header>
+    <div class="header-container">
+      <a href="index.html" class="brand"><span class="logo-dot"></span><span>Stitch Studio</span></a>
+      <nav class="main-nav">
+        <a href="create.html">Erstellen</a>
+        <a class="active" href="gallery.html">Galerie</a>
+        <a href="catalog.html">Katalog</a>
+        <a href="character_lab.html">Charaktere</a>
+        <a href="flirt.html">Flirt KI</a>
+      </nav>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto p-4 space-y-6">
-    <!-- Header & Controls -->
-    <div class="card">
-      <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <div>
-          <h1 class="text-2xl font-semibold text-white">Galerie</h1>
-          <p class="text-gray-400 mt-1">Alle generierten Inhalte mit integriertem Player</p>
+  <main>
+    <div class="wrap">
+      <!-- Toolbar -->
+      <div class="card">
+        <div class="card-header">
+          <div>Deine Galerie</div>
+          <div class="status" id="galStatus">Lade…</div>
         </div>
-        
-        <div class="flex items-center gap-3">
-          <!-- Type Filter -->
-          <div class="flex bg-gray-800 rounded-lg p-1">
-            <button id="filter-image" class="filter-btn active px-3 py-1 rounded text-sm font-medium transition-all duration-200">
-              🖼️ Bilder
-            </button>
-            <button id="filter-video" class="filter-btn px-3 py-1 rounded text-sm font-medium transition-all duration-200">
-              🎥 Videos
-            </button>
-            <button id="filter-all" class="filter-btn px-3 py-1 rounded text-sm font-medium transition-all duration-200">
-              📁 Alle
-            </button>
-          </div>
-          
-          <!-- Sort Options -->
-          <select id="sort-select" class="input bg-gray-800 border-gray-600 text-sm">
-            <option value="newest">Neueste zuerst</option>
-            <option value="oldest">Älteste zuerst</option>
-            <option value="name">Nach Name</option>
-            <option value="size">Nach Größe</option>
-          </select>
-          
-          <!-- Refresh Button -->
-          <button id="refresh-btn" class="btn secondary">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
-            Aktualisieren
-          </button>
-        </div>
-      </div>
-      
-      <!-- Stats -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-        <div class="bg-blue-900/20 border border-blue-800 rounded-lg p-3">
-          <div class="text-2xl font-bold text-blue-400" id="stat-images">0</div>
-          <div class="text-sm text-gray-400">Bilder</div>
-        </div>
-        <div class="bg-purple-900/20 border border-purple-800 rounded-lg p-3">
-          <div class="text-2xl font-bold text-purple-400" id="stat-videos">0</div>
-          <div class="text-sm text-gray-400">Videos</div>
-        </div>
-        <div class="bg-green-900/20 border border-green-800 rounded-lg p-3">
-          <div class="text-2xl font-bold text-green-400" id="stat-total">0</div>
-          <div class="text-sm text-gray-400">Gesamt</div>
-        </div>
-        <div class="bg-yellow-900/20 border border-yellow-800 rounded-lg p-3">
-          <div class="text-2xl font-bold text-yellow-400" id="stat-size">0 MB</div>
-          <div class="text-sm text-gray-400">Speicher</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gallery Grid -->
-    <div class="card">
-      <div id="gallery-status" class="text-center py-8 text-gray-400">
-        <div class="loading">Lade Galerie...</div>
-      </div>
-      
-      <div id="gallery-grid" class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 hidden">
-        <!-- Items werden hier dynamisch eingefügt -->
-      </div>
-      
-      <!-- Empty State -->
-      <div id="empty-state" class="text-center py-12 hidden">
-        <div class="text-6xl mb-4">📸</div>
-        <h3 class="text-lg font-semibold text-gray-300 mb-2">Keine Inhalte gefunden</h3>
-        <p class="text-gray-400 mb-4">Generiere dein erstes Bild oder Video über die entsprechenden Seiten.</p>
-        <div class="flex gap-2 justify-center">
-          <a href="/image.html" class="btn primary">Bild erstellen</a>
-          <a href="/video.html" class="btn secondary">Video erstellen</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Fullscreen Modal -->
-    <div id="fullscreen-modal" class="fixed inset-0 bg-black/90 backdrop-blur z-50 hidden">
-      <div class="absolute inset-4 flex items-center justify-center">
-        <!-- Close Button -->
-        <button id="close-fullscreen" class="absolute top-4 right-4 z-10 text-white hover:text-gray-300 text-3xl">
-          ×
-        </button>
-        
-        <!-- Navigation Buttons -->
-        <button id="prev-media" class="absolute left-4 top-1/2 -translate-y-1/2 z-10 text-white hover:text-gray-300 text-4xl hidden">
-          ‹
-        </button>
-        <button id="next-media" class="absolute right-4 top-1/2 -translate-y-1/2 z-10 text-white hover:text-gray-300 text-4xl hidden">
-          ›
-        </button>
-        
-        <!-- Media Container -->
-        <div id="fullscreen-content" class="max-w-full max-h-full flex items-center justify-center">
-          <!-- Dynamically loaded content -->
-        </div>
-        
-        <!-- Info Panel -->
-        <div id="info-panel" class="absolute bottom-4 left-4 right-4 bg-black/70 backdrop-blur rounded-lg p-4 text-white">
-          <div class="flex items-center justify-between">
-            <div>
-              <div id="media-name" class="font-semibold"></div>
-              <div id="media-details" class="text-sm text-gray-300"></div>
+        <div class="card-body">
+          <div class="toolbar">
+            <div class="field">🔎
+              <input id="search" type="text" placeholder="Suche nach Name…" />
             </div>
-            <div class="flex gap-2">
-              <button id="download-btn" class="btn secondary text-sm">
-                📥 Download
-              </button>
-              <button id="delete-btn" class="btn bg-red-600 hover:bg-red-700 text-sm">
-                🗑️ Löschen
-              </button>
+            <div class="field">🧭
+              <select id="sort">
+                <option value="new">Neueste zuerst</option>
+                <option value="old">Älteste zuerst</option>
+                <option value="name">Name (A–Z)</option>
+              </select>
             </div>
+            <div class="field">🧰
+              <select id="filter">
+                <option value="all">Alle</option>
+                <option value="image">Nur Bilder</option>
+                <option value="video">Nur Videos</option>
+              </select>
+            </div>
+            <button class="btn ghost" id="refresh">Aktualisieren</button>
           </div>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div class="card">
+        <div class="card-body">
+          <div class="item-grid" id="grid"></div>
+          <div id="empty" class="empty" style="display:none">Keine Dateien gefunden.</div>
         </div>
       </div>
     </div>
   </main>
 
+  <!-- Modal -->
+  <div class="modal" id="modal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div class="modal-title" id="mTitle">Vorschau</div>
+        <div style="display:flex;gap:8px">
+          <a id="mDownload" class="btn download" href="#" download>Download</a>
+          <button id="mDelete" class="btn danger">Löschen</button>
+          <button id="mClose" class="close">Schließen</button>
+        </div>
+      </div>
+      <div class="modal-body" id="mBody"><div class="empty">Lade…</div></div>
+      <div class="modal-foot"><div class="meta" id="mMeta"></div><div class="status" id="mStatus"></div></div>
+    </div>
+  </div>
+
   <script>
-    (async function(){
-      let currentFilter = 'all';
-      let currentSort = 'newest';
-      let allItems = [];
-      let filteredItems = [];
-      let currentMediaIndex = 0;
+    // ---- Config / Endpoints ----
+    const API_LIST = "/api/outputs";             // bevorzugt
+    const API_DELETE_QS = "/api/outputs";        // DELETE /api/outputs?name=...
+    const API_DELETE_POST = "/api/delete";       // POST { name }
+    const FALLBACK_INDEX = "/outputs/index.json";// optionales statisches Listing
 
-      const elements = {
-        filterImage: document.getElementById('filter-image'),
-        filterVideo: document.getElementById('filter-video'),
-        filterAll: document.getElementById('filter-all'),
-        sortSelect: document.getElementById('sort-select'),
-        refreshBtn: document.getElementById('refresh-btn'),
-        galleryStatus: document.getElementById('gallery-status'),
-        galleryGrid: document.getElementById('gallery-grid'),
-        emptyState: document.getElementById('empty-state'),
-        fullscreenModal: document.getElementById('fullscreen-modal'),
-        closeFullscreen: document.getElementById('close-fullscreen'),
-        prevMedia: document.getElementById('prev-media'),
-        nextMedia: document.getElementById('next-media'),
-        fullscreenContent: document.getElementById('fullscreen-content'),
-        infoPanel: document.getElementById('info-panel'),
-        mediaName: document.getElementById('media-name'),
-        mediaDetails: document.getElementById('media-details'),
-        downloadBtn: document.getElementById('download-btn'),
-        deleteBtn: document.getElementById('delete-btn'),
-        statImages: document.getElementById('stat-images'),
-        statVideos: document.getElementById('stat-videos'),
-        statTotal: document.getElementById('stat-total'),
-        statSize: document.getElementById('stat-size')
-      };
+    // ---- State ----
+    let allItems = [];   // {name,url,type,size,mtime}
+    let viewItems = [];  // gefiltert/sortiert
 
-      // Utility Functions
-      function formatFileSize(bytes) {
-        if (bytes === 0) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-      }
+    // ---- Utils ----
+    const $ = sel => document.querySelector(sel);
+    const grid = $('#grid'), empty = $('#empty'), galStatus = $('#galStatus');
 
-      function formatDate(timestamp) {
-        return new Date(timestamp * 1000).toLocaleString('de-DE');
-      }
+    const fmtSize = (n)=>{
+      if (!n && n !== 0) return '–';
+      const u = ['B','KB','MB','GB','TB']; let i=0, v=n;
+      while(v>=1024 && i<u.length-1){ v/=1024; i++; }
+      return v.toFixed(v<10?1:0)+' '+u[i];
+    };
+    const fmtDate = (s)=> s ? new Date(s).toLocaleString() : '–';
 
-      function isVideo(filename) {
-        return /\.(mp4|mov|avi|mkv|webm)$/i.test(filename);
-      }
+    const isVideo = (name)=> /\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(name);
+    const isImage = (name)=> /\.(png|jpe?g|gif|webp|bmp|tiff)$/i.test(name);
 
-      function isImage(filename) {
-        return /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(filename);
-      }
-
-      // Data Loading
-      async function loadGalleryData() {
-        try {
-          elements.galleryStatus.innerHTML = '<div class="loading">Lade Inhalte...</div>';
-          
-          const [imageRes, videoRes] = await Promise.all([
-            LMS.fetchJSON('/api/files?type=image').catch(() => ({items: []})),
-            LMS.fetchJSON('/api/files?type=video').catch(() => ({items: []}))
-          ]);
-
-          const images = (imageRes.items || []).map(item => ({...item, type: 'image'}));
-          const videos = (videoRes.items || []).map(item => ({...item, type: 'video'}));
-          
-          allItems = [...images, ...videos].sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
-          
-          updateStats();
-          applyFiltersAndRender();
-
-        } catch (error) {
-          console.error('Failed to load gallery:', error);
-          elements.galleryStatus.innerHTML = `
-            <div class="text-red-400">
-              ❌ Fehler beim Laden der Galerie<br>
-              <button onclick="loadGalleryData()" class="btn primary mt-2">Erneut versuchen</button>
-            </div>
-          `;
+    // ---- Loading ----
+    async function fetchList(){
+      galStatus.textContent = 'Lade…';
+      // 1) bevorzugter API‑Weg
+      try{
+        const r = await fetch(API_LIST, {method:'GET'});
+        if (r.ok){
+          const data = await r.json();
+          if (Array.isArray(data)){
+            galStatus.textContent = 'OK';
+            return data;
+          }
+        }
+        throw new Error('API antwortet nicht wie erwartet');
+      }catch(_){
+        // 2) Fallback: statischer Index
+        try{
+          const r2 = await fetch(FALLBACK_INDEX, {method:'GET'});
+          if (r2.ok){
+            galStatus.textContent = 'Fallback';
+            return await r2.json();
+          }
+          throw new Error('Fallback nicht verfügbar');
+        }catch(e2){
+          galStatus.textContent = 'Fehler';
+          console.warn('Galerie laden fehlgeschlagen:', e2);
+          return [];
         }
       }
+    }
 
-      // Statistics Update
-      function updateStats() {
-        const images = allItems.filter(item => item.type === 'image');
-        const videos = allItems.filter(item => item.type === 'video');
-        const totalSize = allItems.reduce((sum, item) => sum + (item.size || 0), 0);
+    function applyView(){
+      const q = $('#search').value.trim().toLowerCase();
+      const f = $('#filter').value;
+      const s = $('#sort').value;
 
-        elements.statImages.textContent = images.length;
-        elements.statVideos.textContent = videos.length;
-        elements.statTotal.textContent = allItems.length;
-        elements.statSize.textContent = formatFileSize(totalSize);
-      }
+      viewItems = allItems.filter(it=>{
+        if (f==='image' && it.type!=='image') return false;
+        if (f==='video' && it.type!=='video') return false;
+        if (q && !it.name.toLowerCase().includes(q)) return false;
+        return true;
+      });
 
-      // Filtering & Sorting
-      function applyFiltersAndRender() {
-        // Filter
-        if (currentFilter === 'image') {
-          filteredItems = allItems.filter(item => item.type === 'image');
-        } else if (currentFilter === 'video') {
-          filteredItems = allItems.filter(item => item.type === 'video');
+      viewItems.sort((a,b)=>{
+        if (s==='name') return a.name.localeCompare(b.name);
+        if (s==='old') return (new Date(a.mtime) - new Date(b.mtime));
+        // default: new
+        return (new Date(b.mtime) - new Date(a.mtime));
+      });
+
+      renderGrid();
+    }
+
+    function renderGrid(){
+      grid.innerHTML = '';
+      if (!viewItems.length){ empty.style.display='block'; return; }
+      empty.style.display='none';
+
+      for(const it of viewItems){
+        const card = document.createElement('div');
+        card.className = 'item-card';
+
+        const thumb = document.createElement('div');
+        thumb.className = 'item-thumb';
+
+        // Für Videos ein kleines Icon Overlay
+        if (it.type==='video'){
+          thumb.style.backgroundImage = `linear-gradient(0deg, rgba(0,0,0,.35), rgba(0,0,0,.35)), url('${it.poster || it.url}#t=0.1')`;
         } else {
-          filteredItems = [...allItems];
+          thumb.style.backgroundImage = `url('${it.url}')`;
         }
 
-        // Sort
-        switch (currentSort) {
-          case 'oldest':
-            filteredItems.sort((a, b) => (a.mtime || 0) - (b.mtime || 0));
-            break;
-          case 'name':
-            filteredItems.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-            break;
-          case 'size':
-            filteredItems.sort((a, b) => (b.size || 0) - (a.size || 0));
-            break;
-          default: // newest
-            filteredItems.sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
-        }
+        thumb.addEventListener('click', ()=> openModal(it));
 
-        renderGallery();
+        const info = document.createElement('div');
+        info.className = 'item-info';
+        const name = document.createElement('div');
+        name.className = 'name';
+        name.title = it.name;
+        name.textContent = it.name;
+        const actions = document.createElement('div'); actions.className='actions';
+
+        const btnOpen = document.createElement('button');
+        btnOpen.className='iconbtn'; btnOpen.title='Vorschau';
+        btnOpen.innerHTML='🔍'; btnOpen.onclick=()=> openModal(it);
+
+        const aDown = document.createElement('a');
+        aDown.className='iconbtn'; aDown.title='Download'; aDown.href=it.url; aDown.download='';
+        aDown.textContent='⬇️';
+
+        const btnDel = document.createElement('button');
+        btnDel.className='iconbtn'; btnDel.title='Löschen'; btnDel.textContent='🗑️';
+        btnDel.onclick=()=> deleteItem(it);
+
+        actions.append(btnOpen, aDown, btnDel);
+        info.append(name, actions);
+
+        card.append(thumb, info);
+        grid.append(card);
       }
+    }
 
-      // Gallery Rendering
-      function renderGallery() {
-        if (filteredItems.length === 0) {
-          elements.galleryGrid.classList.add('hidden');
-          elements.galleryStatus.classList.add('hidden');
-          elements.emptyState.classList.remove('hidden');
+    // ---- Modal ----
+    const modal = $('#modal'), mBody = $('#mBody'), mTitle = $('#mTitle'), mMeta = $('#mMeta'),
+          mDownload = $('#mDownload'), mDelete = $('#mDelete'), mClose = $('#mClose');
+    let currentItem = null;
+
+    function openModal(it){
+      currentItem = it;
+      mTitle.textContent = it.name;
+      mMeta.textContent = `${it.type.toUpperCase()} • ${fmtSize(it.size)} • ${fmtDate(it.mtime)}`;
+      mDownload.href = it.url;
+      mDownload.setAttribute('download','');
+
+      mBody.innerHTML = '';
+      if (it.type==='image'){
+        const img = document.createElement('img'); img.src = it.url; img.alt = it.name;
+        mBody.append(img);
+      } else {
+        const vid = document.createElement('video'); vid.src = it.url; vid.controls = true; vid.autoplay=false;
+        vid.playsInline = true; vid.preload = 'metadata';
+        mBody.append(vid);
+      }
+      modal.classList.add('open');
+    }
+    function closeModal(){ modal.classList.remove('open'); currentItem = null; }
+    mClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e)=>{ if (e.target===modal) closeModal(); });
+
+    // ---- Delete ----
+    async function deleteItem(it){
+      if (!confirm(`"${it.name}" wirklich löschen?`)) return;
+
+      // 1) DELETE /api/outputs?name=...
+      try{
+        const r = await fetch(`${API_DELETE_QS}?name=${encodeURIComponent(it.name)}`, { method:'DELETE' });
+        if (r.ok){
+          afterDelete(it);
           return;
         }
+      }catch(_){}
 
-        elements.emptyState.classList.add('hidden');
-        elements.galleryStatus.classList.add('hidden');
-        elements.galleryGrid.classList.remove('hidden');
-
-        elements.galleryGrid.innerHTML = filteredItems.map((item, index) => {
-          const isVideoFile = item.type === 'video';
-          const thumbnailClass = isVideoFile ? 'video-thumbnail' : 'image-thumbnail';
-          
-          return `
-            <div class="gallery-item group cursor-pointer" data-index="${index}">
-              <div class="aspect-square bg-gray-800 rounded-lg overflow-hidden relative">
-                ${isVideoFile ? `
-                  <video 
-                    src="${item.url}" 
-                    class="w-full h-full object-cover ${thumbnailClass}"
-                    preload="metadata"
-                    muted
-                  ></video>
-                  <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div class="text-white text-2xl">▶️</div>
-                  </div>
-                  <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                    🎥 VIDEO
-                  </div>
-                ` : `
-                  <img 
-                    src="${item.url}" 
-                    alt="${item.name}"
-                    class="w-full h-full object-cover ${thumbnailClass}"
-                    loading="lazy"
-                  />
-                  <div class="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                    🖼️ BILD
-                  </div>
-                `}
-                
-                <!-- Hover Overlay -->
-                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div class="absolute bottom-2 left-2 right-2">
-                    <div class="text-white font-medium text-sm truncate">${item.name}</div>
-                    <div class="text-gray-300 text-xs flex items-center justify-between">
-                      <span>${formatFileSize(item.size || 0)}</span>
-                      <span>${formatDate(item.mtime || 0).split(' ')[0]}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        // Add click listeners
-        elements.galleryGrid.querySelectorAll('.gallery-item').forEach((item, index) => {
-          item.addEventListener('click', () => openFullscreen(index));
+      // 2) POST /api/delete {name}
+      try{
+        const r2 = await fetch(API_DELETE_POST, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ name: it.name })
         });
-      }
+        if (r2.ok){
+          afterDelete(it);
+          return;
+        }
+      }catch(_){}
 
-      // Fullscreen Modal
-      function openFullscreen(index) {
-        currentMediaIndex = index;
-        const item = filteredItems[index];
-        
-        elements.fullscreenModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        
-        updateFullscreenContent();
-        updateNavigationButtons();
-      }
+      alert('Konnte nicht löschen – Backend‑Endpoint nicht verfügbar.');
+    }
 
-      function closeFullscreen() {
-        elements.fullscreenModal.classList.add('hidden');
-        document.body.style.overflow = '';
-        
-        // Pause any playing video
-        const video = elements.fullscreenContent.querySelector('video');
-        if (video) video.pause();
-      }
+    function afterDelete(it){
+      // aus Listen entfernen
+      allItems = allItems.filter(x=>x.name!==it.name);
+      applyView();
+      if (currentItem && currentItem.name===it.name) closeModal();
+    }
 
-      function updateFullscreenContent() {
-        const item = filteredItems[currentMediaIndex];
-        if (!item) return;
+    mDelete.addEventListener('click', ()=> currentItem && deleteItem(currentItem));
 
-        const isVideoFile = item.type === 'video';
-        
-        elements.fullscreenContent.innerHTML = isVideoFile ? `
-          <video 
-            src="${item.url}" 
-            controls 
-            autoplay 
-            class="max-w-full max-h-full rounded-lg"
-            style="max-height: calc(100vh - 200px);"
-          ></video>
-        ` : `
-          <img 
-            src="${item.url}" 
-            alt="${item.name}"
-            class="max-w-full max-h-full rounded-lg object-contain"
-            style="max-height: calc(100vh - 200px);"
-          />
-        `;
+    // ---- Wiring ----
+    $('#search').addEventListener('input', applyView);
+    $('#filter').addEventListener('change', applyView);
+    $('#sort').addEventListener('change', applyView);
+    $('#refresh').addEventListener('click', init);
 
-        // Update info panel
-        elements.mediaName.textContent = item.name;
-        elements.mediaDetails.innerHTML = `
-          <div class="flex gap-4 text-sm">
-            <span>📊 ${formatFileSize(item.size || 0)}</span>
-            <span>📅 ${formatDate(item.mtime || 0)}</span>
-            <span>🏷️ ${item.type.toUpperCase()}</span>
-          </div>
-        `;
-
-        // Update download button
-        elements.downloadBtn.onclick = () => {
-          const a = document.createElement('a');
-          a.href = item.url;
-          a.download = item.name;
-          a.click();
+    async function init(){
+      const raw = await fetchList();
+      // Normalisieren & Typ erkennen
+      allItems = raw.map(x=>{
+        const name = x.name || (x.url ? x.url.split('/').pop() : 'unbenannt');
+        const type = x.type || (isVideo(name) ? 'video' : isImage(name) ? 'image' : 'other');
+        return {
+          name,
+          url: x.url || `/outputs/${name}`,
+          type,
+          size: x.size ?? null,
+          mtime: x.mtime ?? null,
+          poster: x.poster
         };
-      }
+      }).filter(x=> x.type==='image' || x.type==='video');
 
-      function updateNavigationButtons() {
-        const hasPrev = currentMediaIndex > 0;
-        const hasNext = currentMediaIndex < filteredItems.length - 1;
-        
-        elements.prevMedia.classList.toggle('hidden', !hasPrev);
-        elements.nextMedia.classList.toggle('hidden', !hasNext);
-      }
+      applyView();
 
-      function navigateMedia(direction) {
-        const newIndex = currentMediaIndex + direction;
-        if (newIndex >= 0 && newIndex < filteredItems.length) {
-          currentMediaIndex = newIndex;
-          updateFullscreenContent();
-          updateNavigationButtons();
-        }
-      }
+      galStatus.textContent = allItems.length
+        ? `Bereit • ${allItems.length} Dateien`
+        : 'Keine Dateien';
+    }
 
-      // Event Listeners
-      elements.filterImage.addEventListener('click', () => setFilter('image'));
-      elements.filterVideo.addEventListener('click', () => setFilter('video'));
-      elements.filterAll.addEventListener('click', () => setFilter('all'));
-      
-      elements.sortSelect.addEventListener('change', (e) => {
-        currentSort = e.target.value;
-        applyFiltersAndRender();
-      });
-      
-      elements.refreshBtn.addEventListener('click', loadGalleryData);
-      
-      // Modal controls
-      elements.closeFullscreen.addEventListener('click', closeFullscreen);
-      elements.prevMedia.addEventListener('click', () => navigateMedia(-1));
-      elements.nextMedia.addEventListener('click', () => navigateMedia(1));
-      
-      // Keyboard navigation
-      document.addEventListener('keydown', (e) => {
-        if (!elements.fullscreenModal.classList.contains('hidden')) {
-          switch (e.key) {
-            case 'Escape':
-              closeFullscreen();
-              break;
-            case 'ArrowLeft':
-              navigateMedia(-1);
-              break;
-            case 'ArrowRight':
-              navigateMedia(1);
-              break;
-          }
-        }
-      });
-
-      // Close on background click
-      elements.fullscreenModal.addEventListener('click', (e) => {
-        if (e.target === elements.fullscreenModal) {
-          closeFullscreen();
-        }
-      });
-
-      function setFilter(type) {
-        currentFilter = type;
-        
-        // Update UI
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-          btn.classList.remove('active', 'bg-blue-600', 'text-white');
-          btn.classList.add('text-gray-400');
-        });
-        
-        const activeBtn = type === 'image' ? elements.filterImage : 
-                         type === 'video' ? elements.filterVideo : elements.filterAll;
-        activeBtn.classList.add('active', 'bg-blue-600', 'text-white');
-        activeBtn.classList.remove('text-gray-400');
-        
-        applyFiltersAndRender();
-      }
-
-      // Auto-refresh via BroadcastChannel
-      try {
-        const bc = new BroadcastChannel('lms-events');
-        bc.onmessage = (e) => {
-          if (e.data && e.data.type === 'generated') {
-            setTimeout(loadGalleryData, 1000); // Kurze Verzögerung für File-System
-          }
-        };
-      } catch (e) {
-        console.warn('BroadcastChannel not supported:', e);
-      }
-
-      // Auto-refresh every 30 seconds
-      setInterval(loadGalleryData, 30000);
-
-      // Initial load
-      await loadGalleryData();
-    })();
+    // Start
+    init();
   </script>
 </body>
 </html>

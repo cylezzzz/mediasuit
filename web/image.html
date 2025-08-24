@@ -1,733 +1,237 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>LocalMediaSuite – Image Generator (Functional)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="assets/styles.css">
-  <script defer src="assets/app.js"></script>
+  <meta charset="UTF-8" />
+  <title>Image</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
   <style>
-    .generation-form {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      gap: 30px;
-    }
-    
-    .controls-panel {
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 12px;
-      padding: 20px;
-      height: fit-content;
-    }
-    
-    .preview-panel {
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 12px;
-      padding: 20px;
-    }
-    
-    .model-selector {
-      margin-bottom: 20px;
-    }
-    
-    .model-option {
-      display: flex;
-      align-items: center;
-      padding: 12px;
-      margin: 8px 0;
-      background: #252525;
-      border: 2px solid transparent;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .model-option.selected {
-      border-color: #3b82f6;
-      background: rgba(59, 130, 246, 0.1);
-    }
-    
-    .model-option:hover {
-      background: #333;
-    }
-    
-    .param-group {
-      margin-bottom: 20px;
-    }
-    
-    .param-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-      color: #e5e5e5;
-    }
-    
-    .param-input {
-      width: 100%;
-      padding: 8px 12px;
-      background: #2a2a2a;
-      border: 1px solid #444;
-      border-radius: 6px;
-      color: #fff;
-    }
-    
-    .param-input:focus {
-      outline: none;
-      border-color: #3b82f6;
-    }
-    
-    .mode-selector {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    
-    .mode-btn {
-      flex: 1;
-      padding: 10px;
-      background: #333;
-      border: none;
-      border-radius: 6px;
-      color: #fff;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .mode-btn.active {
-      background: #3b82f6;
-    }
-    
-    .image-upload {
-      display: none;
-      border: 2px dashed #444;
-      border-radius: 8px;
-      padding: 20px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    
-    .image-upload.active {
-      display: block;
-    }
-    
-    .upload-area {
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
-    
-    .upload-area:hover {
-      border-color: #3b82f6;
-    }
-    
-    .preview-area {
-      min-height: 400px;
-      border: 2px dashed #444;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-      position: relative;
-    }
-    
-    .preview-area.has-content {
-      border-style: solid;
-      border-color: #3b82f6;
-    }
-    
-    .preview-placeholder {
-      text-align: center;
-      color: #888;
-    }
-    
-    .generate-btn {
-      width: 100%;
-      padding: 15px;
-      background: linear-gradient(45deg, #3b82f6, #6366f1);
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .generate-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-    }
-    
-    .generate-btn:disabled {
-      background: #9aa3b2;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-    
-    .progress-bar {
-      width: 100%;
-      height: 4px;
-      background: #333;
-      border-radius: 2px;
-      margin: 10px 0;
-      overflow: hidden;
-    }
-    
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #3b82f6, #6366f1);
-      width: 0%;
-      transition: width 0.5s ease;
-    }
-    
-    .status-text {
-      text-align: center;
-      color: #888;
-      font-size: 14px;
-      margin-top: 10px;
-    }
-    
-    .error-message {
-      background: #dc2626;
-      color: white;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 15px;
-    }
-    
-    .success-message {
-      background: #10b981;
-      color: white;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 15px;
-    }
+    :root { --ink:#0d141c }
+    body { font-family: 'Inter', sans-serif; }
+    .chip { display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .7rem; border-radius:9999px; border:1px solid #e5e7eb; background:#fff; font-size:.85rem; cursor:pointer; }
+    .chip.active { background:#0f172a; color:#fff; border-color:#0f172a; }
+    .btn { padding:.5rem 1rem; border-radius:.75rem; border:1px solid #e5e7eb; }
+    .btn-primary { background:#000; color:#fff; border-color:#000; }
+    .thumb { width:72px; height:72px; object-fit:cover; border-radius: .5rem; border:1px solid #e5e7eb; }
+    canvas { max-width:100%; display:block; background:#e5e7eb; border-radius:.75rem; }
   </style>
 </head>
-<body>
-  <header>
-    <h1 class="text-xl font-bold">LocalMediaSuite</h1>
-    <nav class="flex gap-2 flex-wrap"><a href="index.html">Home</a>
-      <a href="image.html" class="active">Image (SFW)</a>
-      <a href="image_nsfw.html">Image (NSFW)</a>
-      <a href="video.html">Video (SFW)</a>
-      <a href="video_nsfw.html">Video (NSFW)</a>
-      <a href="gallery.html">Gallery</a>
-      <a href="catalog.html">Catalog</a>
-      <a href="settings.html">Settings</a>
-          <a href="advanced_image.html">Advanced Image</a>
-        </nav>
-  </header>
+<body class="min-h-screen bg-slate-100 text-[var(--ink)]">
+  <!-- Einheitlicher Header -->
+  <div id="global-header"></div>
+  <script src="assets/js/nav.js"></script>
 
-  <main class="generation-form">
-    <h2>Funktionaler Bild-Generator</h2>
-    
-    <div id="message-container"></div>
-    
-    <div class="form-grid">
-      <!-- Controls Panel -->
-      <div class="controls-panel">
-        <!-- Generation Mode -->
-        <div class="param-group">
-          <label>Generierungs-Modus</label>
-          <div class="mode-selector">
-            <button class="mode-btn active" data-mode="text2img">Text → Bild</button>
-            <button class="mode-btn" data-mode="img2img">Bild → Bild</button>
-          </div>
-        </div>
+  <main class="p-6">
+    <h2 class="text-2xl font-semibold mb-4">Image</h2>
 
-        <!-- Model Selection -->
-        <div class="param-group">
-          <label>KI-Modell</label>
-          <div id="model-list" class="model-selector">
-            <div class="status-text">Lade Modelle...</div>
-          </div>
-        </div>
+    <div class="grid grid-cols-1 xl:grid-cols-[320px,1fr] gap-6">
+      <!-- LEFT: Controls -->
+      <aside class="bg-white rounded-xl shadow border p-4 space-y-5">
+        <!-- Prompt -->
+        <div class="space-y-2">
+          <h3 class="text-lg font-semibold">Prompt</h3>
+          <textarea id="promptInput" rows="5" class="w-full" placeholder="Was soll generiert werden?" data-persist="img.prompt"></textarea>
 
-        <!-- Image Upload (for img2img) -->
-        <div id="image-upload" class="image-upload">
-          <div class="upload-area" onclick="document.getElementById('file-input').click()">
-            <input type="file" id="file-input" accept="image/*" style="display: none;">
-            <div>📁 Bild hochladen</div>
-            <div style="font-size: 12px; color: #888; margin-top: 5px;">
-              PNG, JPG, WEBP bis 10MB
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-sm font-medium">Kategorie</label>
+              <select id="categorySelect" class="w-full" data-persist="img.category">
+                <option value="">Allgemein</option>
+                <option value="portrait">Portrait</option>
+                <option value="landscape">Landscape</option>
+                <option value="product">Product</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-sm font-medium">Seitenverhältnis</label>
+              <select id="aspect" class="w-full" data-persist="img.aspect">
+                <option value="1:1">1:1</option>
+                <option value="16:9" selected>16:9</option>
+                <option value="4:5">4:5</option>
+                <option value="9:16">9:16</option>
+              </select>
             </div>
           </div>
-          <div id="upload-preview" style="margin-top: 15px; display: none;">
-            <img id="upload-preview-img" style="max-width: 100%; height: auto; border-radius: 6px;">
+
+          <label class="text-sm font-medium mt-2 block">Negative Prompt</label>
+          <input id="neg" class="w-full" placeholder="artefacts, lowres, bad hands…" data-persist="img.neg" />
+
+          <div class="flex gap-2 pt-2">
+            <button id="btnGenerate" class="btn btn-primary">Generieren (Strg+Enter)</button>
+            <button id="btnStop" class="btn">Stop</button>
+          </div>
+          <p id="status" class="text-sm text-slate-600"></p>
+        </div>
+
+        <!-- Presets -->
+        <div class="space-y-2">
+          <h3 class="text-lg font-semibold">Filter (vordefiniert)</h3>
+          <div id="filters" class="flex flex-wrap gap-2">
+            <span class="chip" data-f="none">None</span>
+            <span class="chip" data-f="vintage">Vintage</span>
+            <span class="chip" data-f="sepia">Sepia</span>
+            <span class="chip" data-f="noir">Noir</span>
+            <span class="chip" data-f="vibrant">Vibrant</span>
+            <span class="chip" data-f="warm">Warm</span>
+            <span class="chip" data-f="cool">Cool</span>
+            <span class="chip" data-f="film">Film</span>
+            <span class="chip" data-f="matte">Matte</span>
+          </div>
+          <p class="text-xs text-slate-500">Presets setzen echte Werte; unten feinjustieren.</p>
+        </div>
+
+        <!-- Fine-tune -->
+        <div class="space-y-3">
+          <h3 class="text-lg font-semibold">Feinjustierung</h3>
+          <label class="text-sm font-medium">Brightness <span id="valB" class="text-slate-500">100%</span></label>
+          <input id="brightness" type="range" min="50" max="150" value="100" data-persist="img.brightness" />
+          <label class="text-sm font-medium">Contrast <span id="valC" class="text-slate-500">100%</span></label>
+          <input id="contrast" type="range" min="50" max="150" value="100" data-persist="img.contrast" />
+          <label class="text-sm font-medium">Saturation <span id="valS" class="text-slate-500">100%</span></label>
+          <input id="saturation" type="range" min="0" max="200" value="100" data-persist="img.saturation" />
+        </div>
+
+        <!-- Source -->
+        <div class="space-y-2">
+          <h3 class="text-lg font-semibold">Quelle</h3>
+          <input id="file" type="file" accept="image/*" class="w-full" />
+          <div class="flex items-center gap-2">
+            <img id="thumb" class="thumb" src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=360&auto=format&fit=crop" alt="">
+            <button id="btnReset" class="btn">Reset</button>
+            <button id="btnDownload" class="btn">Download PNG</button>
           </div>
         </div>
+      </aside>
 
-        <!-- Generation Parameters -->
-        <div class="param-group">
-          <label>Auflösung</label>
-          <select id="resolution" class="param-input">
-            <option value="512x512">512×512 (schnell)</option>
-            <option value="768x768">768×768 (ausgewogen)</option>
-            <option value="1024x768" selected>1024×768 (HD)</option>
-            <option value="1024x1024">1024×1024 (quadratisch)</option>
-            <option value="1536x1024">1536×1024 (breit)</option>
-          </select>
-        </div>
-
-        <div class="param-group">
-          <label>Steps: <span id="steps-value">28</span></label>
-          <input type="range" id="steps" min="10" max="50" value="28" class="param-input">
-        </div>
-
-        <div class="param-group">
-          <label>Guidance Scale: <span id="guidance-value">7.0</span></label>
-          <input type="range" id="guidance" min="1" max="20" step="0.1" value="7.0" class="param-input">
-        </div>
-
-        <div id="strength-group" class="param-group" style="display: none;">
-          <label>Strength: <span id="strength-value">0.65</span></label>
-          <input type="range" id="strength" min="0.1" max="1" step="0.01" value="0.65" class="param-input">
-        </div>
-
-        <div class="param-group">
-          <label>Output Format</label>
-          <select id="format" class="param-input">
-            <option value="png">PNG</option>
-            <option value="jpg" selected>JPG</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Preview Panel -->
-      <div class="preview-panel">
-        <div id="preview-area" class="preview-area">
-          <div class="preview-placeholder">
-            <div style="font-size: 48px; margin-bottom: 10px;">🎨</div>
-            <div>Bereit für Generierung</div>
-            <div style="font-size: 12px; color: #9aa3b2; margin-top: 5px;">
-              Gib einen Prompt ein und klicke auf "Generieren"
-            </div>
+      <!-- RIGHT: Preview -->
+      <section class="space-y-4">
+        <div class="bg-white rounded-xl shadow border p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-lg font-semibold">Preview</h3>
+            <div id="meta" class="text-sm text-slate-500">—</div>
           </div>
+          <canvas id="cv"></canvas>
         </div>
-
-        <div class="param-group">
-          <label for="prompt">Prompt</label>
-          <textarea 
-            id="prompt" 
-            class="param-input" 
-            rows="4" 
-            placeholder="Beschreibe dein Bild detailliert... (z.B. 'Eine majestätische Berglandschaft bei Sonnenuntergang, fotorealistisch, hohe Qualität')"
-            required
-          ></textarea>
-        </div>
-
-        <div class="param-group">
-          <label for="negative-prompt">Negative Prompt (optional)</label>
-          <textarea 
-            id="negative-prompt" 
-            class="param-input" 
-            rows="2" 
-            placeholder="Was du NICHT im Bild haben möchtest... (z.B. 'unscharf, niedrige Qualität, verzerrt')"
-          ></textarea>
-        </div>
-
-        <div id="progress-container" style="display: none;">
-          <div class="progress-bar">
-            <div id="progress-fill" class="progress-fill"></div>
-          </div>
-          <div id="status-text" class="status-text">Vorbereitung...</div>
-        </div>
-
-        <button id="generate-btn" class="generate-btn">
-          🚀 Bild generieren
-        </button>
-      </div>
+      </section>
     </div>
   </main>
 
   <script>
-    class FunctionalImageGenerator {
-      constructor() {
-        this.selectedModel = null;
-        this.currentMode = 'text2img';
-        this.isGenerating = false;
-        this.uploadedImage = null;
-        
-        this.init();
-      }
+    // Canvas & Image
+    const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+    const img = new Image(); img.crossOrigin = 'anonymous';
+    img.src = document.getElementById('thumb').src;
+    const meta = document.getElementById('meta');
+    const file = document.getElementById('file');
 
-      init() {
-        this.setupEventListeners();
-        this.loadModels();
-        this.updateSliderValues();
-      }
+    // sliders + labels
+    const brightness = document.getElementById('brightness');
+    const contrast   = document.getElementById('contrast');
+    const saturation = document.getElementById('saturation');
+    const valB = document.getElementById('valB');
+    const valC = document.getElementById('valC');
+    const valS = document.getElementById('valS');
 
-      setupEventListeners() {
-        // Mode buttons
-        document.querySelectorAll('.mode-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            this.setMode(e.target.dataset.mode);
-          });
-        });
+    // filters presets (gleiche Engine wie NSFW-Seite, andere Presets)
+    const FILTERS = {
+      none:    {brightness:100, contrast:100, saturation:100, extra:''},
+      vintage: {brightness:105, contrast:95,  saturation:110, extra:'sepia(12%) hue-rotate(-5deg)'},
+      sepia:   {brightness:100, contrast:100, saturation:95,  extra:'sepia(85%)'},
+      noir:    {brightness:105, contrast:120, saturation:0,   extra:''},
+      vibrant: {brightness:102, contrast:108, saturation:140, extra:''},
+      warm:    {brightness:101, contrast:104, saturation:115, extra:'sepia(10%) hue-rotate(-8deg)'},
+      cool:    {brightness:101, contrast:104, saturation:110, extra:'hue-rotate(12deg)'},
+      film:    {brightness:98,  contrast:110, saturation:105, extra:''},
+      matte:   {brightness:104, contrast:90,  saturation:95,  extra:''}
+    };
 
-        // File upload
-        document.getElementById('file-input').addEventListener('change', (e) => {
-          this.handleFileUpload(e.target.files[0]);
-        });
+    let activePreset = 'none';
 
-        // Parameter sliders
-        document.getElementById('steps').addEventListener('input', (e) => {
-          document.getElementById('steps-value').textContent = e.target.value;
-        });
-
-        document.getElementById('guidance').addEventListener('input', (e) => {
-          document.getElementById('guidance-value').textContent = parseFloat(e.target.value).toFixed(1);
-        });
-
-        document.getElementById('strength').addEventListener('input', (e) => {
-          document.getElementById('strength-value').textContent = parseFloat(e.target.value).toFixed(2);
-        });
-
-        // Generate button
-        document.getElementById('generate-btn').addEventListener('click', () => {
-          this.generateImage();
-        });
-      }
-
-      setMode(mode) {
-        this.currentMode = mode;
-        
-        // Update buttons
-        document.querySelectorAll('.mode-btn').forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.mode === mode);
-        });
-
-        // Show/hide upload section
-        const uploadSection = document.getElementById('image-upload');
-        const strengthGroup = document.getElementById('strength-group');
-        
-        if (mode === 'img2img') {
-          uploadSection.classList.add('active');
-          strengthGroup.style.display = 'block';
-        } else {
-          uploadSection.classList.remove('active');
-          strengthGroup.style.display = 'none';
-        }
-
-        this.showMessage(`Modus gewechselt zu: ${mode === 'text2img' ? 'Text zu Bild' : 'Bild zu Bild'}`, 'info');
-      }
-
-      async loadModels() {
-        try {
-          const response = await fetch('/api/models/compatible?mode=' + this.currentMode);
-          const data = await response.json();
-
-          if (!data.ok) {
-            throw new Error('Konnte Modelle nicht laden');
-          }
-
-          this.renderModels(data.compatible_models || []);
-        } catch (error) {
-          console.error('Failed to load models:', error);
-          this.showMessage('Fehler beim Laden der Modelle: ' + error.message, 'error');
-          
-          // Fallback für Testing
-          this.renderModels([
-            {
-              id: 'test-model-1',
-              name: 'Test Model SD 1.5',
-              architecture: 'sd15',
-              description: 'Test-Modell für Entwicklung'
-            }
-          ]);
-        }
-      }
-
-      renderModels(models) {
-        const container = document.getElementById('model-list');
-        
-        if (models.length === 0) {
-          container.innerHTML = `
-            <div class="status-text" style="color: #dc2626;">
-              Keine kompatiblen Modelle gefunden<br>
-              <small>Installiere Modelle über den Katalog</small>
-            </div>
-          `;
-          return;
-        }
-
-        container.innerHTML = models.map(model => `
-          <div class="model-option" data-model-id="${model.id}">
-            <div style="flex: 1;">
-              <div style="font-weight: 500; margin-bottom: 2px;">${model.name}</div>
-              <div style="font-size: 12px; color: #888;">
-                ${model.architecture} • ${model.description || 'Kein Beschreibung'}
-              </div>
-            </div>
-            <div style="width: 12px; height: 12px; border: 2px solid #3b82f6; border-radius: 50%;"></div>
-          </div>
-        `).join('');
-
-        // Add click handlers
-        container.querySelectorAll('.model-option').forEach(option => {
-          option.addEventListener('click', () => {
-            this.selectModel(option.dataset.modelId, option);
-          });
-        });
-
-        // Auto-select first model
-        if (models.length > 0) {
-          const firstOption = container.querySelector('.model-option');
-          this.selectModel(models[0].id, firstOption);
-        }
-      }
-
-      selectModel(modelId, element) {
-        // Remove previous selection
-        document.querySelectorAll('.model-option').forEach(opt => {
-          opt.classList.remove('selected');
-        });
-
-        // Select new model
-        element.classList.add('selected');
-        this.selectedModel = modelId;
-        
-        const modelName = element.querySelector('div').textContent;
-        this.showMessage(`Modell ausgewählt: ${modelName}`, 'info');
-      }
-
-      handleFileUpload(file) {
-        if (!file) return;
-
-        if (!file.type.startsWith('image/')) {
-          this.showMessage('Bitte wähle eine gültige Bilddatei', 'error');
-          return;
-        }
-
-        if (file.size > 10 * 1024 * 1024) {
-          this.showMessage('Bildgröße sollte unter 10MB sein', 'error');
-          return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.uploadedImage = file;
-          
-          // Show preview
-          const preview = document.getElementById('upload-preview');
-          const previewImg = document.getElementById('upload-preview-img');
-          previewImg.src = e.target.result;
-          preview.style.display = 'block';
-
-          // Update main preview
-          this.updatePreview(`
-            <img src="${e.target.result}" style="max-width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px;">
-            <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
-              Quellbild geladen
-            </div>
-          `);
-
-          this.showMessage('Bild erfolgreich hochgeladen', 'success');
-        };
-        reader.readAsDataURL(file);
-      }
-
-      updateSliderValues() {
-        // Initialize slider displays
-        document.getElementById('steps-value').textContent = document.getElementById('steps').value;
-        document.getElementById('guidance-value').textContent = parseFloat(document.getElementById('guidance').value).toFixed(1);
-        document.getElementById('strength-value').textContent = parseFloat(document.getElementById('strength').value).toFixed(2);
-      }
-
-      async generateImage() {
-        // Validation
-        const prompt = document.getElementById('prompt').value.trim();
-        if (!prompt) {
-          this.showMessage('Bitte gib einen Prompt ein', 'error');
-          document.getElementById('prompt').focus();
-          return;
-        }
-
-        if (!this.selectedModel) {
-          this.showMessage('Bitte wähle ein Modell aus', 'error');
-          return;
-        }
-
-        if (this.currentMode === 'img2img' && !this.uploadedImage) {
-          this.showMessage('Für Bild-zu-Bild benötigst du ein hochgeladenes Bild', 'error');
-          return;
-        }
-
-        this.isGenerating = true;
-        this.updateGenerateButton(true);
-        this.showProgress();
-
-        try {
-          // Prepare form data
-          const formData = new FormData();
-          formData.append('prompt', prompt);
-          formData.append('model_id', this.selectedModel);
-          formData.append('mode', this.currentMode);
-          formData.append('nsfw', 'false');
-
-          // Resolution
-          const resolution = document.getElementById('resolution').value.split('x');
-          formData.append('width', resolution[0]);
-          formData.append('height', resolution[1]);
-
-          // Parameters
-          formData.append('num_inference_steps', document.getElementById('steps').value);
-          formData.append('guidance_scale', document.getElementById('guidance').value);
-          formData.append('output_format', document.getElementById('format').value);
-
-          // Negative prompt
-          const negativePrompt = document.getElementById('negative-prompt').value.trim();
-          if (negativePrompt) {
-            formData.append('negative_prompt', negativePrompt);
-          }
-
-          // Image-specific parameters
-          if (this.currentMode === 'img2img') {
-            formData.append('strength', document.getElementById('strength').value);
-            if (this.uploadedImage) {
-              formData.append('init_image', this.uploadedImage);
-            }
-          }
-
-          // Simulate progress updates
-          this.simulateProgress();
-
-          // Make API call
-          const response = await fetch('/api/generate/universal', {
-            method: 'POST',
-            body: formData
-          });
-
-          const data = await response.json();
-
-          if (!data.ok) {
-            throw new Error(data.error?.message || 'Generation fehlgeschlagen');
-          }
-
-          // Show result
-          this.showResult(data);
-          this.showMessage('Bild erfolgreich generiert!', 'success');
-
-        } catch (error) {
-          console.error('Generation failed:', error);
-          this.showMessage('Generation fehlgeschlagen: ' + error.message, 'error');
-        } finally {
-          this.isGenerating = false;
-          this.updateGenerateButton(false);
-          this.hideProgress();
-        }
-      }
-
-      simulateProgress() {
-        const steps = [
-          { progress: 10, text: 'Modell laden...' },
-          { progress: 25, text: 'Prompt verarbeiten...' },
-          { progress: 50, text: 'Bild generieren...' },
-          { progress: 75, text: 'Details verfeinern...' },
-          { progress: 90, text: 'Speichern...' }
-        ];
-
-        let currentStep = 0;
-        const interval = setInterval(() => {
-          if (currentStep < steps.length && this.isGenerating) {
-            const step = steps[currentStep];
-            this.updateProgress(step.progress, step.text);
-            currentStep++;
-          } else {
-            clearInterval(interval);
-          }
-        }, 1000);
-      }
-
-      showProgress() {
-        document.getElementById('progress-container').style.display = 'block';
-        this.updateProgress(0, 'Starte Generation...');
-      }
-
-      hideProgress() {
-        setTimeout(() => {
-          document.getElementById('progress-container').style.display = 'none';
-        }, 1000);
-      }
-
-      updateProgress(percentage, text) {
-        document.getElementById('progress-fill').style.width = `${percentage}%`;
-        document.getElementById('status-text').textContent = text;
-      }
-
-      updateGenerateButton(isGenerating) {
-        const button = document.getElementById('generate-btn');
-        
-        if (isGenerating) {
-          button.disabled = true;
-          button.innerHTML = '⏳ Generiere...';
-        } else {
-          button.disabled = false;
-          button.innerHTML = '🚀 Bild generieren';
-        }
-      }
-
-      showResult(data) {
-        const resultHtml = `
-          <img src="${data.file}" style="max-width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px;">
-          <div style="position: absolute; bottom: 10px; left: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 8px; border-radius: 4px; font-size: 12px;">
-            <div style="font-weight: 500; margin-bottom: 4px;">✅ Generierung abgeschlossen</div>
-            <div>${data.metadata?.resolution || ''} • ${data.model} • ${data.metadata?.generation_time?.toFixed(1) || '?'}s</div>
-          </div>
-          <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 5px;">
-            <a href="${data.file}" download style="background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px;">📥 Download</a>
-            <a href="/gallery.html" style="background: #10b981; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px;">🖼️ Galerie</a>
-          </div>
-        `;
-        
-        this.updatePreview(resultHtml);
-      }
-
-      updatePreview(html) {
-        const previewArea = document.getElementById('preview-area');
-        previewArea.innerHTML = html;
-        previewArea.classList.add('has-content');
-      }
-
-      showMessage(message, type = 'info') {
-        const container = document.getElementById('message-container');
-        
-        const colors = {
-          success: '#10b981',
-          error: '#dc2626',
-          info: '#3b82f6'
-        };
-
-        const messageElement = document.createElement('div');
-        messageElement.className = type === 'success' ? 'success-message' : 
-                                 type === 'error' ? 'error-message' : 
-                                 'success-message';
-        messageElement.style.background = colors[type];
-        messageElement.textContent = message;
-
-        container.appendChild(messageElement);
-
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-          messageElement.remove();
-        }, 5000);
-      }
+    function applyPreset(name){
+      activePreset = name;
+      const p = FILTERS[name];
+      brightness.value = p.brightness;
+      contrast.value   = p.contrast;
+      saturation.value = p.saturation;
+      updateLabels();
+      render();
+      document.querySelectorAll('#filters .chip').forEach(c=>c.classList.toggle('active', c.dataset.f===name));
     }
 
-    // Initialize when DOM is loaded
-    document.addEventListener('DOMContentLoaded', () => {
-      new FunctionalImageGenerator();
+    function fitCanvas() {
+      const maxW = Math.min(960, cv.parentElement.clientWidth);
+      const aspect = img.width / img.height || 16/9;
+      const w = maxW, h = Math.round(w / aspect);
+      cv.width = w; cv.height = h; cv.style.height = h+'px';
+      meta.textContent = `${w}×${h}`;
+    }
+
+    function currentFilterCSS() {
+      return `brightness(${brightness.value}%) contrast(${contrast.value}%) saturate(${saturation.value}%) ${FILTERS[activePreset].extra||''}`;
+    }
+
+    function updateLabels(){
+      valB.textContent = brightness.value + '%';
+      valC.textContent = contrast.value + '%';
+      valS.textContent = saturation.value + '%';
+    }
+
+    function render(){
+      if (!img.complete) return;
+      fitCanvas();
+      ctx.clearRect(0,0,cv.width,cv.height);
+      ctx.filter = currentFilterCSS();
+      ctx.drawImage(img, 0, 0, cv.width, cv.height);
+      ctx.filter = 'none';
+    }
+
+    img.onload = render;
+    window.addEventListener('resize', render);
+    [brightness,contrast,saturation].forEach(s => s.addEventListener('input', ()=>{ updateLabels(); render(); }));
+    updateLabels();
+
+    document.getElementById('filters').addEventListener('click', e=>{
+      const chip = e.target.closest('.chip'); if(!chip) return;
+      applyPreset(chip.dataset.f);
     });
+    applyPreset('none');
+
+    file.addEventListener('change', e=>{
+      const f = e.target.files?.[0]; if(!f) return;
+      const url = URL.createObjectURL(f);
+      img.onload = ()=>{ document.getElementById('thumb').src = url; render(); };
+      img.src = url;
+    });
+
+    document.getElementById('btnReset').addEventListener('click', ()=>{
+      applyPreset('none');
+      document.getElementById('thumb').src = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=360&auto=format&fit=crop';
+      img.src = document.getElementById('thumb').src;
+    });
+
+    document.getElementById('btnDownload').addEventListener('click', ()=>{
+      const a = document.createElement('a');
+      a.href = cv.toDataURL('image/png'); a.download = 'image.png'; a.click();
+    });
+
+    // prompt demo submit
+    const statusEl = document.getElementById('status');
+    function show(msg, ok=true){ statusEl.textContent=msg; statusEl.className='text-sm '+(ok?'text-emerald-600':'text-rose-600'); }
+    async function submit(){
+      const payload = {
+        prompt: document.getElementById('promptInput').value,
+        negative: document.getElementById('neg').value,
+        category: document.getElementById('categorySelect').value,
+        aspect: document.getElementById('aspect').value,
+        preset: activePreset,
+        sliders: { brightness: +brightness.value, contrast:+contrast.value, saturation:+saturation.value }
+      };
+      show('Sende Job (Demo)…'); /* fetch('/api/image/generate', {method:'POST', body: JSON.stringify(payload)}) */
+    }
+    document.getElementById('btnGenerate').addEventListener('click', submit);
+    document.getElementById('promptInput').addEventListener('keydown', e=>{ if(e.key==='Enter' && e.ctrlKey){ e.preventDefault(); submit(); }});
+    document.getElementById('btnStop').addEventListener('click', ()=>show('Gestoppt.', false));
   </script>
 </body>
 </html>

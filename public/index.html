@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>LocalMediaSuite – Start</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <style>
+    :root{
+      --bg:#0a0e13; --card:#0f1420; --border:#1f2a3b; --text:#e6eaf1; --muted:#9aa4b2;
+      --accent:#3b82f6; --accent2:#8b5cf6; --ok:#22c55e;
+      --blue:#3b82f6; --pink:#e91e63; --teal:#14b8a6; --amber:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    a{color:inherit;text-decoration:none}
+
+    /* Header */
+    .topbar{
+      position:sticky; top:0; z-index:10;
+      padding:12px 20px; background:rgba(10,14,19,.92); backdrop-filter: blur(6px);
+      border-bottom:1px solid var(--border);
+    }
+    .topline{display:flex; align-items:center; gap:12px}
+    .brand{font-weight:800; letter-spacing:.4px; font-size:20px; display:flex; align-items:center; gap:10px}
+    .brand::before{content:""; width:20px; height:20px; border-radius:7px; background:linear-gradient(135deg,var(--accent),var(--accent2))}
+    .pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent2)}
+    .search{ margin-left:auto; display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:10px;
+      border:1px solid var(--border); background:#111827; color:#e5e7eb; min-width:260px;}
+    .search input{background:transparent; border:0; outline:none; color:#e5e7eb; width:100%}
+    .nav{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+    .nav a{padding:8px 12px; border:1px solid var(--border); border-radius:999px; background:#0d1320}
+    .nav a.primary{background:linear-gradient(135deg,var(--accent),var(--accent2)); border-color:transparent}
+
+    /* Layout */
+    .wrap{max-width:1440px;margin:22px auto;padding:0 22px}
+    .grid{display:grid; gap:22px; grid-template-columns: repeat(3, 1fr)}
+    @media (max-width:1100px){ .grid{grid-template-columns: repeat(2, 1fr)} }
+    @media (max-width:720px) { .grid{grid-template-columns: 1fr} }
+
+    .tile{
+      position:relative; overflow:hidden; border-radius:16px;
+      border:2px solid var(--border); background:var(--card);
+      aspect-ratio:16/9; min-height:240px; display:block; isolation:isolate;
+    }
+    .tile .bg{
+      position:absolute; inset:0; z-index:-2;
+      background-size:cover; background-position:center;
+      filter:brightness(.86) saturate(1.05);
+      transition: transform .5s ease, filter .25s ease, opacity .6s ease;
+      opacity:1;
+    }
+    /* Innenrahmen */
+    .tile .frame{
+      position:absolute; inset:10px; border-radius:14px; z-index:-1;
+      border:3px solid rgba(255,255,255,.12);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); pointer-events:none;
+    }
+    .tile .frame.blue { border-color: color-mix(in srgb, var(--blue) 70%, transparent); }
+    .tile .frame.pink { border-color: color-mix(in srgb, var(--pink) 70%, transparent); }
+    .tile .frame.teal { border-color: color-mix(in srgb, var(--teal) 70%, transparent); }
+    .tile .frame.amber{ border-color: color-mix(in srgb, var(--amber)70%, transparent); }
+
+    /* Overlay-Gradient */
+    .tile .overlay{
+      position:absolute; inset:0; z-index:0;
+      background:
+        radial-gradient(1000px 320px at 20% 0%, rgba(59,130,246,.22), transparent 60%),
+        linear-gradient(180deg, rgba(0,0,0,0) 35%, rgba(0,0,0,.55) 100%);
+      pointer-events:none;
+    }
+
+    .tile .bottomline{position:absolute; left:12px; right:12px; height:2px; border-radius:2px; z-index:1}
+    .tile .bottomline.one{bottom:16px; background:rgba(255,255,255,.12)}
+    .tile .bottomline.two{bottom:10px; background:rgba(255,255,255,.20)}
+
+    .tile:hover .bg{ transform:scale(1.04); filter:brightness(.95) saturate(1.12) }
+
+    .tile .label{ position:absolute; left:18px; right:18px; bottom:22px;
+      display:flex; flex-direction:column; gap:6px; z-index:2;}
+    .kicker{font-size:12px; color:#cbd5e1; opacity:.9; text-transform:uppercase; letter-spacing:.35px}
+    .title{font-size:18px; font-weight:800; text-shadow:0 2px 12px rgba(0,0,0,.45)}
+    .subtitle{font-size:12px; color:#d1d5db; opacity:.9}
+
+    .tag{ position:absolute; top:10px; left:10px; padding:4px 10px; border-radius:999px;
+      font-size:11px; font-weight:700; backdrop-filter: blur(6px); border:1px solid rgba(255,255,255,.12); z-index:2;}
+    .blue{ background: rgba(59,130,246,.18) ; color:#dbeafe }
+    .pink{ background: rgba(233,30,99,.18); color:#ffe4ef }
+    .teal{ background: rgba(20,184,166,.18); color:#d1fae5 }
+    .amber{ background: rgba(245,158,11,.18); color:#fffbeb }
+
+    /* Footer */
+    .foot{max-width:1440px;margin:18px auto 32px;padding:0 22px;color:var(--muted);font-size:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .foot .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px rgba(34,197,94,.6)}
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="topbar">
+    <div class="topline">
+      <div class="brand">LocalMediaSuite</div>
+      <div class="pulse" title="Status"></div>
+      <label class="search" title="Suche in Kacheln">
+        <span>🔍</span>
+        <input id="search" type="text" placeholder="Suche… (z. B. Bild, Video, Katalog)" />
+      </label>
+    </div>
+    <!-- Nav zu ALLEN Seiten -->
+    <nav class="nav">
+      <a class="primary" href="index.html">Home</a>
+      <a href="overview.html">Overview</a>
+      <a href="studio.html">Studio</a>
+      <a href="settings.html">Settings</a>
+      <a href="catalog.html">Catalog</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="character_lab.html">Character Lab</a>
+      <a href="dreams.html">Dreams</a>
+      <a href="image.html">Image (SFW)</a>
+      <a href="image_nsfw.html">Image (NSFW)</a>
+      <a href="video.html">Video (SFW)</a>
+      <a href="video_nsfw.html">Video (NSFW)</a>
+      <a href="advanced_image.html">Advanced Image</a>
+      <a href="remover.html">Remover + Pose</a>
+      <a href="flirt.html">Flirt</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <div class="grid" id="grid">
+      <!-- 1 BILD SFW -->
+      <a class="tile" href="image.html" data-keywords="bild image sfw text2img img2img fotoreal realistisch"
+         data-images="assets/thumbs/image_1.png,assets/thumbs/image_1_1.png,assets/thumbs/image_2.png,assets/thumbs/image_2_2.png">
+        <div class="bg" aria-hidden="true"></div><span class="frame blue"></span><span class="overlay"></span>
+        <span class="bottomline one"></span><span class="bottomline two"></span>
+        <span class="tag blue">SFW</span>
+        <div class="label"><div class="kicker">BILD</div><div class="title">Text→Bild • Bild→Bild</div><div class="subtitle">Fotorealistisch, schnell, hohe Qualität</div></div>
+      </a>
+
+      <!-- 2 SETTINGS -->
+      <a class="tile" href="settings.html" data-keywords="settings einstellungen server pfade geräte config"
+         data-images="assets/thumbs/settings_1.png,assets/thumbs/settings_1_1.png,assets/thumbs/settings_2.png,assets/thumbs/settings_2_2.png">
+        <div class="bg" aria-hidden="true"></div><span class="frame teal"></span><span class="overlay"></span>
+        <span class="bottomline one"></span><span class="bottomline two"></span>
+        <span class="tag teal">SYSTEM</span>
+        <div class="label"><div class="kicker">SETTINGS</div><div class="title">Server • Pfade • Devices</div><div class="subtitle">Schlicht & schnell konfiguriert</div></div>
+      </a>
+
+      <!-- 3 BILD NSFW -->
+      <a class="tile" href="image_nsfw.html" data-keywords="bild image nsfw adult 18+ ungefiltert"
+         data-images="assets/thumbs/image_nsfw_1.png,assets/thumbs/image_nsfw_2.png,assets/thumbs/imageab18_1.png,assets/thumbs/imageab18_2.png">
+        <div class="bg" aria-hidden="true"></div><span class="frame pink"></span><span class="overlay"></span>
+        <span class="bottomline one"></span><span class="bottomline two"></span>
+        <span class="tag pink">NSFW</span>
+        <div class="label"><div class="kicker">PORN BILD</div><div class="title">Ungefiltert • Adult</div><div class="subtitle">Explizite Motive ohne Filter</div></div>
+      </a>
+
+      <!-- 4 VIDEO SFW -->
+      <a class="tile" href="video.html" data-keywords="video sfw text2video img2video clip animation"
+         data-images="assets/thumbs/video_1.png,assets/thumbs/video_1_1.png,assets/thumbs/video_2.png,assets/thumbs/video_2_2.png">
+        <div class="bg" aria-hidden="true"></div><span class="frame blue"></span><span class="overlay"></span>
+        <span class="bottomline one"></span><span class="bottomline two"></span>
+        <span class="tag blue">SFW</span>
+        <div class="label"><div class="kicker">VIDEO</div><div class="title">Text→Video • Bild→Video</div><div class="subtitle">SVD-basierte Clips & Animationen</div></div>
+      </a>
+
+      <!-- 5 KATALOG -->
+      <a class="tile" href="catalog.html" data-keywords="katalog modelle agenten installation verwalten update"
+         data-images="assets/thumbs/catalog_1.png,assets/thumbs/catalog_1_1.png,assets/thumbs/catalog_2.png,assets/thumbs/catalog_2_2.png">
+        <div class="bg" aria-hidden="true"></div><span class="frame amber"></span><span class="overlay"></span>
+        <span class="bottomline one"></span><span class="bottomline two"></span>
+        <span class="tag amber">MODELLE</span>
+        <div class="label"><div class="kicker">KATALOG</div><div class="title">Modelle & Agenten</div><div class="subtitle">Installieren • Updaten • Verwalten</div></div>
+      </a>
+
+      <!-- 6 GALERIE -->
+      <a class="tile" href="gallery.html" data-keywords="galerie ergebnisse player bilder videos history"
+         data-images="assets/thumbs/gallery_1.png,assets/thumbs/gallery_1_1.png,assets/thumbs/gallery_2.png,assets/thumbs/gallery_2_2.png">
+        <div class="bg" aria-hidden="true"></div><span class="frame teal"></span><span class="overlay"></span>
+        <span class="bottomline one"></span><span class="bottomline two"></span>
+        <span class="tag teal">TOOLS</span>
+        <div class="label"><div class="kicker">GALERIE</div><div class="title">Alle Ergebnisse</div><div class="subtitle">Integrierter Player für Bild & Video</div></div>
+      </a>
+
+      <!-- 7 VIDEO NSFW -->
+      <a class="tile" href="video_nsfw.html" data-keywords="video nsfw adult 18+"
+         data-images="assets/thumbs/video_nsfw_1.png,assets/thumbs/video_nsfw_1_1.png,assets/thumbs/video_nsfw_2.png,assets/thumbs/video_nsfw_2_2.png">
+        <div class="bg" aria-hidden="true"></div><span class="frame pink"></span><span class="overlay"></span>
+        <span class="bottomline one"></span><span class="bottomline two"></span>
+        <span class="tag pink">NSFW</span>
+        <div class="label"><div class="kicker">PORN VIDEO</div><div class="title">Ungefiltert • Adult</div><div class="subtitle">Alle Inhalte, volle Kontrolle</div></div>
+      </a>
+
+      <!-- 8 DREAMS -->
+      <a class="tile" href="dreams.html" data-keywords="dreams ideen prompt vorlagen inspiration generator"
+         data-images="assets/thumbs/home_2.png,assets/thumbs/home_2_2.png,assets/thumbs/Screenshot 2025-08-23 165616.png">
+        <div class="bg" aria-hidden="true"></div><span class="frame blue"></span><span class="overlay"></span>
+        <span class="bottomline one"></span><span class="bottomline two"></span>
+        <span class="tag blue">IDEEN</span>
+        <div class="label"><div class="kicker">DREAMS</div><div class="title">Vorlagen & Prompt-Inspo</div><div class="subtitle">Schneller zur guten Idee</div></div>
+      </a>
+
+      <!-- 9 ADVANCED IMAGE -->
+      <a class="tile" href="advanced_image.html" data-keywords="advanced masking control batch bewegung motion controlnet"
+         data-images="assets/thumbs/advanced_image_1.png,assets/thumbs/advanced_image_1_1.png,assets/thumbs/advanced_image_2.png,assets/thumbs/advanced_image_2_2.png">
+        <div class="bg" aria-hidden="true"></div><span class="frame blue"></span><span class="overlay"></span>
+        <span class="bottomline one"></span><span class="bottomline two"></span>
+        <span class="tag blue">PRO</span>
+        <div class="label"><div class="kicker">ADVANCED IMAGE</div><div class="title">Masking • Control • Motion</div><div class="subtitle">Feintuning & Profi-Workflows</div></div>
+      </a>
+
+      <!-- 10 REMOVER + POSE -->
+      <a class="tile" href="remover.html" data-keywords="remover object remove background clean inpaint pose maske"
+         data-images="assets/thumbs/gallery_2.png,assets/thumbs/gallery_2_2.png,assets/thumbs/image_1.png">
+        <div class="bg" aria-hidden="true"></div><span class="frame amber"></span><span class="overlay"></span>
+        <span class="bottomline one"></span><span class="bottomline two"></span>
+        <span class="tag amber">TOOLS</span>
+        <div class="label"><div class="kicker">REMOVER</div><div class="title">Bild & Video Remover + Pose</div><div class="subtitle">Masken, Inpaint, Posen-Prompt</div></div>
+      </a>
+
+      <!-- 11 FLIRT -->
+      <a class="tile" href="flirt.html" data-keywords="flirt chat kontext buttons presets"
+         data-images="assets/thumbs/flirt_1.png,assets/thumbs/Flirt_2.png,assets/thumbs/flirt_4.png">
+        <div class="bg" aria-hidden="true"></div><span class="frame pink"></span><span class="overlay"></span>
+        <span class="bottomline one"></span><span class="bottomline two"></span>
+        <span class="tag pink">CHAT</span>
+        <div class="label"><div class="kicker">FLIRT</div><div class="title">Kontext-Chat • Enter-Send</div><div class="subtitle">Schnelle Antworten, Buttons & Presets</div></div>
+      </a>
+
+      <!-- 12 OVERVIEW -->
+      <a class="tile" href="overview.html" data-keywords="overview dashboard vorschau status"
+         data-images="assets/thumbs/home_1.png,assets/thumbs/home_1_1.png,assets/thumbs/home_2.png,assets/thumbs/home_2_2.png">
+        <div class="bg" aria-hidden="true"></div><span class="frame teal"></span><span class="overlay"></span>
+        <span class="bottomline one"></span><span class="bottomline two"></span>
+        <span class="tag teal">INFO</span>
+        <div class="label"><div class="kicker">OVERVIEW</div><div class="title">Vorschau & Galerie</div><div class="subtitle">Status, schnelle Einstiege</div></div>
+      </a>
+
+      <!-- 13 CHARACTER LAB -->
+      <a class="tile" href="character_lab.html" data-keywords="character pose body auswahl speichern"
+         data-images="assets/body/slim.png,assets/poses/front.png,assets/poses/over_shoulder.png">
+        <div class="bg" aria-hidden="true"></div><span class="frame teal"></span><span class="overlay"></span>
+        <span class="bottomline one"></span><span class="bottomline two"></span>
+        <span class="tag teal">CHARACTER</span>
+        <div class="label"><div class="kicker">BUILDER</div><div class="title">Body & Pose wählen</div><div class="subtitle">Speichert für Dreams/Generator</div></div>
+      </a>
+
+      <!-- 14 STUDIO -->
+      <a class="tile" href="studio.html" data-keywords="studio projekte sets scenen batch"
+         data-images="assets/thumbs/video_1.png,assets/thumbs/advanced_image_2.png,assets/thumbs/gallery_1.png">
+        <div class="bg" aria-hidden="true"></div><span class="frame blue"></span><span class="overlay"></span>
+        <span class="bottomline one"></span><span class="bottomline two"></span>
+        <span class="tag blue">WORK</span>
+        <div class="label"><div class="kicker">STUDIO</div><div class="title">Projekte & Sets</div><div class="subtitle">Batchen, Vorlagen, Szenen</div></div>
+      </a>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span class="dot" title="Server-Status"></span>
+    <span>Server:</span><span id="srv" style="color:#a5b4fc">prüfe…</span>
+    <span>•</span><span>CPU:</span><span id="cpu">–</span>%
+    <span>•</span><span>RAM:</span><span id="ram">–</span>%
+  </footer>
+
+  <script>
+    // Live-Status (optional)
+    (async function status(){
+      try{
+        const r = await fetch('/api/status');
+        const j = await r.json();
+        const s = j.system || {};
+        document.getElementById('srv').textContent = 'Online';
+        document.getElementById('cpu').textContent = s.cpu_percent ?? '–';
+        document.getElementById('ram').textContent = s.ram_percent ?? '–';
+      }catch{
+        document.getElementById('srv').textContent = 'Offline';
+      }
+    })();
+
+    // Bilder vorladen
+    (function preload(){
+      const urls=new Set();
+      document.querySelectorAll(".tile").forEach(t=>{
+        (t.dataset.images||"").split(",").map(s=>s.trim()).filter(Boolean).forEach(u=>urls.add(u));
+      });
+      urls.forEach(u=>{const img=new Image(); img.src=u;});
+    })();
+
+    // Rotator (versetzt + Jitter, ~3s)
+    const PERIOD=3000, STAGGER_MAX=2000;
+    document.querySelectorAll(".tile").forEach(tile=>{
+      const bg=tile.querySelector(".bg");
+      const list=(tile.dataset.images||"").split(",").map(s=>s.trim()).filter(Boolean);
+      if(!list.length) return;
+      let i=Math.floor(Math.random()*list.length);
+      bg.style.backgroundImage=`url('${list[i]}')`;
+      if(list.length<2) return;
+      const startDelay=Math.random()*STAGGER_MAX;
+      const tick=()=>{
+        i=(i+1)%list.length;
+        bg.style.opacity=0;
+        setTimeout(()=>{ bg.style.backgroundImage=`url('${list[i]}')`; bg.style.opacity=1; },450);
+        const jitter=(Math.random()*300)-150;
+        setTimeout(tick, PERIOD+jitter);
+      };
+      setTimeout(tick,startDelay);
+    });
+
+    // Suche
+    document.getElementById("search").addEventListener("input", e=>{
+      const q=e.target.value.toLowerCase();
+      document.querySelectorAll(".tile").forEach(tile=>{
+        const text=((tile.dataset.keywords||"") + " " + tile.innerText).toLowerCase();
+        tile.style.display=text.includes(q)?"":"none";
+      });
+    });
+  </script>
+</body>
+</html>

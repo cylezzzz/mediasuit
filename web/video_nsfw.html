@@ -1,772 +1,322 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>LocalMediaSuite – Video Generator (Unrestricted)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="assets/styles.css">
-  <script defer src="assets/app.js"></script>
+  <meta charset="UTF-8" />
+  <title>Video Nsfw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
   <style>
-    .generation-form {
-      max-width: 1300px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      gap: 30px;
-    }
-    
-    .controls-panel {
-      background: linear-gradient(135deg, #1a1a1a, #252525);
-      border: 1px solid #444;
-      border-radius: 12px;
-      padding: 25px;
-      height: fit-content;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    }
-    
-    .preview-panel {
-      background: linear-gradient(135deg, #1a1a1a, #252525);
-      border: 1px solid #444;
-      border-radius: 12px;
-      padding: 25px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    }
-    
-    .model-option {
-      display: flex;
-      align-items: center;
-      padding: 15px;
-      margin: 8px 0;
-      background: linear-gradient(135deg, #2a2a2a, #333);
-      border: 2px solid transparent;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .model-option::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(233, 30, 99, 0.2), transparent);
-      transition: left 0.5s ease;
-    }
-    
-    .model-option:hover::before {
-      left: 100%;
-    }
-    
-    .model-option.selected {
-      border-color: #e91e63;
-      background: linear-gradient(135deg, rgba(233, 30, 99, 0.15), rgba(255, 20, 147, 0.1));
-      box-shadow: 0 0 20px rgba(233, 30, 99, 0.3);
-    }
-    
-    .model-option:hover {
-      background: linear-gradient(135deg, #333, #444);
-      transform: translateY(-2px);
-    }
-    
-    .param-group {
-      margin-bottom: 25px;
-    }
-    
-    .param-group label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: #e5e5e5;
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .param-input {
-      width: 100%;
-      padding: 12px 15px;
-      background: linear-gradient(135deg, #2a2a2a, #333);
-      border: 1px solid #555;
-      border-radius: 8px;
-      color: #fff;
-      font-size: 14px;
-      transition: all 0.3s ease;
-    }
-    
-    .param-input:focus {
-      outline: none;
-      border-color: #e91e63;
-      box-shadow: 0 0 15px rgba(233, 30, 99, 0.3);
-      transform: scale(1.02);
-    }
-    
-    .mode-selector {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 25px;
-    }
-    
-    .mode-btn {
-      flex: 1;
-      padding: 12px;
-      background: linear-gradient(135deg, #333, #444);
-      border: none;
-      border-radius: 8px;
-      color: #fff;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .mode-btn.active {
-      background: linear-gradient(135deg, #e91e63, #ff1493);
-      box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
-      transform: translateY(-1px);
-    }
-    
-    .mode-btn:hover:not(.active) {
-      background: linear-gradient(135deg, #444, #555);
-      transform: translateY(-1px);
-    }
-    
-    .image-upload {
-      display: none;
-      border: 2px dashed #555;
-      border-radius: 10px;
-      padding: 25px;
-      text-align: center;
-      margin-bottom: 25px;
-      background: linear-gradient(135deg, rgba(233, 30, 99, 0.05), rgba(255, 20, 147, 0.05));
-      transition: all 0.3s ease;
-    }
-    
-    .image-upload.active {
-      display: block;
-    }
-    
-    .upload-area {
-      cursor: pointer;
-      transition: all 0.3s ease;
-      padding: 20px;
-      border-radius: 8px;
-    }
-    
-    .upload-area:hover {
-      border-color: #e91e63;
-      background: rgba(233, 30, 99, 0.1);
-      transform: scale(1.02);
-    }
-    
-    .preview-area {
-      min-height: 450px;
-      border: 2px dashed #555;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 25px;
-      position: relative;
-      background: linear-gradient(135deg, 
-        rgba(233, 30, 99, 0.08), 
-        rgba(255, 20, 147, 0.05),
-        rgba(139, 69, 19, 0.05)
-      );
-      transition: all 0.3s ease;
-      overflow: hidden;
-    }
-    
-    .preview-area::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: 
-        radial-gradient(circle at 20% 80%, rgba(233, 30, 99, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 20, 147, 0.1) 0%, transparent 50%);
-      pointer-events: none;
-    }
-    
-    .preview-area.has-content {
-      border-style: solid;
-      border-color: #e91e63;
-      box-shadow: 0 0 30px rgba(233, 30, 99, 0.3);
-    }
-    
-    .preview-placeholder {
-      text-align: center;
-      color: #888;
-      z-index: 1;
-    }
-    
-    .generate-btn {
-      width: 100%;
-      padding: 18px;
-      background: linear-gradient(45deg, #e91e63, #ff1493, #ff6b6b);
-      border: none;
-      border-radius: 10px;
-      color: white;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .generate-btn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-      transition: left 0.6s ease;
-    }
-    
-    .generate-btn:hover::before {
-      left: 100%;
-    }
-    
-    .generate-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(233, 30, 99, 0.5);
-    }
-    
-    .generate-btn:disabled {
-      background: #9aa3b2;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-    
-    .progress-bar {
-      width: 100%;
-      height: 6px;
-      background: #333;
-      border-radius: 3px;
-      margin: 15px 0;
-      overflow: hidden;
-      position: relative;
-    }
-    
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #e91e63, #ff1493, #ff6b6b);
-      width: 0%;
-      transition: width 0.5s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .progress-fill::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      right: 0;
-      background: linear-gradient(90deg, 
-        rgba(255,255,255,0) 0%, 
-        rgba(255,255,255,0.3) 50%, 
-        rgba(255,255,255,0) 100%);
-      animation: shimmer 2s infinite;
-    }
-    
-    @keyframes shimmer {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
-    }
-    
-    .status-text {
-      text-align: center;
-      color: #ccc;
-      font-size: 14px;
-      margin-top: 10px;
-      font-weight: 500;
-    }
-    
-    .error-message {
-      background: linear-gradient(135deg, #dc2626, #b91c1c);
-      color: white;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      border-left: 4px solid #f87171;
-    }
-    
-    .success-message {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      border-left: 4px solid #34d399;
-    }
-    
-    .nsfw-badge {
-      background: linear-gradient(45deg, #e91e63, #ff1493);
-      color: white;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .video-specs {
-      background: linear-gradient(135deg, #2a2a2a, #333);
-      border: 1px solid #555;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 20px;
-      font-size: 12px;
-      color: #ccc;
-    }
-    
-    .spec-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      padding: 4px 0;
-      border-bottom: 1px solid #444;
-    }
-    
-    .spec-row:last-child {
-      margin-bottom: 0;
-      border-bottom: none;
-    }
-    
-    .spec-row .value {
-      color: #e91e63;
-      font-weight: 600;
-    }
-    
-    .suggestion-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
-    }
-    
-    .suggestion-chip {
-      padding: 8px 15px;
-      background: linear-gradient(135deg, #2a2a2a, #333);
-      border: 1px solid #555;
-      border-radius: 20px;
-      font-size: 11px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-    
-    .suggestion-chip:hover {
-      background: linear-gradient(135deg, #e91e63, #ff1493);
-      border-color: #e91e63;
-      transform: scale(1.05);
-    }
-    
-    .advanced-controls {
-      background: linear-gradient(135deg, rgba(233, 30, 99, 0.05), rgba(255, 20, 147, 0.03));
-      border: 1px solid rgba(233, 30, 99, 0.2);
-      border-radius: 8px;
-      padding: 15px;
-      margin-top: 20px;
-    }
-    
-    .warning-notice {
-      background: linear-gradient(135deg, #2a2a2a, #333);
-      border: 1px solid #e91e63;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 25px;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .warning-notice::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 4px;
-      height: 100%;
-      background: linear-gradient(180deg, #e91e63, #ff1493);
-    }
+    :root { --ink:#0d141c }
+    body { font-family: 'Inter', sans-serif; }
+    .chip { @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full border bg-white text-sm cursor-default; }
+    .chip button { @apply inline-flex items-center justify-center w-5 h-5 rounded-full border; }
   </style>
 </head>
-<body>
-  <header>
-    <h1 class="text-xl font-bold">LocalMediaSuite</h1>
-    <nav class="flex gap-2 flex-wrap"><a href="index.html">Home</a>
-      <a href="image.html">Image (SFW)</a>
-      <a href="image_nsfw.html">Image (Unrestricted)</a>
-      <a href="video.html">Video (SFW)</a>
-      <a href="video_nsfw.html" class="active">Video (Unrestricted)</a>
-      <a href="gallery.html">Gallery</a>
-      <a href="catalog.html">Catalog</a>
-      <a href="settings.html">Settings</a>
-          <a href="advanced_image.html">Advanced Image</a>
-        </nav>
+<body class="min-h-screen bg-slate-100 text-[var(--ink)]">
+  <!-- Top Bar -->
+  <header class="w-full bg-white border-b px-6 py-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">Stitch Dashboard</h1>
+    <nav class="space-x-4">
+      <a href="index.html" class="text-blue-600 hover:underline">Home</a>
+      <a href="overview.html" class="text-blue-600 hover:underline">Overview</a>
+      <a href="settings.html" class="text-blue-600 hover:underline">Settings</a>
+      <a href="studio.html" class="text-blue-600 hover:underline">Studio</a>
+    </nav>
   </header>
 
-  <main class="generation-form">
-    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
-      <h2 style="background: linear-gradient(45deg, #e91e63, #ff1493); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px; font-weight: 700;">Unrestricted Video Generator</h2>
-      <span class="nsfw-badge">18+ Content</span>
-    </div>
-    
-    <div class="warning-notice">
-      <div style="color: #e91e63; font-weight: bold; margin-bottom: 8px; font-size: 16px;">⚠️ Unrestricted Video Content</div>
-      <div style="font-size: 14px; color: #ccc; line-height: 1.5;">
-        Dieser Video-Generator hat keine inhaltlichen Beschränkungen. Alle Arten von Videos können erstellt werden. 
-        Nutzer sind selbst verantwortlich für die Einhaltung lokaler Gesetze und Bestimmungen.
-        <div style="margin-top: 8px; font-size: 12px; color: #888;">
-          • Keine automatische Zensur oder Filter
-          • Vollständige kreative Kontrolle
-          • Erweiterte Qualitätseinstellungen verfügbar
-        </div>
-      </div>
-    </div>
-    
-    <div id="message-container"></div>
-    
-    <div class="form-grid">
-      <!-- Controls Panel -->
-      <div class="controls-panel">
-        <!-- Generation Mode -->
-        <div class="param-group">
-          <label>Video-Modus</label>
-          <div class="mode-selector">
-            <button class="mode-btn active" data-mode="text2video">Text → Video</button>
-            <button class="mode-btn" data-mode="img2video">Bild → Video</button>
-          </div>
-        </div>
+  <!-- Layout -->
+  <main class="p-6">
+    <h2 class="text-2xl font-semibold mb-4">Video Nsfw</h2>
 
-        <!-- Model Selection -->
-        <div class="param-group">
-          <label>Video-Modell (Unrestricted)</label>
-          <div id="video-model-list" class="model-selector">
-            <div class="status-text">Lade unrestricted Video-Modelle...</div>
-          </div>
-        </div>
+    <div class="grid grid-cols-1 xl:grid-cols-[320px,1fr] gap-6">
+      <!-- LEFT: Spezifische Einstellungen -->
+      <aside class="bg-white rounded-xl shadow border p-4 space-y-4">
+        <h3 class="text-lg font-semibold">Allgemeine Einstellungen</h3>
 
-        <!-- Image Upload (for img2video) -->
-        <div id="video-image-upload" class="image-upload">
-          <div class="upload-area" onclick="document.getElementById('video-file-input').click()">
-            <input type="file" id="video-file-input" accept="image/*" style="display: none;">
-            <div style="font-size: 20px; margin-bottom: 10px;">🎬</div>
-            <div style="font-weight: 600; margin-bottom: 8px;">Startbild hochladen</div>
-            <div style="font-size: 12px; color: #888;">
-              PNG, JPG, WEBP bis 15MB<br>
-              Wird zu Video animiert (keine Beschränkungen)
-            </div>
-          </div>
-          <div id="video-upload-preview" style="margin-top: 15px; display: none;">
-            <img id="video-upload-preview-img" style="max-width: 100%; height: auto; border-radius: 8px;">
-          </div>
-        </div>
-
-        <!-- Video Parameters -->
-        <div class="param-group">
-          <label>Auflösung & Qualität</label>
-          <select id="video-resolution" class="param-input">
-            <option value="1024x576" selected>1024×576 (SVD optimiert)</option>
-            <option value="1280x720">1280×720 (HD)</option>
-            <option value="1920x1080">1920×1080 (Full HD)</option>
-            <option value="1024x1024">1024×1024 (Quadratisch)</option>
+        <div class="space-y-1">
+          <label class="text-sm font-medium">Modell</label>
+          <select id="model" class="w-full">
+            <option value="firefly-video-beta">Firefly Video (beta)</option>
+            <option value="sdxl-video">SDXL-Video</option>
+            <option value="pika">Pika</option>
+            <option value="hunyuan-video">Hunyuan Video</option>
           </select>
         </div>
 
-        <div class="param-group">
-          <label>Dauer: <span id="duration-value">4</span> Sekunden</label>
-          <input type="range" id="duration" min="2" max="15" value="4" class="param-input">
-          <div style="font-size: 11px; color: #888; margin-top: 4px;">
-            Längere Videos = höhere Qualität aber längere Generierzeit
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm font-medium">Videoformat</label>
+            <select id="aspect" class="w-full">
+              <option value="16:9">Breitbild (16:9)</option>
+              <option value="9:16">Hochformat (9:16)</option>
+              <option value="1:1">Quadrat (1:1)</option>
+              <option value="4:3">Klassisch (4:3)</option>
+            </select>
           </div>
-        </div>
-
-        <div class="param-group">
-          <label>Frame Rate</label>
-          <select id="fps" class="param-input">
-            <option value="12">12 fps (Film-Look)</option>
-            <option value="24" selected>24 fps (Standard)</option>
-            <option value="30">30 fps (Smooth)</option>
-            <option value="60">60 fps (Ultra-Smooth)</option>
-          </select>
-        </div>
-
-        <div class="param-group">
-          <label>Motion Intensity: <span id="motion-value">150</span></label>
-          <input type="range" id="motion-bucket" min="100" max="255" value="150" class="param-input">
-          <div style="display: flex; justify-content: space-between; font-size: 10px; color: #9aa3b2; margin-top: 4px;">
-            <span>Subtil</span>
-            <span>Natürlich</span>
-            <span>Dynamisch</span>
-          </div>
-        </div>
-
-        <div class="param-group">
-          <label>Noise Level: <span id="noise-value">0.03</span></label>
-          <input type="range" id="noise-aug" min="0" max="0.1" step="0.01" value="0.03" class="param-input">
-          <div style="font-size: 11px; color: #888; margin-top: 4px;">
-            Höhere Werte für mehr Variation
-          </div>
-        </div>
-
-        <!-- Advanced Controls -->
-        <div class="advanced-controls">
-          <div class="param-group">
-            <label>Seed (Reproduzierbarkeit)</label>
-            <input type="number" id="video-seed" class="param-input" placeholder="Leer für zufällig">
-          </div>
-          
-          <div class="param-group">
-            <label>Qualitätsstufe</label>
-            <select id="quality-level" class="param-input">
-              <option value="draft">Draft (schnell)</option>
-              <option value="standard" selected>Standard</option>
-              <option value="high">Hoch (langsamer)</option>
-              <option value="ultra">Ultra (sehr langsam)</option>
+          <div>
+            <label class="text-sm font-medium">FPS</label>
+            <select id="fps" class="w-full">
+              <option>24</option><option>30</option><option>48</option><option>60</option>
             </select>
           </div>
         </div>
 
-        <!-- Video Specs Display -->
-        <div class="video-specs">
-          <div style="font-weight: 600; color: #e91e63; margin-bottom: 10px;">📊 Video-Spezifikationen</div>
-          <div class="spec-row">
-            <span>Frames gesamt:</span>
-            <span class="value" id="total-frames">96</span>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm font-medium">Dauer (s)</label>
+            <input id="duration" type="number" min="1" max="30" value="6" class="w-full" />
           </div>
-          <div class="spec-row">
-            <span>Geschätzte Größe:</span>
-            <span class="value" id="estimated-size">~25MB</span>
-          </div>
-          <div class="spec-row">
-            <span>Generation Zeit:</span>
-            <span class="value" id="estimated-time">~3-6min</span>
-          </div>
-          <div class="spec-row">
-            <span>Qualität:</span>
-            <span class="value" id="quality-display">Standard</span>
+          <div>
+            <label class="text-sm font-medium">Seed</label>
+            <input id="seed" type="number" placeholder="zufällig" class="w-full" />
           </div>
         </div>
-      </div>
 
-      <!-- Preview Panel -->
-      <div class="preview-panel">
-        <div id="video-preview-area" class="preview-area">
-          <div class="preview-placeholder">
-            <div style="font-size: 60px; margin-bottom: 15px;">🎭</div>
-            <div style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">Unrestricted Video Generator</div>
-            <div style="font-size: 14px; color: #888; max-width: 400px; line-height: 1.4;">
-              Erstelle Videos ohne jegliche Beschränkungen. Alle Inhalte und Stile sind möglich.
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm font-medium">Auflösung</label>
+            <select id="resolution" class="w-full">
+              <option value="768x432">768×432</option>
+              <option value="1280x720">1280×720 (HD)</option>
+              <option value="1920x1080" selected>1920×1080 (FHD)</option>
+              <option value="2048x1152">2048×1152</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-sm font-medium">Qualität</label>
+            <select id="quality" class="w-full">
+              <option>Entwurf</option>
+              <option selected>Standard</option>
+              <option>Hoch</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-sm font-medium">Kameraparameter</label>
+          <div class="grid grid-cols-2 gap-3">
+            <input id="fov" type="number" placeholder="FOV (mm)" class="w-full" />
+            <select id="camMove" class="w-full">
+              <option value="">Keine Bewegung</option>
+              <option value="pan">Pan (Links/Rechts)</option>
+              <option value="tilt">Tilt (Hoch/Runter)</option>
+              <option value="dolly">Dolly (vor/zurück)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-sm font-medium">Stile/Looks</label>
+          <div class="flex flex-wrap gap-2" id="styleChips">
+            <!-- gefüllte Beispiele -->
+            <span class="chip">cinematic</span>
+            <span class="chip">soft lighting</span>
+            <span class="chip">ultra realistic</span>
+          </div>
+          <div class="flex gap-2 mt-2">
+            <input id="styleInput" class="flex-1" placeholder="Stil hinzufügen…">
+            <button id="addStyle" class="px-3 py-2 rounded-lg border bg-slate-50">Add</button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between border-t pt-3">
+          <label class="text-sm font-medium">Safety (NSFW freischalten)</label>
+          <input id="nsfw" type="checkbox" class="h-5 w-5 accent-rose-600" checked />
+        </div>
+
+        <p class="text-xs text-slate-500">Hinweis: Diese Seite ist für 18+ Inhalte vorgesehen. Es werden keine Filter simuliert – Backend-Policy entscheidet.</p>
+      </aside>
+
+      <!-- RIGHT: Preview oben rechts, darunter Prompt + Kategorien -->
+      <section class="space-y-6">
+        <!-- Preview Card -->
+        <div class="bg-white rounded-xl shadow border p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-lg font-semibold">Preview</h3>
+            <div class="text-sm text-slate-500" id="previewMeta">1920×1080 • 24fps • 6s</div>
+          </div>
+
+          <!-- Video/Image Placeholder -->
+          <div class="aspect-video w-full bg-slate-200 rounded-lg overflow-hidden flex items-center justify-center relative">
+            <video id="previewVideo" class="w-full h-full hidden" controls></video>
+            <img id="previewImage" alt="Preview" class="w-full h-full object-cover"
+                 src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1920&auto=format&fit=crop" />
+            <button id="swapPreview" class="absolute bottom-3 right-3 px-3 py-1.5 rounded-lg bg-white/90 border text-sm">Bild/Video wechseln</button>
+          </div>
+
+          <div class="mt-3 flex gap-2">
+            <button id="btnPlay" class="px-4 py-2 rounded-lg bg-black text-white">Abspielen</button>
+            <button id="btnDownload" class="px-4 py-2 rounded-lg border">Download</button>
+          </div>
+        </div>
+
+        <!-- Prompt + Kategorien -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Prompt Card -->
+          <div class="bg-white rounded-xl shadow border p-4">
+            <h3 class="text-lg font-semibold mb-3">Prompt</h3>
+            <textarea id="prompt" rows="7" class="w-full"
+              placeholder="Präzise Videobeschreibung… (z.B. cinematic close-up portrait at golden hour, soft rim light, ultra realistic, cat in sunflower field, camera doesn’t move)"></textarea>
+
+            <label class="text-sm font-medium mt-3 block">Negative Prompt</label>
+            <input id="neg" class="w-full" placeholder="artefacts, flicker, jitter, low quality…" />
+
+            <div class="flex flex-wrap items-center gap-2 mt-4">
+              <button id="btnGenerate" class="px-4 py-2 rounded-lg bg-rose-600 text-white">Generieren</button>
+              <button id="btnStop" class="px-4 py-2 rounded-lg border">Stop</button>
+              <span class="text-xs text-slate-500">Senden: Strg+Enter</span>
             </div>
+            <div id="status" class="mt-3 text-sm text-slate-600"></div>
+          </div>
+
+          <!-- Dynamische Kategorien -->
+          <div class="bg-white rounded-xl shadow border p-4">
+            <h3 class="text-lg font-semibold mb-3">Dynamische Kategorien</h3>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium">Schnellauswahl</label>
+              <div class="flex flex-wrap gap-2" id="quickCats">
+                <!-- Beispiele -->
+                <button class="px-3 py-1.5 rounded-lg border bg-slate-50" data-cat="solo">solo</button>
+                <button class="px-3 py-1.5 rounded-lg border bg-slate-50" data-cat="couple">couple</button>
+                <button class="px-3 py-1.5 rounded-lg border bg-slate-50" data-cat="bedroom">bedroom</button>
+                <button class="px-3 py-1.5 rounded-lg border bg-slate-50" data-cat="shower">shower</button>
+                <button class="px-3 py-1.5 rounded-lg border bg-slate-50" data-cat="roleplay">roleplay</button>
+                <button class="px-3 py-1.5 rounded-lg border bg-slate-50" data-cat="dance">dance</button>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <label class="text-sm font-medium">Aktive Kategorien</label>
+              <div id="activeCats" class="mt-2 flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="flex gap-2 mt-3">
+              <input id="catInput" class="flex-1" placeholder="Kategorie hinzufügen…" />
+              <button id="addCat" class="px-3 py-2 rounded-lg border bg-slate-50">Add</button>
+              <button id="clearCats" class="px-3 py-2 rounded-lg border">Clear</button>
+            </div>
+
+            <p class="text-xs text-slate-500 mt-3">Kategorien werden zur Prompt-Ergänzung genutzt und als Metadaten gespeichert.</p>
           </div>
         </div>
-
-        <div class="param-group">
-          <label for="video-prompt">Video-Beschreibung (Unrestricted)</label>
-          <textarea 
-            id="video-prompt" 
-            class="param-input" 
-            rows="5" 
-            placeholder="Beschreibe deine Video-Szene detailliert und unzensiert... Alle Inhalte sind möglich. Beispiel: 'Sinnliche Szene bei Kerzenlicht, dramatische Schatten, cineastische Kamerabewegung, intime Atmosphäre'"
-            required
-          ></textarea>
-          
-          <div class="suggestion-chips">
-            <span class="suggestion-chip" data-prompt="dramatic lighting, intimate atmosphere">🕯️ Intim</span>
-            <span class="suggestion-chip" data-prompt="sensual movement, slow motion">💃 Sinnlich</span>
-            <span class="suggestion-chip" data-prompt="cinematic camera work, artistic shadows">🎬 Cineastisch</span>
-            <span class="suggestion-chip" data-prompt="passionate scene, warm colors">❤️ Leidenschaftlich</span>
-            <span class="suggestion-chip" data-prompt="artistic nude, chiaroscuro lighting">🎨 Künstlerisch</span>
-            <span class="suggestion-chip" data-prompt="fantasy scene, ethereal atmosphere">✨ Fantasy</span>
-          </div>
-        </div>
-
-        <div class="param-group">
-          <label for="video-style-prompt">Stil & Technik</label>
-          <textarea 
-            id="video-style-prompt" 
-            class="param-input" 
-            rows="2" 
-            placeholder="Zusätzliche Stil-Anweisungen... (z.B. 'film noir style, high contrast, professional cinematography')"
-          ></textarea>
-        </div>
-
-        <div id="video-progress-container" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="font-weight: 600;">Video-Generation läuft...</span>
-            <span style="font-size: 12px; color: #e91e63;" id="video-progress-percent">0%</span>
-          </div>
-          <div class="progress-bar">
-            <div id="video-progress-fill" class="progress-fill"></div>
-          </div>
-          <div id="video-status-text" class="status-text">Vorbereitung...</div>
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-top: 8px;">
-            <span>ETA: <span id="eta-display" style="color: #e91e63;">--:--</span></span>
-            <span>Frame: <span id="frame-progress" style="color: #e91e63;">0/96</span></span>
-            <span>Qualität: <span id="current-quality" style="color: #e91e63;">Standard</span></span>
-          </div>
-        </div>
-
-        <button id="video-generate-btn" class="generate-btn">
-          🎬 Unrestricted Video Generieren
-        </button>
-      </div>
+      </section>
     </div>
   </main>
 
+  <!-- Minimal JS for UX -->
   <script>
-    class UnrestrictedVideoGenerator {
-      constructor() {
-        this.selectedModel = null;
-        this.currentMode = 'text2video';
-        this.isGenerating = false;
-        this.uploadedImage = null;
-        this.videoSpecs = {
-          width: 1024,
-          height: 576,
-          fps: 24,
-          duration: 4,
-          frames: 96
-        };
-        
-        this.init();
+    // helpers
+    const $ = (s, r=document) => r.querySelector(s);
+    const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+    // preview meta updater
+    function updateMeta(){
+      $('#previewMeta').textContent =
+        `${$('#resolution').value} • ${$('#fps').value}fps • ${$('#duration').value}s`;
+    }
+    ['resolution','fps','duration'].forEach(id=>$('#'+id).addEventListener('input', updateMeta));
+    updateMeta();
+
+    // swap image/video placeholder
+    $('#swapPreview').addEventListener('click', () => {
+      const v = $('#previewVideo');
+      const img = $('#previewImage');
+      if (v.classList.contains('hidden')) {
+        v.src = ''; // no real media yet
+        v.classList.remove('hidden'); img.classList.add('hidden');
+      } else {
+        v.pause(); v.classList.add('hidden'); img.classList.remove('hidden');
       }
+    });
 
-      init() {
-        this.setupEventListeners();
-        this.loadVideoModels();
-        this.updateSliderValues();
-        this.calculateVideoSpecs();
-        this.setupSuggestionChips();
+    $('#btnPlay').addEventListener('click', () => {
+      const v = $('#previewVideo');
+      if (v.classList.contains('hidden')) return;
+      v.play().catch(()=>{});
+    });
+
+    // styles add/remove
+    function makeRemovableChip(text, container){
+      const span = document.createElement('span');
+      span.className = 'chip';
+      span.innerHTML = `<span>${text}</span><button aria-label="remove">&times;</button>`;
+      span.querySelector('button').addEventListener('click', ()=> span.remove());
+      container.appendChild(span);
+    }
+    $('#addStyle').addEventListener('click', () => {
+      const val = $('#styleInput').value.trim();
+      if (!val) return;
+      makeRemovableChip(val, $('#styleChips'));
+      $('#styleInput').value = '';
+    });
+
+    // categories logic
+    const activeCats = new Set();
+    function renderCats(){
+      const wrap = $('#activeCats'); wrap.innerHTML = '';
+      activeCats.forEach(c => makeRemovableChip(c, wrap));
+    }
+    $('#addCat').addEventListener('click', () => {
+      const val = $('#catInput').value.trim();
+      if (!val) return;
+      activeCats.add(val); $('#catInput').value = ''; renderCats();
+    });
+    $('#clearCats').addEventListener('click', () => { activeCats.clear(); renderCats(); });
+    $$('#quickCats button').forEach(b => b.addEventListener('click', () => {
+      activeCats.add(b.dataset.cat); renderCats();
+    }));
+
+    // prompt submit (Ctrl+Enter)
+    function buildRequest(){
+      return {
+        model: $('#model').value,
+        aspect: $('#aspect').value,
+        fps: +$('#fps').value,
+        duration: +$('#duration').value,
+        resolution: $('#resolution').value,
+        quality: $('#quality').value,
+        fov: $('#fov').value || null,
+        camera_move: $('#camMove').value || null,
+        styles: $$('#styleChips .chip span:first-child').map(s=>s.textContent),
+        nsfw: $('#nsfw').checked,
+        prompt: $('#prompt').value.trim(),
+        negative: $('#neg').value.trim(),
+        categories: Array.from(activeCats)
+      };
+    }
+    function showStatus(msg, ok=true){
+      const el = $('#status');
+      el.textContent = msg;
+      el.className = 'mt-3 text-sm ' + (ok ? 'text-emerald-600' : 'text-rose-600');
+    }
+    function fakeGenDelay(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+    async function submitGeneration(){
+      const payload = buildRequest();
+      if (!payload.prompt){
+        showStatus('Bitte Prompt eingeben.', false); return;
       }
+      showStatus('Wird vorbereitet …');
+      // hier später: fetch('/api/video/generate', {method:'POST', body: JSON.stringify(payload)})
+      await fakeGenDelay(600);
+      showStatus('Job übergeben (Demo). Antwort vom Backend hier einbinden.');
+    }
 
-      setupEventListeners() {
-        // Mode buttons
-        document.querySelectorAll('.mode-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            this.setMode(e.target.dataset.mode);
-          });
-        });
+    $('#btnGenerate').addEventListener('click', submitGeneration);
+    $('#prompt').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); submitGeneration(); }
+    });
+    $('#btnStop').addEventListener('click', () => showStatus('Job gestoppt (Demo).', false));
 
-        // File upload
-        document.getElementById('video-file-input').addEventListener('change', (e) => {
-          this.handleVideoFileUpload(e.target.files[0]);
-        });
-
-        // Parameter controls
-        document.getElementById('duration').addEventListener('input', (e) => {
-          document.getElementById('duration-value').textContent = e.target.value;
-          this.calculateVideoSpecs();
-        });
-
-        document.getElementById('fps').addEventListener('change', () => {
-          this.calculateVideoSpecs();
-        });
-
-        document.getElementById('video-resolution').addEventListener('change', () => {
-          this.calculateVideoSpecs();
-        });
-
-        document.getElementById('quality-level').addEventListener('change', (e) => {
-          document.getElementById('quality-display').textContent = e.target.options[e.target.selectedIndex].text;
-          this.calculateVideoSpecs();
-        });
-
-        document.getElementById('motion-bucket').addEventListener('input', (e) => {
-          document.getElementById('motion-value').textContent = e.target.value;
-        });
-
-        document.getElementById('noise-aug').addEventListener('input', (e) => {
-          document.getElementById('noise-value').textContent = parseFloat(e.target.value).toFixed(2);
-        });
-
-        // Generate button
-        document.getElementById('video-generate-btn').addEventListener('click', () => {
-          this.generateUnrestrictedVideo();
-        });
-      }
-
-      setupSuggestionChips() {
-        document.querySelectorAll('.suggestion-chip').forEach(chip => {
-          chip.addEventListener('click', () => {
-            const prompt = chip.dataset.prompt;
-            const currentPrompt = document.getElementById('video-prompt').value.trim();
-            
-            if (currentPrompt === '') {
-              document.getElementById('video-prompt').value = prompt;
-            } else if (!currentPrompt.toLowerCase().includes(prompt.toLowerCase())) {
-              document.getElementById('video-prompt').value = currentPrompt + ', ' + prompt;
-            }
-            
-            this.showMessage(`Stil hinzugefügt: ${chip.textContent}`, 'success');
-          });
-        });
-      }
-
-      setMode(mode) {
-        this.currentMode = mode;
-        
-        // Update buttons
-        document.querySelectorAll('.mode-btn').forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.mode === mode);
-        });
-
-        // Show/hide upload section
-        const uploadSection = document.getElementById('video-image-upload');
-        
-        if (mode === 'img2video') {
-          uploadSection.classList.add('active');
-        } else {
-          uploadSection.classList.remove('active');
-        }
-
-        this.showMessage(`Video-Modus: ${mode === 'text2video' ? 'Text zu Video' : 'Bild zu Video (Animation)'}`, 'info');
-        this.loadVideoModels();
-      }
-
-      async loadVideoModels() {
-        try {
-          // Lade alle verfügbaren Video-Modelle (nicht nur kompatible)
-          const response = await fetch('/api/models?type=video');
-          let models = [];
-          
-          if (response.ok) {
-            const data = await response.json();
-            models = Array.isArray(data) ? data : [];
-          }
-
-          // Fallback auf Mock-Daten wenn keine Modelle
-          if (models.length === 0) {
-            models = [
-              {
-                id: 'svd-img2vid-xt-unrestricted',
-                name: 'SVD XT (Unrestricted)',
-                architecture: 'svd',
-                description: 'Hochqualitative Video-Generation ohne Filter',
-                nsfw_capable: true,
-                modalities: ['img2video', 'text2video']
-              },
-              {
-                id: 'animatediff-unrestricted',
-                name: '
+    // download (Demo: aktuelle Preview)
+    $('#btnDownload').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.href = $('#previewImage').src;
+      link.download = 'preview.jpg';
+      link.click();
+    });
+  </script>
+</body>
+</html>

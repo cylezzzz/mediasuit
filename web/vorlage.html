@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LocalMediaSuite – Vorlage</title>
+  <style>
+    :root {
+      --bg: #0a0e13;
+      --card: #111827;
+      --border: #1f2937;
+      --text: #f3f4f6;
+      --sub: #9ca3af;
+      --accent: #3b82f6;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 system-ui, sans-serif;
+    }
+
+    /* Header */
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--text);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: inline-block;
+    }
+
+    nav a {
+      color: var(--sub);
+      margin-left: 14px;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    nav a.active,
+    nav a:hover {
+      color: var(--accent);
+    }
+
+    /* Content */
+    main {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 16px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .card-header {
+      font-weight: 600;
+      font-size: 18px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .card-body {
+      color: var(--text);
+    }
+
+    .btn {
+      background: var(--accent);
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn:hover {
+      filter: brightness(1.1);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <a href="index.html" class="brand">
+        <span class="logo-dot"></span>
+        <span>LocalMediaSuite</span>
+      </a>
+      <nav class="main-nav">
+        <a href="index.html">Home</a>
+        <a href="image.html">Image (SFW)</a>
+        <a href="image_nsfw.html">Image (NSFW)</a>
+        <a href="video.html">Video (SFW)</a>
+        <a href="video_nsfw.html">Video (NSFW)</a>
+        <a href="gallery.html">Galerie</a>
+        <a href="catalog.html">Katalog</a>
+        <a href="settings.html">Settings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Beispiel-Card -->
+    <div class="card">
+      <div class="card-header">Seitentitel</div>
+      <div class="card-body">
+        <p>Hier kannst du den Inhalt deiner Seite einfügen: Text, Formulare, Bilder, Player oder Buttons.</p>
+        <button class="btn">Aktion starten</button>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
